@@ -1,5 +1,6 @@
 package dev.detpikachu.unpluggedAfk;
 
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
@@ -12,6 +13,11 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         Bukkit.getPluginManager().registerEvents(this, this);
+
+        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
+            commands.registrar().register(UnpluggedAfkCommands.unplug());
+            commands.registrar().register(UnpluggedAfkCommands.unplugged());
+        });
     }
 
     @Override
