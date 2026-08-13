@@ -1,0 +1,6 @@
+name: unplugged-afk
+version: '${version}'
+
+main: dev.detpikachu.unpluggedAfk.UnpluggedAfk
+api-version: '1.21.11'
+load: POSTWORLD
