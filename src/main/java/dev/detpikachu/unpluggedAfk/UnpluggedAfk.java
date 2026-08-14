@@ -1,8 +1,10 @@
 package dev.detpikachu.unpluggedAfk;
 
+import dev.detpikachu.unpluggedAfk.config.UnpluggedAfkOptions;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -12,17 +14,17 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        Bukkit.getPluginManager().registerEvents(this, this);
+        // Config
+        saveDefaultConfig();
+        ConfigurationSerialization.registerClass(UnpluggedAfkOptions.class);
+        UnpluggedAfkOptions.deserialize(getConfig().getValues(true));
 
+        // Events
+        Bukkit.getPluginManager().registerEvents(this, this);
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
             commands.registrar().register(UnpluggedAfkCommands.unplug());
             commands.registrar().register(UnpluggedAfkCommands.unplugged());
         });
-    }
-
-    @Override
-    public void onDisable() {
-        // Plugin shutdown logic
     }
 
     @EventHandler
