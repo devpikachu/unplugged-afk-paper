@@ -2,7 +2,6 @@ package dev.detpikachu.unpluggedAfk.player;
 
 import com.mojang.authlib.GameProfile;
 import dev.detpikachu.unpluggedAfk.UnpluggedConstants;
-import dev.detpikachu.unpluggedAfk.bookkeeping.UnpluggedStatus;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
@@ -19,8 +18,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.component.ResolvableProfile;
 
 public final class UnpluggedServerPlayer extends ServerPlayer {
-
-    private UnpluggedStatus status = UnpluggedStatus.ACTIVE;
+    
     private int durationMins = UnpluggedConstants.DEFAULT_DURATION;
     private long startAtMillis = System.currentTimeMillis();
     private long timeoutAtMillis = -1L;

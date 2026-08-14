@@ -29,7 +29,7 @@ public final class AdminDebugDummyCommand {
         var executor = context.getSource().getExecutor();
         var level = ((CraftWorld) executor.getWorld()).getHandle();
 
-        final var unpluggedPlayer = UnpluggedPlayerManager.createDummy(server, level, UUID.fromString(DUMMY_UUID), DUMMY_NAME);
+        final var unpluggedPlayer = UnpluggedPlayerManager.getInstance().createDummy(server, level, UUID.fromString(DUMMY_UUID), DUMMY_NAME);
         unpluggedPlayer.snapTo(executor.getX(), executor.getY(), executor.getZ(), executor.getYaw(), executor.getPitch());
 
         return 1;
