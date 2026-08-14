@@ -44,12 +44,12 @@ public final class AdminDebugDummyCommand {
         var clientInformation = ClientInformation.createDefault();
         var cookie = new CommonListenerCookie(profile, 0, clientInformation, true, null, new HashSet<>(), new KeepAlive());
         var connection = new UnpluggedConnection(PacketFlow.SERVERBOUND);
-        var player = new UnpluggedServerPlayer(server, level, profile, clientInformation);
+        var bot = new UnpluggedServerPlayer(server, level, profile, clientInformation);
 
-        playerList.placeNewPlayer(connection, player, cookie);
-        player.connection = new UnpluggedGamePacketListener(server, connection, player, cookie);
-        player.snapTo(executor.getX(), executor.getY(), executor.getZ(), executor.getPitch(), executor.getYaw());
-        player.gameMode.changeGameModeForPlayer(GameType.DEFAULT_MODE, PlayerGameModeChangeEvent.Cause.DEFAULT_GAMEMODE, null);
+        playerList.placeNewPlayer(connection, bot, cookie);
+        bot.connection = new UnpluggedGamePacketListener(server, connection, bot, cookie);
+        bot.snapTo(executor.getX(), executor.getY(), executor.getZ(), executor.getYaw(), executor.getPitch());
+        bot.gameMode.changeGameModeForPlayer(GameType.DEFAULT_MODE, PlayerGameModeChangeEvent.Cause.DEFAULT_GAMEMODE, null);
 
         return 1;
     }

@@ -2,13 +2,15 @@ package dev.detpikachu.unpluggedAfk;
 
 import dev.detpikachu.unpluggedAfk.commands.UnpluggedCommands;
 import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
+import dev.detpikachu.unpluggedAfk.player.UnpluggedServerPlayer;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class UnpluggedAfk extends JavaPlugin implements Listener {
@@ -29,6 +31,15 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        event.getPlayer().sendMessage(Component.text("Hello, " + event.getPlayer().getName() + "!"));
+        if (((CraftPlayer) event.getPlayer()).getHandle() instanceof UnpluggedServerPlayer) {
+            event.joinMessage(null);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        if (((CraftPlayer) event.getPlayer()).getHandle() instanceof UnpluggedServerPlayer) {
+            event.quitMessage(null);
+        }
     }
 }
