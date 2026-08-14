@@ -13,6 +13,7 @@ import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.world.level.GameType;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
@@ -43,14 +44,23 @@ public final class UnpluggedPlayerManager {
         this.players.remove(player.getUUID());
     }
 
-    public UnpluggedServerPlayer createDummy(MinecraftServer server, ServerLevel level, UUID uuid, String name, int durationMins, String reason) {
+    public UnpluggedServerPlayer create(MinecraftServer server, ServerLevel level, ServerPlayer player, int durationMins, String reason) {
+        final var profile = player.gameProfile;
+        return this.create(server, level, profile, durationMins, reason);
+    }
+
+    public UnpluggedServerPlayer create(MinecraftServer server, ServerLevel level, UUID uuid, String name, int durationMins, String reason) {
         final var profile = new GameProfile(uuid, name);
+        return this.create(server, level, profile, durationMins, reason);
+    }
+
+    private UnpluggedServerPlayer create(MinecraftServer server, ServerLevel level, GameProfile profile, int durationMins, String reason) {
         final var clientInformation = ClientInformation.createDefault();
         final var cookie = new CommonListenerCookie(profile, 0, clientInformation, true, null, new HashSet<>(), new KeepAlive());
         final var connection = new UnpluggedConnection(PacketFlow.SERVERBOUND);
 
         final var unpluggedPlayer = new UnpluggedServerPlayer(server, level, profile, clientInformation);
-        this.add(unpluggedPlayer);
+        this.players.put(unpluggedPlayer.getUUID(), unpluggedPlayer);
 
         server.getPlayerList().placeNewPlayer(connection, unpluggedPlayer, cookie);
         unpluggedPlayer.connection = new UnpluggedGamePacketListener(server, connection, unpluggedPlayer, cookie);
@@ -59,9 +69,5 @@ public final class UnpluggedPlayerManager {
         unpluggedPlayer.setReason(reason);
 
         return unpluggedPlayer;
-    }
-
-    private void add(UnpluggedServerPlayer player) {
-        this.players.put(player.getUUID(), player);
     }
 }

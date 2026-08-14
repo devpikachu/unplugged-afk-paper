@@ -4,9 +4,6 @@ import com.mojang.authlib.GameProfile;
 import dev.detpikachu.unpluggedAfk.UnpluggedConstants;
 import dev.detpikachu.unpluggedAfk.UnpluggedPlayerManager;
 import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import javax.annotation.Nullable;
 import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -17,16 +14,14 @@ import net.minecraft.server.TickTask;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.component.ResolvableProfile;
 
 public final class UnpluggedServerPlayer extends ServerPlayer {
 
     private boolean isSpawnStatePending = true;
     private int durationMins = UnpluggedOptions.getInstance().getDefaultDurationMins();
-    private long startAtMillis = System.currentTimeMillis();
+    private final long startAtMillis = System.currentTimeMillis();
     private long timeoutAtMillis = -1L;
     private String reason = "";
-    private @Nullable String outcome = null;
 
     public UnpluggedServerPlayer(MinecraftServer server, ServerLevel level, GameProfile gameProfile, ClientInformation clientInformation) {
         super(server, level, gameProfile, clientInformation);
@@ -127,10 +122,5 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         playerList.broadcastAll(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LISTED, this));
 
         this.isSpawnStatePending = false;
-    }
-
-    private static CompletableFuture<GameProfile> fetchGameProfile(MinecraftServer server, final UUID uuid) {
-        final ResolvableProfile resolver = ResolvableProfile.createUnresolved(uuid);
-        return resolver.resolveProfile(server.services().profileResolver());
     }
 }
