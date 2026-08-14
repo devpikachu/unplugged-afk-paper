@@ -5,13 +5,13 @@ import java.util.Map;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.jetbrains.annotations.NotNull;
 
-public final class UnpluggedAfkOptions implements ConfigurationSerializable {
+public final class UnpluggedOptions implements ConfigurationSerializable {
 
-    private static UnpluggedAfkOptions instance;
+    private static UnpluggedOptions instance;
 
     private boolean isDebug;
 
-    public static UnpluggedAfkOptions getInstance() {
+    public static UnpluggedOptions getInstance() {
         return instance;
     }
 
@@ -29,7 +29,7 @@ public final class UnpluggedAfkOptions implements ConfigurationSerializable {
     }
 
     public static void deserialize(Map<String, Object> data) {
-        var options = new UnpluggedAfkOptions();
+        var options = new UnpluggedOptions();
 
         options.isDebug = (boolean) data.get("debug");
 

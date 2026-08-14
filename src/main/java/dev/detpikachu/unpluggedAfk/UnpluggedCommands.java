@@ -7,7 +7,7 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 
-public final class UnpluggedAfkCommands {
+public final class UnpluggedCommands {
 
     private final static String CMD_UNPLUG = "unplug";
     private final static String CMD_UNPLUGGED = "unplugged";
