@@ -10,7 +10,7 @@ public final class AdminCommands {
     private final static String CMD_UNPLUGGED = "unplugged";
 
     public static LiteralCommandNode<CommandSourceStack> construct() {
-        var root = Commands.literal(CMD_UNPLUGGED);
+        final var root = Commands.literal(CMD_UNPLUGGED);
 
         // TODO: Permissions
         root

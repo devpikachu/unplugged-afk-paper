@@ -44,7 +44,7 @@ public final class UnpluggedOptions implements ConfigurationSerializable {
 
     @Override
     public @NotNull Map<String, Object> serialize() {
-        var data = new HashMap<String, Object>();
+        final var data = new HashMap<String, Object>();
 
         data.put(DEFAULT_DURATION_MINS, this.defaultDurationMins);
         data.put(MAX_DURATION_MINS, this.maxDurationMins);

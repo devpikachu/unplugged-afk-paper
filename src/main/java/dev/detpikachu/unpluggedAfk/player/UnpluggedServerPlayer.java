@@ -66,7 +66,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
             this.connection.onDisconnect(new DisconnectionDetails(message));
         }
 
-        var server = this.level().getServer();
+        final var server = this.level().getServer();
         server.schedule(
                 new TickTask(server.getTickCount(), () -> {
                     this.connection.onDisconnect(new DisconnectionDetails(message));
@@ -121,7 +121,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     }
 
     private void applyDeferredSpawnState(MinecraftServer server) {
-        var playerList = server.getPlayerList();
+        final var playerList = server.getPlayerList();
 
         playerList.broadcastAll(new ClientboundRotateHeadPacket(this, (byte) (this.yHeadRot * 256 / 360)), this.level().dimension());
         playerList.broadcastAll(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER, this));

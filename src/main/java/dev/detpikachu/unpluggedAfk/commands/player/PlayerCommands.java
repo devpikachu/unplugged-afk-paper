@@ -15,13 +15,13 @@ public final class PlayerCommands {
     private final static String ARG_REASON = "reason";
 
     public static LiteralCommandNode<CommandSourceStack> construct() {
-        var root = Commands.literal(CMD_UNPLUG).then(
+        final var root = Commands.literal(CMD_UNPLUG).then(
                 Commands.argument(ARG_DURATION, IntegerArgumentType.integer(1)).then(
                         Commands.argument(ARG_REASON, StringArgumentType.greedyString())
                                 .executes(ctx -> {
-                                            var duration = ctx.getArgument(ARG_DURATION, int.class);
-                                            var reason = ctx.getArgument(ARG_REASON, String.class);
-                                            var sender = ctx.getSource().getSender();
+                                            final var duration = ctx.getArgument(ARG_DURATION, int.class);
+                                            final var reason = ctx.getArgument(ARG_REASON, String.class);
+                                            final var sender = ctx.getSource().getSender();
 
                                             sender.sendPlainMessage("Unplugging for " + duration + " minutes with reason " + reason);
 

@@ -9,7 +9,7 @@ public final class AdminDebugCommands {
     private final static String CMD_DEBUG = "debug";
 
     public static LiteralArgumentBuilder<CommandSourceStack> construct() {
-        var root = Commands.literal(CMD_DEBUG);
+        final var root = Commands.literal(CMD_DEBUG);
 
         root.then(AdminDebugSpawnFakeCommand.construct());
 

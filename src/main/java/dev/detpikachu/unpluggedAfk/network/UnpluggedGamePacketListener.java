@@ -24,7 +24,11 @@ public final class UnpluggedGamePacketListener extends ServerGamePacketListenerI
             return;
         }
 
-        if (message.getContents() instanceof TranslatableContents text && (text.getKey().equals(UnpluggedConstants.DISCONNECT_DUPLICATE_LOGIN) || text.getKey().equals(UnpluggedConstants.DISCONNECT_IDLING))) {
+        if (!(message.getContents() instanceof TranslatableContents text)) {
+            return;
+        }
+
+        if (text.getKey().equals(UnpluggedConstants.DISCONNECT_DUPLICATE_LOGIN) || text.getKey().equals(UnpluggedConstants.DISCONNECT_IDLING)) {
             player.kill(message);
         }
     }
