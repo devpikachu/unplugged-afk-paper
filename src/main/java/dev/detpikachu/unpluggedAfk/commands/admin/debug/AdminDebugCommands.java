@@ -11,7 +11,7 @@ public final class AdminDebugCommands {
     public static LiteralArgumentBuilder<CommandSourceStack> construct() {
         var root = Commands.literal(CMD_DEBUG);
 
-        root.then(AdminDebugDummyCommand.construct());
+        root.then(AdminDebugSpawnFakeCommand.construct());
 
         return root;
     }

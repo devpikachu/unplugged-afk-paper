@@ -10,16 +10,16 @@ import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
 
-public final class AdminDebugDummyCommand {
+public final class AdminDebugSpawnFakeCommand {
 
-    private final static String CMD_DUMMY = "dummy";
+    private final static String CMD_DUMMY = "spawn-fake";
     private final static String DUMMY_UUID = "ccdb9503-cd7b-4ad2-b7cb-00d165a73e2a";
-    private final static String DUMMY_NAME = "Testison";
+    private final static String DUMMY_NAME = "Fakeson";
 
     public static LiteralArgumentBuilder<CommandSourceStack> construct() {
         var root = Commands.literal(CMD_DUMMY);
 
-        root.executes(AdminDebugDummyCommand::execute);
+        root.executes(AdminDebugSpawnFakeCommand::execute);
 
         return root;
     }
