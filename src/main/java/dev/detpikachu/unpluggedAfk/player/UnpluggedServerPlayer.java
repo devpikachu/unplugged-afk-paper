@@ -20,16 +20,12 @@ import net.minecraft.world.item.component.ResolvableProfile;
 
 public final class UnpluggedServerPlayer extends ServerPlayer {
 
+    private boolean isSpawnStatePending = true;
     private int durationMins = UnpluggedOptions.getInstance().getDefaultDurationMins();
     private long startAtMillis = System.currentTimeMillis();
     private long timeoutAtMillis = -1L;
-    private long lastTickAtMillis = System.currentTimeMillis();
     private String reason = "";
     private @Nullable String outcome = null;
-
-    private boolean isSpawnStatePending = true;
-    private boolean isAlive = true;
-    private boolean isTimedOut = false;
 
     public UnpluggedServerPlayer(MinecraftServer server, ServerLevel level, GameProfile gameProfile, ClientInformation clientInformation) {
         super(server, level, gameProfile, clientInformation);
@@ -100,15 +96,17 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         }
 
         // Remove invalid bots that are still ticking
-        if (!this.isSpawnStatePending && !this.isAlive) {
-            final var name = this.getName();
-            final var outcome = Component.literal("Invalid");
+//        if (!this.isSpawnStatePending && !this.isAlive) {
+//            final var outcome = Component.literal("Invalid");
+//            this.kill(outcome);
+//            server.getPlayerList().remove(this);
+//        }
 
-            this.kill(outcome);
-            server.getPlayerList().remove(this);
+        if (System.currentTimeMillis() >= this.timeoutAtMillis) {
+            final var reason = Component.literal("Expired");
+            this.kill(reason);
         }
 
-        this.tickBot(server);
         this.connection.resetPosition();
         this.level().getChunkSource().move(this);
 
@@ -132,15 +130,6 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
 
     private void killBot() {
         // TODO
-    }
-
-    private void tickBot(MinecraftServer server) {
-        final long now = System.currentTimeMillis();
-
-        final long delta = now - this.lastTickAtMillis;
-        this.lastTickAtMillis = now;
-
-        // TODO: Entry ops
     }
 
     private static CompletableFuture<GameProfile> fetchGameProfile(MinecraftServer server, final UUID uuid) {
