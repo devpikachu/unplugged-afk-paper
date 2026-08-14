@@ -2,6 +2,7 @@ package dev.detpikachu.unpluggedAfk.player;
 
 import com.mojang.authlib.GameProfile;
 import dev.detpikachu.unpluggedAfk.UnpluggedConstants;
+import dev.detpikachu.unpluggedAfk.UnpluggedPlayerManager;
 import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -56,7 +57,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     }
 
     public void kill(Component message) {
-        this.killBot();
+        UnpluggedPlayerManager.getInstance().remove(this);
 
         if (message.getContents() instanceof TranslatableContents text && text.getKey().equals(UnpluggedConstants.DISCONNECT_DUPLICATE_LOGIN)) {
             this.connection.onDisconnect(new DisconnectionDetails(message));
@@ -126,10 +127,6 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         playerList.broadcastAll(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LISTED, this));
 
         this.isSpawnStatePending = false;
-    }
-
-    private void killBot() {
-        // TODO
     }
 
     private static CompletableFuture<GameProfile> fetchGameProfile(MinecraftServer server, final UUID uuid) {

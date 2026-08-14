@@ -8,7 +8,6 @@ import io.papermc.paper.util.KeepAlive;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.MinecraftServer;
@@ -32,12 +31,16 @@ public final class UnpluggedPlayerManager {
         return INSTANCE;
     }
 
-    public boolean contains(@Nonnull UUID uuid) {
+    public boolean contains(UUID uuid) {
         return this.players.containsKey(uuid);
     }
 
     public @Nullable UnpluggedServerPlayer get(UUID uuid) {
         return this.players.get(uuid);
+    }
+
+    public void remove(UnpluggedServerPlayer player) {
+        this.players.remove(player.getUUID());
     }
 
     public UnpluggedServerPlayer createDummy(MinecraftServer server, ServerLevel level, UUID uuid, String name, int durationMins, String reason) {
@@ -58,11 +61,7 @@ public final class UnpluggedPlayerManager {
         return unpluggedPlayer;
     }
 
-    private void add(@Nonnull UnpluggedServerPlayer player) {
+    private void add(UnpluggedServerPlayer player) {
         this.players.put(player.getUUID(), player);
-    }
-
-    private void remove(@Nonnull UUID uuid) {
-        this.players.remove(uuid);
     }
 }
