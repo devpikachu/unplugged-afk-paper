@@ -60,7 +60,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     }
 
     public void kill(Component message) {
-        // TODO: Kill shadow
+        this.killBot();
 
         if (message.getContents() instanceof TranslatableContents text && text.getKey().equals(UnpluggedConstants.DISCONNECT_DUPLICATE_LOGIN)) {
             this.connection.onDisconnect(new DisconnectionDetails(message));
@@ -106,8 +106,6 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
 
             this.kill(outcome);
             server.getPlayerList().remove(this);
-
-            // TODO: Send leave message?
         }
 
         this.tickBot(server);
@@ -122,15 +120,6 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         }
     }
 
-    private void tickBot(MinecraftServer server) {
-        final long now = System.currentTimeMillis();
-
-        final long delta = now - this.lastTickMillis;
-        this.lastTickMillis = now;
-
-        // TODO: Entry ops
-    }
-
     private void applyDeferredSpawnState(MinecraftServer server) {
         var playerList = server.getPlayerList();
 
@@ -139,6 +128,19 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         playerList.broadcastAll(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LISTED, this));
 
         this.isSpawnStatePending = false;
+    }
+
+    private void killBot() {
+        // TODO
+    }
+
+    private void tickBot(MinecraftServer server) {
+        final long now = System.currentTimeMillis();
+
+        final long delta = now - this.lastTickMillis;
+        this.lastTickMillis = now;
+
+        // TODO: Entry ops
     }
 
     private static CompletableFuture<GameProfile> fetchGameProfile(MinecraftServer server, final UUID uuid) {

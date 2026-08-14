@@ -7,12 +7,12 @@ import org.jetbrains.annotations.NotNull;
 
 public final class UnpluggedOptions implements ConfigurationSerializable {
 
-    private static UnpluggedOptions instance;
+    private static final UnpluggedOptions INSTANCE = new UnpluggedOptions();
 
     private boolean isDebug;
 
     public static UnpluggedOptions getInstance() {
-        return instance;
+        return INSTANCE;
     }
 
     public boolean getIsDebug() {
@@ -29,10 +29,6 @@ public final class UnpluggedOptions implements ConfigurationSerializable {
     }
 
     public static void deserialize(Map<String, Object> data) {
-        var options = new UnpluggedOptions();
-
-        options.isDebug = (boolean) data.get("debug");
-
-        instance = options;
+        INSTANCE.isDebug = (boolean) data.get("debug");
     }
 }
