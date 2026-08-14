@@ -2,12 +2,13 @@ package dev.detpikachu.unpluggedAfk.player;
 
 import com.mojang.authlib.GameProfile;
 import dev.detpikachu.unpluggedAfk.UnpluggedConstants;
+import dev.detpikachu.unpluggedAfk.bookkeeping.UnpluggedStatus;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import javax.annotation.Nullable;
 import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
-import net.minecraft.network.protocol.game.ClientboundPlayerInfoRemovePacket;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundRotateHeadPacket;
 import net.minecraft.server.MinecraftServer;
@@ -19,44 +20,20 @@ import net.minecraft.world.item.component.ResolvableProfile;
 
 public final class UnpluggedServerPlayer extends ServerPlayer {
 
+    private UnpluggedStatus status = UnpluggedStatus.ACTIVE;
+    private int durationMins = UnpluggedConstants.DEFAULT_DURATION;
+    private long startAtMillis = System.currentTimeMillis();
+    private long timeoutAtMillis = -1L;
+    private long lastTickAtMillis = System.currentTimeMillis();
+    private String reason = "";
+    private @Nullable String outcome = null;
+
     private boolean isSpawnStatePending = true;
-    private int durationMinutes = 0;
-    private String reason;
-    private String outcome;
-    private long startAtMillis;
-    private long timeoutMillis = -1L;
-    private long lastTickMillis;
     private boolean isAlive = true;
     private boolean isTimedOut = false;
 
     public UnpluggedServerPlayer(MinecraftServer server, ServerLevel level, GameProfile gameProfile, ClientInformation clientInformation) {
         super(server, level, gameProfile, clientInformation);
-        startAtMillis = System.currentTimeMillis();
-        lastTickMillis = System.currentTimeMillis();
-    }
-
-    public int getDurationMinutes() {
-        return this.durationMinutes;
-    }
-
-    public String getReason() {
-        return this.reason;
-    }
-
-    public long getStartAtMillis() {
-        return this.startAtMillis;
-    }
-
-    public long getTimeoutMillis() {
-        return this.timeoutMillis;
-    }
-
-    public void setTimeoutMillis(long timeoutMillis) {
-        this.timeoutMillis = timeoutMillis;
-    }
-
-    public boolean isAlive() {
-        return this.isAlive;
     }
 
     public void kill(Component message) {
@@ -137,8 +114,8 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     private void tickBot(MinecraftServer server) {
         final long now = System.currentTimeMillis();
 
-        final long delta = now - this.lastTickMillis;
-        this.lastTickMillis = now;
+        final long delta = now - this.lastTickAtMillis;
+        this.lastTickAtMillis = now;
 
         // TODO: Entry ops
     }
