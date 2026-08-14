@@ -12,7 +12,11 @@ public final class AdminCommands {
     public static LiteralCommandNode<CommandSourceStack> construct() {
         var root = Commands.literal(CMD_UNPLUGGED);
 
-        root.then(AdminDebugCommands.construct());
+        // TODO: Permissions
+        root
+                .requires(sender -> sender.getSender().isOp())
+                .then(AdminDebugCommands.construct())
+                .then(AdminStatsCommand.construct());
 
         return root.build();
     }

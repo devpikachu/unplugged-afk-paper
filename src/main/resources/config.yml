@@ -1,1 +1,2 @@
-debug: true
+defaultDurationMins: 480
+maxDurationMins: 480

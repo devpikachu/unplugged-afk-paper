@@ -2,6 +2,7 @@ package dev.detpikachu.unpluggedAfk.player;
 
 import com.mojang.authlib.GameProfile;
 import dev.detpikachu.unpluggedAfk.UnpluggedConstants;
+import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
@@ -19,7 +20,7 @@ import net.minecraft.world.item.component.ResolvableProfile;
 
 public final class UnpluggedServerPlayer extends ServerPlayer {
 
-    private int durationMins = UnpluggedConstants.DEFAULT_DURATION;
+    private int durationMins = UnpluggedOptions.getInstance().getDefaultDurationMins();
     private long startAtMillis = System.currentTimeMillis();
     private long timeoutAtMillis = -1L;
     private long lastTickAtMillis = System.currentTimeMillis();
@@ -32,6 +33,30 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
 
     public UnpluggedServerPlayer(MinecraftServer server, ServerLevel level, GameProfile gameProfile, ClientInformation clientInformation) {
         super(server, level, gameProfile, clientInformation);
+    }
+
+    public int getDurationMins() {
+        return this.durationMins;
+    }
+
+    public void setDurationMins(int durationMins) {
+        // TODO: Not ideal since it swallows invalid input. Good enough for MVP.
+        final var maxDurationMins = UnpluggedOptions.getInstance().getMaxDurationMins();
+
+        if (durationMins > maxDurationMins) {
+            durationMins = maxDurationMins;
+        }
+
+        this.durationMins = durationMins;
+        this.timeoutAtMillis = System.currentTimeMillis() + (this.durationMins * 60000L);
+    }
+
+    public String getReason() {
+        return this.reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 
     public void kill(Component message) {

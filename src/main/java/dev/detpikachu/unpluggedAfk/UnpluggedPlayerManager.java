@@ -40,7 +40,7 @@ public final class UnpluggedPlayerManager {
         return this.players.get(uuid);
     }
 
-    public UnpluggedServerPlayer createDummy(MinecraftServer server, ServerLevel level, UUID uuid, String name) {
+    public UnpluggedServerPlayer createDummy(MinecraftServer server, ServerLevel level, UUID uuid, String name, int durationMins, String reason) {
         final var profile = new GameProfile(uuid, name);
         final var clientInformation = ClientInformation.createDefault();
         final var cookie = new CommonListenerCookie(profile, 0, clientInformation, true, null, new HashSet<>(), new KeepAlive());
@@ -52,6 +52,8 @@ public final class UnpluggedPlayerManager {
         server.getPlayerList().placeNewPlayer(connection, unpluggedPlayer, cookie);
         unpluggedPlayer.connection = new UnpluggedGamePacketListener(server, connection, unpluggedPlayer, cookie);
         unpluggedPlayer.gameMode.changeGameModeForPlayer(GameType.DEFAULT_MODE, PlayerGameModeChangeEvent.Cause.DEFAULT_GAMEMODE, null);
+        unpluggedPlayer.setDurationMins(durationMins);
+        unpluggedPlayer.setReason(reason);
 
         return unpluggedPlayer;
     }
