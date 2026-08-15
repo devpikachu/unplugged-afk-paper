@@ -6,15 +6,12 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.detpikachu.unpluggedAfk.UnpluggedPlayerManager;
-import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
+import dev.detpikachu.unpluggedAfk.player.UnpluggedSession;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.CraftServer;
-import org.bukkit.craftbukkit.CraftWorld;
 
-import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandErrors.ERR_NOT_A_PLAYER;
-import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandErrors.errDurationTooLarge;
+import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandGuards.requireDuration;
+import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandGuards.requireExecutor;
 
 public final class AdminDebugSpawnFakeCommand {
 
@@ -29,56 +26,22 @@ public final class AdminDebugSpawnFakeCommand {
         final var durationMins = Commands.argument(ARG_DURATION_MINS, IntegerArgumentType.integer(1));
         final var reason = Commands.argument(ARG_REASON, StringArgumentType.greedyString());
 
-        return root.then(durationMins.then(reason.executes(AdminDebugSpawnFakeCommand::executeWithReason)).executes(AdminDebugSpawnFakeCommand::execute));
+        return root.then(durationMins
+                .then(reason.executes(context -> execute(context, context.getArgument(ARG_REASON, String.class))))
+                .executes(context -> execute(context, null)));
     }
 
-    private static int execute(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-        final var server = ((CraftServer) Bukkit.getServer()).getServer();
-        final var sender = context.getSource().getSender();
-        final var executor = context.getSource().getExecutor();
+    private static int execute(CommandContext<CommandSourceStack> context, String reason) throws CommandSyntaxException {
+        final var executor = requireExecutor(context);
+        final var durationMins = requireDuration(context, ARG_DURATION_MINS);
 
-        if (executor == null) {
-            throw ERR_NOT_A_PLAYER.create();
-        }
+        final var effectiveReason = (reason == null || reason.isBlank())
+                ? executor.getName().getString()
+                : reason;
 
-        final var level = ((CraftWorld) executor.getWorld()).getHandle();
-
-        final var durationMins = context.getArgument(ARG_DURATION_MINS, int.class);
-        if (durationMins > UnpluggedOptions.getInstance().getMaxDurationMins()) {
-            throw errDurationTooLarge(durationMins).create();
-        }
-
-        // TODO: Try-catch
-        final var unpluggedPlayer = UnpluggedPlayerManager.getInstance().createFake(server, level, durationMins, sender.getName());
-        unpluggedPlayer.connection.teleport(executor.getX(), executor.getY(), executor.getZ(), executor.getYaw(), executor.getPitch());
-
-        return 1;
-    }
-
-    private static int executeWithReason(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-        final var server = ((CraftServer) Bukkit.getServer()).getServer();
-        final var sender = context.getSource().getSender();
-        final var executor = context.getSource().getExecutor();
-
-        if (executor == null) {
-            throw ERR_NOT_A_PLAYER.create();
-        }
-
-        final var level = ((CraftWorld) executor.getWorld()).getHandle();
-
-        final var durationMins = context.getArgument(ARG_DURATION_MINS, int.class);
-        if (durationMins > UnpluggedOptions.getInstance().getMaxDurationMins()) {
-            throw errDurationTooLarge(durationMins).create();
-        }
-
-        var reason = context.getArgument(ARG_REASON, String.class);
-        if (reason == null || reason.isBlank()) {
-            reason = sender.getName();
-        }
-
-        // TODO: Try-catch
-        final var unpluggedPlayer = UnpluggedPlayerManager.getInstance().createFake(server, level, durationMins, reason);
-        unpluggedPlayer.connection.teleport(executor.getX(), executor.getY(), executor.getZ(), executor.getYaw(), executor.getPitch());
+        final var unpluggedPlayer = UnpluggedPlayerManager.getInstance()
+                .createFake(executor.level(), new UnpluggedSession(durationMins, effectiveReason, true));
+        unpluggedPlayer.connection.teleport(executor.getX(), executor.getY(), executor.getZ(), executor.getYRot(), executor.getXRot());
 
         return 1;
     }

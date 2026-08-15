@@ -33,7 +33,7 @@ public final class UnpluggedConnection extends Connection {
 
     @Override
     public void handleDisconnection() {
-        this.channel.close();
+        this.closeChannel();
     }
 
     @Override
@@ -54,5 +54,9 @@ public final class UnpluggedConnection extends Connection {
     @Override
     public @NonNull SocketAddress getRemoteAddress() {
         return ADDRESS;
+    }
+
+    public void closeChannel() {
+        this.channel.close();
     }
 }

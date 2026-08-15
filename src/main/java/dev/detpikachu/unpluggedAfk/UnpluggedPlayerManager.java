@@ -1,25 +1,24 @@
 package dev.detpikachu.unpluggedAfk;
 
 import com.mojang.authlib.GameProfile;
+import dev.detpikachu.unpluggedAfk.exceptions.UnplugFailedException;
 import dev.detpikachu.unpluggedAfk.formatting.UnpluggedChatFormatting;
 import dev.detpikachu.unpluggedAfk.network.UnpluggedConnection;
 import dev.detpikachu.unpluggedAfk.network.UnpluggedGamePacketListener;
+import dev.detpikachu.unpluggedAfk.player.UnpluggedFakeIdentity;
 import dev.detpikachu.unpluggedAfk.player.UnpluggedServerPlayer;
+import dev.detpikachu.unpluggedAfk.player.UnpluggedSession;
 import io.papermc.paper.util.KeepAlive;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 import net.minecraft.network.protocol.PacketFlow;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
-import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.level.GameType;
-import net.minecraft.world.level.storage.TagValueInput;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 
@@ -28,9 +27,7 @@ import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.EXCEPTION_FAILED_TO
 public final class UnpluggedPlayerManager {
 
     private static final UnpluggedPlayerManager INSTANCE = new UnpluggedPlayerManager();
-    private static final String FAKE_NAME = "Fakeson_";
-    private static final String SUFFIX_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    private static final int SUFFIX_LENGTH = 4;
+
 
     private final ConcurrentHashMap.KeySetView<UUID, Boolean> pending;
     private final ConcurrentHashMap<UUID, UnpluggedServerPlayer> players;
@@ -42,6 +39,10 @@ public final class UnpluggedPlayerManager {
 
     public static UnpluggedPlayerManager getInstance() {
         return INSTANCE;
+    }
+
+    public int count() {
+        return this.players.size();
     }
 
     public boolean isPending(UUID uuid) {
@@ -56,75 +57,48 @@ public final class UnpluggedPlayerManager {
         this.players.remove(player.getUUID());
     }
 
-    public UnpluggedServerPlayer unplugPlayer(MinecraftServer server, ServerLevel level, ServerPlayer player, int durationMins, String reason) {
+    public void createPlayer(ServerPlayer player, UnpluggedSession session) {
+        final var uuid = player.getUUID();
+        final var level = player.level();
+        final var server = level.getServer();
+
         try {
-            pending.add(player.getUUID());
-            player.getBukkitEntity().kick(UnpluggedChatFormatting.formatUnplugged(durationMins, reason), PlayerKickEvent.Cause.PLUGIN);
+            pending.add(uuid);
+            player.getBukkitEntity().kick(
+                    UnpluggedChatFormatting.formatUnplugged(session.durationMins(), session.reason()),
+                    PlayerKickEvent.Cause.PLUGIN);
 
             if (server.getPlayerList().getPlayer(player.getUUID()) != null) {
-                throw new RuntimeException(EXCEPTION_FAILED_TO_DISCONNECT);
+                throw new UnplugFailedException(EXCEPTION_FAILED_TO_DISCONNECT);
             }
 
-            final var unpluggedPlayer = this.create(server, level, player.gameProfile, player.clientInformation(), durationMins, reason);
-
-            // Load player NBT
-            try (ProblemReporter.ScopedCollector logger = new ProblemReporter.ScopedCollector(unpluggedPlayer.problemPath(), UnpluggedAfk.LOGGER)) {
-                final var opt = unpluggedPlayer
-                        .level()
-                        .getServer()
-                        .getPlayerList()
-                        .loadPlayerData(unpluggedPlayer.nameAndId())
-                        .map(nbt -> TagValueInput.create(logger, unpluggedPlayer.registryAccess(), nbt));
-
-                opt.ifPresent(data -> {
-                    unpluggedPlayer.load(data);
-                    unpluggedPlayer.loadAndSpawnEnderPearls(data);
-                    unpluggedPlayer.loadAndSpawnParentVehicle(data);
-                });
-            }
-
-            return unpluggedPlayer;
+            this.create(level, player.gameProfile, player.clientInformation(), session);
         } finally {
             this.pending.remove(player.getUUID());
         }
     }
 
-    public UnpluggedServerPlayer createFake(MinecraftServer server, ServerLevel level, int durationMins, String reason) {
-        final var profile = new GameProfile(UUID.randomUUID(), FAKE_NAME + randomSuffix());
-        final var clientInformation = ClientInformation.createDefault();
-
-        final var unpluggedPlayer = this.create(server, level, profile, clientInformation, durationMins, reason);
+    public UnpluggedServerPlayer createFake(ServerLevel level, UnpluggedSession session) {
+        final var unpluggedPlayer = this.create(level, UnpluggedFakeIdentity.random().toProfile(), ClientInformation.createDefault(), session);
 
         unpluggedPlayer.gameMode.changeGameModeForPlayer(GameType.DEFAULT_MODE, PlayerGameModeChangeEvent.Cause.DEFAULT_GAMEMODE, null);
-        unpluggedPlayer.setIsFake(true);
         unpluggedPlayer.getBukkitEntity().setPersistent(false);
 
         return unpluggedPlayer;
     }
 
-    private UnpluggedServerPlayer create(MinecraftServer server, ServerLevel level, GameProfile profile, ClientInformation clientInformation, int durationMins, String reason) {
+    private UnpluggedServerPlayer create(ServerLevel level, GameProfile profile, ClientInformation clientInformation, UnpluggedSession session) {
+        final var server = level.getServer();
         final var cookie = new CommonListenerCookie(profile, 0, clientInformation, true, null, new HashSet<>(), new KeepAlive());
         final var connection = new UnpluggedConnection(PacketFlow.SERVERBOUND);
 
-        final var unpluggedPlayer = new UnpluggedServerPlayer(server, level, profile, clientInformation);
-        this.players.put(unpluggedPlayer.getUUID(), unpluggedPlayer);
+        final var unpluggedPlayer = new UnpluggedServerPlayer(server, level, profile, clientInformation, connection, session);
 
         server.getPlayerList().placeNewPlayer(connection, unpluggedPlayer, cookie);
         unpluggedPlayer.connection = new UnpluggedGamePacketListener(server, connection, unpluggedPlayer, cookie);
-        unpluggedPlayer.setDurationMins(durationMins);
-        unpluggedPlayer.setReason(reason);
+
+        this.players.put(unpluggedPlayer.getUUID(), unpluggedPlayer);
 
         return unpluggedPlayer;
-    }
-
-    private static String randomSuffix() {
-        final var random = ThreadLocalRandom.current();
-        final var suffix = new StringBuilder(SUFFIX_LENGTH);
-
-        for (var i = 0; i < SUFFIX_LENGTH; i++) {
-            suffix.append(SUFFIX_ALPHABET.charAt(random.nextInt(SUFFIX_ALPHABET.length())));
-        }
-
-        return suffix.toString();
     }
 }

@@ -1,7 +1,8 @@
 package dev.detpikachu.unpluggedAfk.player;
 
 import com.mojang.authlib.GameProfile;
-import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
+import dev.detpikachu.unpluggedAfk.UnpluggedAfk;
+import dev.detpikachu.unpluggedAfk.network.UnpluggedConnection;
 import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
@@ -12,11 +13,13 @@ import net.minecraft.server.TickTask;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.portal.TeleportTransition;
+import net.minecraft.world.level.storage.TagValueInput;
 import org.jspecify.annotations.NonNull;
 
 import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.KILL_REASON_EXPIRED;
@@ -24,40 +27,31 @@ import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.KILL_REASON_REMOVED
 
 public final class UnpluggedServerPlayer extends ServerPlayer {
 
-    private boolean isFake = false;
+    private final UnpluggedConnection unpluggedConnection;
+    private final UnpluggedSession session;
+    private final long startAtMillis = System.currentTimeMillis();
+    private final long timeoutAtMillis;
+
     private boolean isSpawnStatePending = true;
     private boolean isKilled = false;
-    private int durationMins;
-    private final long startAtMillis = System.currentTimeMillis();
-    private long timeoutAtMillis = Long.MAX_VALUE;
-    private String reason = "";
 
-    public UnpluggedServerPlayer(MinecraftServer server, ServerLevel level, GameProfile gameProfile, ClientInformation clientInformation) {
+    public UnpluggedServerPlayer(MinecraftServer server, ServerLevel level, GameProfile gameProfile, ClientInformation clientInformation, UnpluggedConnection unpluggedConnection, UnpluggedSession session) {
         super(server, level, gameProfile, clientInformation);
+        this.unpluggedConnection = unpluggedConnection;
+        this.session = session;
+        this.timeoutAtMillis = this.startAtMillis + (session.durationMins() * 60_000L);
     }
 
     public boolean isFake() {
-        return this.isFake;
-    }
-
-    public void setIsFake(boolean isFake) {
-        this.isFake = isFake;
+        return this.session.isFake();
     }
 
     public int getDurationMins() {
-        return this.durationMins;
+        return this.session.durationMins();
     }
 
-    public void setDurationMins(int durationMins) {
-        // TODO: Not ideal since it swallows invalid input. Good enough for MVP.
-        final var maxDurationMins = UnpluggedOptions.getInstance().getMaxDurationMins();
-
-        if (durationMins > maxDurationMins) {
-            durationMins = maxDurationMins;
-        }
-
-        this.durationMins = durationMins;
-        this.timeoutAtMillis = System.currentTimeMillis() + (this.durationMins * 60000L);
+    public String getReason() {
+        return this.session.reason();
     }
 
     public long getStartAtMillis() {
@@ -66,30 +60,6 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
 
     public long getTimeoutAtMillis() {
         return this.timeoutAtMillis;
-    }
-
-    public String getReason() {
-        return this.reason;
-    }
-
-    public void setReason(String reason) {
-        this.reason = reason;
-    }
-
-    public void kill(Component message) {
-        if (this.isKilled) {
-            return;
-        }
-
-        final var server = this.level().getServer();
-        server.schedule(
-                new TickTask(server.getTickCount(), () -> {
-                    this.connection.onDisconnect(new DisconnectionDetails(message));
-                    this.connection.connection.channel.close();
-                })
-        );
-
-        this.isKilled = true;
     }
 
     @Override
@@ -165,6 +135,38 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         }
 
         this.kill(Component.literal(KILL_REASON_REMOVED));
+    }
+
+    public void kill(Component message) {
+        if (this.isKilled) {
+            return;
+        }
+
+        final var server = this.level().getServer();
+        server.schedule(
+                new TickTask(server.getTickCount(), () -> {
+                    this.connection.onDisconnect(new DisconnectionDetails(message));
+                    this.unpluggedConnection.closeChannel();
+                })
+        );
+
+        this.isKilled = true;
+    }
+
+    public void loadPersistedData() {
+        try (var reporter = new ProblemReporter.ScopedCollector(this.problemPath(), UnpluggedAfk.LOGGER)) {
+            this
+                    .level()
+                    .getServer()
+                    .getPlayerList()
+                    .loadPlayerData(this.nameAndId())
+                    .map(nbt -> TagValueInput.create(reporter, this.registryAccess(), nbt))
+                    .ifPresent(data -> {
+                        this.load(data);
+                        this.loadAndSpawnEnderPearls(data);
+                        this.loadAndSpawnParentVehicle(data);
+                    });
+        }
     }
 
     private void applyDeferredSpawnState(MinecraftServer server) {

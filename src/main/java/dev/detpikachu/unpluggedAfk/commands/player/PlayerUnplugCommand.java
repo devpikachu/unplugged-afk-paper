@@ -5,20 +5,18 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import dev.detpikachu.unpluggedAfk.UnpluggedAfk;
 import dev.detpikachu.unpluggedAfk.UnpluggedPlayerManager;
-import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
+import dev.detpikachu.unpluggedAfk.exceptions.UnplugFailedException;
+import dev.detpikachu.unpluggedAfk.player.UnpluggedSession;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import net.minecraft.server.level.ServerPlayer;
-import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.CraftServer;
-import org.bukkit.craftbukkit.CraftWorld;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
 
 import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.PERM_UNPLUG;
-import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandErrors.ERR_NOT_A_PLAYER;
+import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandErrors.ERR_GENERIC;
 import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandErrors.ERR_REASON_REQUIRED;
-import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandErrors.errDurationTooLarge;
+import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandGuards.requireDuration;
+import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandGuards.requireExecutor;
 
 public final class PlayerUnplugCommand {
 
@@ -40,35 +38,20 @@ public final class PlayerUnplugCommand {
     }
 
     private static int execute(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
-        final var server = ((CraftServer) Bukkit.getServer()).getServer();
-        final var executor = context.getSource().getExecutor();
-
-        if (executor == null) {
-            throw ERR_NOT_A_PLAYER.create();
-        }
-
-        final var level = ((CraftWorld) executor.getWorld()).getHandle();
-
-        final var durationMins = context.getArgument(ARG_DURATION_MINS, int.class);
-        if (durationMins > UnpluggedOptions.getInstance().getMaxDurationMins()) {
-            throw errDurationTooLarge(durationMins).create();
-        }
-
+        final var player = requireExecutor(context);
+        final var durationMins = requireDuration(context, ARG_DURATION_MINS);
         final var reason = context.getArgument(ARG_REASON, String.class);
+
         if (reason == null || reason.isBlank()) {
             throw ERR_REASON_REQUIRED.create();
         }
 
-        if (!(executor instanceof CraftPlayer craftPlayer)) {
-            throw ERR_NOT_A_PLAYER.create();
+        try {
+            UnpluggedPlayerManager.getInstance().createPlayer(player, new UnpluggedSession(durationMins, reason, false));
+        } catch (UnplugFailedException exception) {
+            UnpluggedAfk.LOGGER.error("Failed to unplug player {} ({})", player.getName(), player.getUUID(), exception);
+            throw ERR_GENERIC.create();
         }
-
-        if (!(craftPlayer.getHandle() instanceof ServerPlayer player)) {
-            throw ERR_NOT_A_PLAYER.create();
-        }
-
-        // TODO: Try-catch
-        UnpluggedPlayerManager.getInstance().unplugPlayer(server, level, player, durationMins, reason);
 
         return 1;
     }
