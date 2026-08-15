@@ -14,6 +14,8 @@ import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 
+import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.PERM_UNPLUG;
+
 public final class PlayerUnplugCommand {
 
     private final static String CMD_UNPLUG = "unplug";
@@ -27,9 +29,10 @@ public final class PlayerUnplugCommand {
         final var durationMins = Commands.argument(ARG_DURATION_MINS, IntegerArgumentType.integer(1, UnpluggedOptions.getInstance().getMaxDurationMins()));
         final var reason = Commands.argument(ARG_REASON, StringArgumentType.greedyString());
 
-        root.then(durationMins.then(reason.executes(PlayerUnplugCommand::execute)));
-
-        return root.build();
+        return root
+                .requires(sender -> sender.getSender().hasPermission(PERM_UNPLUG))
+                .then(durationMins.then(reason.executes(PlayerUnplugCommand::execute)))
+                .build();
     }
 
     private static int execute(CommandContext<CommandSourceStack> context) {

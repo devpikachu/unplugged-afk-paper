@@ -4,3 +4,15 @@ version: '${version}'
 main: dev.detpikachu.unpluggedAfk.UnpluggedAfk
 api-version: '1.21.11'
 load: POSTWORLD
+
+permissions:
+  unplugged-afk.unplug:
+    description: Gives access to the '/unplug' player command
+    default: true
+  unplugged-afk.admin:
+    description: Gives access to all admin commands
+    default: op
+  unplugged-afk.admin.info:
+    description: Gives access to the '/unplugged info' admin command
+  unplugged-afk.admin.debug:
+    description: Gives access to the '/unplugged debug' admin command and its subcommands

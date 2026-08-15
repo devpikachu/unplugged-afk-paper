@@ -13,6 +13,9 @@ import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 
+import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.PERM_ADMIN;
+import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.PERM_ADMIN_INFO;
+
 public final class AdminInfoCommand {
 
     private final static String CMD_INFO = "info";
@@ -24,9 +27,9 @@ public final class AdminInfoCommand {
 
         final var player = Commands.argument(ARG_PLAYER, ArgumentTypes.player());
 
-        root.executes(AdminInfoCommand::execute).then(player.executes(AdminInfoCommand::executeWithPlayer));
-
-        return root;
+        return root
+                .requires(sender -> sender.getSender().hasPermission(PERM_ADMIN) || sender.getSender().hasPermission(PERM_ADMIN_INFO))
+                .executes(AdminInfoCommand::execute).then(player.executes(AdminInfoCommand::executeWithPlayer));
     }
 
     private static int execute(CommandContext<CommandSourceStack> context) {

@@ -29,9 +29,7 @@ public final class AdminDebugSpawnFakeCommand {
         final var durationMins = Commands.argument(ARG_DURATION_MINS, IntegerArgumentType.integer(1, UnpluggedOptions.getInstance().getMaxDurationMins()));
         final var reason = Commands.argument(ARG_REASON, StringArgumentType.greedyString());
 
-        root.then(durationMins.then(reason.executes(AdminDebugSpawnFakeCommand::executeWithReason)).executes(AdminDebugSpawnFakeCommand::execute));
-
-        return root;
+        return root.then(durationMins.then(reason.executes(AdminDebugSpawnFakeCommand::executeWithReason)).executes(AdminDebugSpawnFakeCommand::execute));
     }
 
     private static int execute(CommandContext<CommandSourceStack> context) {

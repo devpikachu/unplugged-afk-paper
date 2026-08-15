@@ -2,7 +2,6 @@ package dev.detpikachu.unpluggedAfk.player;
 
 import com.mojang.authlib.GameProfile;
 import dev.detpikachu.unpluggedAfk.UnpluggedConstants;
-import dev.detpikachu.unpluggedAfk.UnpluggedPlayerManager;
 import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
 import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.network.chat.Component;
