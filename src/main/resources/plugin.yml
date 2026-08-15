@@ -1,5 +1,8 @@
 name: unplugged-afk
 version: '${version}'
+description: Save electricity by disconnecting from the server and leaving your character to do the AFKing for you!
+author: Andrei "detpikachu" Hava
+website: https://github.com/devpikachu/unplugged-afk-paper
 
 main: dev.detpikachu.unpluggedAfk.UnpluggedAfk
 api-version: '${apiVersion}'
