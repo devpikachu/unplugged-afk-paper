@@ -1,8 +1,8 @@
 # Unplugged-AFK Paper
 
-**Unplugged-AFK Paper** is a feature- **incomplete** port / rewrite of the
+**Unplugged-AFK Paper** is a **feature-incomplete** port / rewrite of the
 amazing [Unplugged-AFK](https://github.com/sakura-ryoko/unplugged-afk) Fabric mod by Sakura Ryoko, published under the
-LGPL3-or-later SPDX identifier.
+LGPL3-or-later license.
 
 This is an eco-friendly Paper plugin that allows Players to "go unplugged" for a certain amount of time. By executing a
 command, a bot (or unplugged player) of themselves is spawned to stand AFK at farms, at the same time disconnecting
