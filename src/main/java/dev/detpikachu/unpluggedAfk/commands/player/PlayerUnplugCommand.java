@@ -70,7 +70,7 @@ public final class PlayerUnplugCommand {
         player.connection.disconnect(Component.literal("AFK'd"));
 
         // Spawn unplugged player
-        final var unpluggedPlayer = UnpluggedPlayerManager.getInstance().create(server, level, player, durationMins, reason);
+        final var unpluggedPlayer = UnpluggedPlayerManager.getInstance().unplugPlayer(server, level, player, durationMins, reason);
         unpluggedPlayer.snapTo(x, y, z, yRot, xRot);
 
         return 1;

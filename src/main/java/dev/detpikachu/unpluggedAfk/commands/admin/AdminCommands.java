@@ -16,7 +16,7 @@ public final class AdminCommands {
         root
                 .requires(sender -> sender.getSender().isOp())
                 .then(AdminDebugCommands.construct())
-                .then(AdminStatsCommand.construct());
+                .then(AdminInfoCommand.construct());
 
         return root.build();
     }

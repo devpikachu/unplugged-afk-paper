@@ -44,18 +44,21 @@ public final class UnpluggedPlayerManager {
         this.players.remove(player.getUUID());
     }
 
-    public UnpluggedServerPlayer create(MinecraftServer server, ServerLevel level, ServerPlayer player, int durationMins, String reason) {
-        final var profile = player.gameProfile;
-        return this.create(server, level, profile, durationMins, reason);
+    public UnpluggedServerPlayer unplugPlayer(MinecraftServer server, ServerLevel level, ServerPlayer player, int durationMins, String reason) {
+        return this.create(server, level, player.gameProfile, player.clientInformation(), durationMins, reason);
     }
 
-    public UnpluggedServerPlayer create(MinecraftServer server, ServerLevel level, UUID uuid, String name, int durationMins, String reason) {
+    public UnpluggedServerPlayer createFake(MinecraftServer server, ServerLevel level, UUID uuid, String name, int durationMins, String reason) {
         final var profile = new GameProfile(uuid, name);
-        return this.create(server, level, profile, durationMins, reason);
+        final var clientInformation = ClientInformation.createDefault();
+
+        final var unpluggedPlayer = this.create(server, level, profile, clientInformation, durationMins, reason);
+        unpluggedPlayer.setIsFake(true);
+
+        return unpluggedPlayer;
     }
 
-    private UnpluggedServerPlayer create(MinecraftServer server, ServerLevel level, GameProfile profile, int durationMins, String reason) {
-        final var clientInformation = ClientInformation.createDefault();
+    private UnpluggedServerPlayer create(MinecraftServer server, ServerLevel level, GameProfile profile, ClientInformation clientInformation, int durationMins, String reason) {
         final var cookie = new CommonListenerCookie(profile, 0, clientInformation, true, null, new HashSet<>(), new KeepAlive());
         final var connection = new UnpluggedConnection(PacketFlow.SERVERBOUND);
 

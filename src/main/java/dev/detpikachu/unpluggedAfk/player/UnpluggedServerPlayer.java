@@ -17,6 +17,7 @@ import net.minecraft.server.level.ServerPlayer;
 
 public final class UnpluggedServerPlayer extends ServerPlayer {
 
+    private boolean isFake = false;
     private boolean isSpawnStatePending = true;
     private int durationMins = UnpluggedOptions.getInstance().getDefaultDurationMins();
     private final long startAtMillis = System.currentTimeMillis();
@@ -25,6 +26,14 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
 
     public UnpluggedServerPlayer(MinecraftServer server, ServerLevel level, GameProfile gameProfile, ClientInformation clientInformation) {
         super(server, level, gameProfile, clientInformation);
+    }
+
+    public boolean getIsFake() {
+        return this.isFake;
+    }
+
+    public void setIsFake(boolean isFake) {
+        this.isFake = isFake;
     }
 
     public int getDurationMins() {
@@ -41,6 +50,14 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
 
         this.durationMins = durationMins;
         this.timeoutAtMillis = System.currentTimeMillis() + (this.durationMins * 60000L);
+    }
+
+    public long getStartAtMillis() {
+        return this.startAtMillis;
+    }
+
+    public long getTimeoutAtMillis() {
+        return this.timeoutAtMillis;
     }
 
     public String getReason() {
