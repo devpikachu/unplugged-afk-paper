@@ -69,7 +69,11 @@ public final class UnpluggedChatFormatting {
         }
 
         final var durationHours = durationMins / 60.f;
-        return text(durationHours, WHITE).append(text(" hour(s)", WHITE));
+        final var remainderDurationMins = durationMins % 60;
+        return text(durationHours, WHITE)
+                .append(text(" hour(s) ", WHITE))
+                .append(text(remainderDurationMins, WHITE))
+                .append(text(" minute(s)", WHITE));
     }
 
     private static Component formatTimestamp(long timestampMillis) {
@@ -86,6 +90,10 @@ public final class UnpluggedChatFormatting {
         }
 
         final var relativeHours = relativeMins / 60.f;
-        return text(relativeHours, WHITE).append(text(" hour(s)", WHITE));
+        final var remainderRelativeMins = relativeMins % 60;
+        return text(relativeHours, WHITE)
+                .append(text(" hour(s) ", WHITE))
+                .append(text(remainderRelativeMins, WHITE))
+                .append(text(" minute(s)", WHITE));
     }
 }
