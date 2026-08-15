@@ -9,6 +9,7 @@ import io.papermc.paper.util.KeepAlive;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.MinecraftServer;
@@ -27,6 +28,9 @@ import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.EXCEPTION_FAILED_TO
 public final class UnpluggedPlayerManager {
 
     private static final UnpluggedPlayerManager INSTANCE = new UnpluggedPlayerManager();
+    private static final String FAKE_NAME = "Fakeson_";
+    private static final String SUFFIX_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final int SUFFIX_LENGTH = 4;
 
     private final ConcurrentHashMap.KeySetView<UUID, Boolean> pending;
     private final ConcurrentHashMap<UUID, UnpluggedServerPlayer> players;
@@ -85,8 +89,8 @@ public final class UnpluggedPlayerManager {
         }
     }
 
-    public UnpluggedServerPlayer createFake(MinecraftServer server, ServerLevel level, UUID uuid, String name, int durationMins, String reason) {
-        final var profile = new GameProfile(uuid, name);
+    public UnpluggedServerPlayer createFake(MinecraftServer server, ServerLevel level, int durationMins, String reason) {
+        final var profile = new GameProfile(UUID.randomUUID(), FAKE_NAME + randomSuffix());
         final var clientInformation = ClientInformation.createDefault();
 
         final var unpluggedPlayer = this.create(server, level, profile, clientInformation, durationMins, reason);
@@ -110,5 +114,16 @@ public final class UnpluggedPlayerManager {
         unpluggedPlayer.setReason(reason);
 
         return unpluggedPlayer;
+    }
+
+    private static String randomSuffix() {
+        final var random = ThreadLocalRandom.current();
+        final var suffix = new StringBuilder(SUFFIX_LENGTH);
+
+        for (var i = 0; i < SUFFIX_LENGTH; i++) {
+            suffix.append(SUFFIX_ALPHABET.charAt(random.nextInt(SUFFIX_ALPHABET.length())));
+        }
+
+        return suffix.toString();
     }
 }

@@ -9,7 +9,6 @@ import dev.detpikachu.unpluggedAfk.UnpluggedPlayerManager;
 import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
@@ -22,9 +21,6 @@ public final class AdminDebugSpawnFakeCommand {
 
     private static final String ARG_DURATION_MINS = "durationMins";
     private static final String ARG_REASON = "reason";
-
-    private static final String DUMMY_UUID = "ccdb9503-cd7b-4ad2-b7cb-00d165a73e2a";
-    private static final String DUMMY_NAME = "Fakeson";
 
     public static LiteralArgumentBuilder<CommandSourceStack> construct() {
         final var root = Commands.literal(CMD_SPAWN_FAKE);
@@ -48,7 +44,7 @@ public final class AdminDebugSpawnFakeCommand {
         final var durationMins = context.getArgument(ARG_DURATION_MINS, int.class);
 
         // TODO: Try-catch
-        final var unpluggedPlayer = UnpluggedPlayerManager.getInstance().createFake(server, level, UUID.fromString(DUMMY_UUID), DUMMY_NAME, durationMins, sender.getName());
+        final var unpluggedPlayer = UnpluggedPlayerManager.getInstance().createFake(server, level, durationMins, sender.getName());
         unpluggedPlayer.connection.teleport(executor.getX(), executor.getY(), executor.getZ(), executor.getYaw(), executor.getPitch());
 
         return 1;
@@ -72,7 +68,7 @@ public final class AdminDebugSpawnFakeCommand {
         }
 
         // TODO: Try-catch
-        final var unpluggedPlayer = UnpluggedPlayerManager.getInstance().createFake(server, level, UUID.fromString(DUMMY_UUID), DUMMY_NAME, durationMins, reason);
+        final var unpluggedPlayer = UnpluggedPlayerManager.getInstance().createFake(server, level, durationMins, reason);
         unpluggedPlayer.connection.teleport(executor.getX(), executor.getY(), executor.getZ(), executor.getYaw(), executor.getPitch());
 
         return 1;
