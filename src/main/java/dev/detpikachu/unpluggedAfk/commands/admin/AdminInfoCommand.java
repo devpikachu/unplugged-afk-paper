@@ -8,9 +8,6 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
-import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.CraftServer;
-import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 
 import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.PERM_ADMIN_INFO;
@@ -28,21 +25,10 @@ public final class AdminInfoCommand {
 
         return root
                 .requires(context -> context.getSender().hasPermission(PERM_ADMIN_INFO))
-                .executes(AdminInfoCommand::execute).then(player.executes(AdminInfoCommand::executeWithPlayer));
+                .then(player.executes(AdminInfoCommand::execute));
     }
 
-    private static int execute(CommandContext<CommandSourceStack> context) {
-        // TODO: If executor null, print error message stating command must be run by the player.
-        final var server = ((CraftServer) Bukkit.getServer()).getServer();
-        final var executor = context.getSource().getExecutor();
-        final var level = ((CraftWorld) executor.getWorld()).getHandle();
-
-        // TODO: Print global stats
-        executor.sendPlainMessage("Global stats");
-        return 1;
-    }
-
-    private static int executeWithPlayer(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+    private static int execute(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         final var sender = context.getSource().getSender();
         final var playerResolver = context.getArgument(ARG_PLAYER, PlayerSelectorArgumentResolver.class);
 
