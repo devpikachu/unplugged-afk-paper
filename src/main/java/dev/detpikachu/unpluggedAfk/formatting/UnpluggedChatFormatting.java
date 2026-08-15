@@ -1,7 +1,12 @@
 package dev.detpikachu.unpluggedAfk.formatting;
 
+import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
 import dev.detpikachu.unpluggedAfk.player.UnpluggedServerPlayer;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
@@ -16,9 +21,9 @@ import static net.kyori.adventure.text.format.NamedTextColor.YELLOW;
 // TODO: Configurable messages
 public final class UnpluggedChatFormatting {
 
-    public static Component format(CraftPlayer player) {
+    public static Component formatPlayer(CraftPlayer player) {
         if (player.getHandle() instanceof UnpluggedServerPlayer unpluggedPlayer) {
-            return format(unpluggedPlayer);
+            return formatPlayer(unpluggedPlayer);
         }
 
         final var playerName = text(player.getName(), GOLD);
@@ -27,7 +32,7 @@ public final class UnpluggedChatFormatting {
         return playerName.append(realPlayer);
     }
 
-    public static Component format(UnpluggedServerPlayer unpluggedPlayer) {
+    public static Component formatPlayer(UnpluggedServerPlayer unpluggedPlayer) {
         final var informationFor = text("Unplugged information for ", WHITE);
         final var playerName = text(unpluggedPlayer.getName().getString(), GOLD);
         final var colon = text(":", WHITE);
@@ -70,6 +75,32 @@ public final class UnpluggedChatFormatting {
         final var unplugged = text(" has unplugged, leaving their character behind", YELLOW);
 
         return playerName.append(unplugged);
+    }
+
+    public static Component formatList(Collection<UnpluggedServerPlayer> unpluggedPlayers) {
+        final var header = text("Unplugged players: ", WHITE)
+                .append(text(unpluggedPlayers.size(), GOLD))
+                .append(text("/", WHITE))
+                .append(text(UnpluggedOptions.getInstance().getMaxUnpluggedPlayers(), GOLD));
+
+        final var lines = new ArrayList<Component>();
+        lines.add(header);
+
+        unpluggedPlayers.stream()
+                .sorted(Comparator.comparingLong(UnpluggedServerPlayer::getTimeoutAtMillis))
+                .map(UnpluggedChatFormatting::formatListEntry)
+                .forEach(lines::add);
+
+        return Component.join(JoinConfiguration.newlines(), lines);
+    }
+
+    private static Component formatListEntry(UnpluggedServerPlayer unpluggedPlayer) {
+        final var name = text(unpluggedPlayer.getName().getString(), GOLD);
+        final var fakeMarker = unpluggedPlayer.isFake() ? text(" (fake)", RED) : Component.empty();
+        final var expiresLabel = text(" - expires in ", GRAY);
+        final var expiresValue = formatTimestamp(unpluggedPlayer.getTimeoutAtMillis());
+
+        return name.append(fakeMarker).append(expiresLabel).append(expiresValue);
     }
 
     private static Component formatDuration(int durationMins) {

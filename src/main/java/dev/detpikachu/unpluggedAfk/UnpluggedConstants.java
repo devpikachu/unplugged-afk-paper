@@ -12,6 +12,7 @@ public final class UnpluggedConstants {
     public static final String PERM_UNPLUG = "unplugged-afk.unplug";
     public static final String PERM_ADMIN = "unplugged-afk.admin";
     public static final String PERM_ADMIN_INFO = "unplugged-afk.admin.info";
+    public static final String PERM_ADMIN_LIST = "unplugged-afk.admin.list";
     public static final String PERM_ADMIN_DEBUG = "unplugged-afk.admin.debug";
 
     public static final String EXCEPTION_FAILED_TO_DISCONNECT = "Failed to disconnect player";

@@ -53,7 +53,8 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-        UnpluggedPlayerManager.getInstance().forEach(unpluggedPlayer -> unpluggedPlayer.kill(Component.literal(KILL_REASON_DISABLED)));
+        UnpluggedPlayerManager.getInstance().getPlayers()
+                .forEach(unpluggedPlayer -> unpluggedPlayer.kill(Component.literal(KILL_REASON_DISABLED)));
         UnpluggedPlayerManager.getInstance().removeAll();
     }
 

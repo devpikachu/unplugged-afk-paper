@@ -9,10 +9,11 @@ import dev.detpikachu.unpluggedAfk.player.UnpluggedFakeIdentity;
 import dev.detpikachu.unpluggedAfk.player.UnpluggedServerPlayer;
 import dev.detpikachu.unpluggedAfk.player.UnpluggedSession;
 import io.papermc.paper.util.KeepAlive;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
@@ -48,8 +49,8 @@ public final class UnpluggedPlayerManager {
         return this.pending.contains(uuid);
     }
 
-    public void forEach(Consumer<UnpluggedServerPlayer> action) {
-        this.players.values().forEach(action);
+    public Collection<UnpluggedServerPlayer> getPlayers() {
+        return Collections.unmodifiableCollection(this.players.values());
     }
 
     public void remove(UnpluggedServerPlayer player) {

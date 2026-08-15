@@ -33,7 +33,7 @@ public final class AdminInfoCommand {
         final var playerResolver = context.getArgument(ARG_PLAYER, PlayerSelectorArgumentResolver.class);
 
         final var player = (CraftPlayer) playerResolver.resolve(context.getSource()).getFirst();
-        sender.sendMessage(UnpluggedChatFormatting.format(player));
+        sender.sendMessage(UnpluggedChatFormatting.formatPlayer(player));
 
         return 1;
     }

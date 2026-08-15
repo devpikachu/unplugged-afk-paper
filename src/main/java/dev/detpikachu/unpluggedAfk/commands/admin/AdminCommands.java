@@ -8,6 +8,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.PERM_ADMIN;
 import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.PERM_ADMIN_DEBUG;
 import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.PERM_ADMIN_INFO;
+import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.PERM_ADMIN_LIST;
 
 public final class AdminCommands {
 
@@ -20,6 +21,7 @@ public final class AdminCommands {
                 .requires(AdminCommands::isAdmin)
                 .then(AdminDebugCommands.construct())
                 .then(AdminInfoCommand.construct())
+                .then(AdminListCommand.construct())
                 .build();
     }
 
@@ -28,6 +30,7 @@ public final class AdminCommands {
 
         return sender.hasPermission(PERM_ADMIN)
                 || sender.hasPermission(PERM_ADMIN_INFO)
+                || sender.hasPermission(PERM_ADMIN_LIST)
                 || sender.hasPermission(PERM_ADMIN_DEBUG);
     }
 }
