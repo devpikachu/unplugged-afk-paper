@@ -25,7 +25,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
 
     private boolean isFake = false;
     private boolean isSpawnStatePending = true;
-    private int durationMins = UnpluggedOptions.getInstance().getDefaultDurationMins();
+    private int durationMins;
     private final long startAtMillis = System.currentTimeMillis();
     private long timeoutAtMillis = Long.MAX_VALUE;
     private String reason = "";
