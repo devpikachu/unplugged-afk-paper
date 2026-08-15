@@ -38,4 +38,14 @@ public final class UnpluggedCommandErrors {
                 )
         );
     }
+
+    public static SimpleCommandExceptionType errCapReached() {
+        return new SimpleCommandExceptionType(
+                MessageComponentSerializer.message().serialize(
+                        text("The server already has ", RED)
+                                .append(text(UnpluggedOptions.getInstance().getMaxUnpluggedPlayers(), RED))
+                                .append(text(" unplugged player(s). Please try again later.", RED))
+                )
+        );
+    }
 }

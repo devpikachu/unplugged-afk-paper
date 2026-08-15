@@ -15,6 +15,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.PERM_UNPLUG;
 import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandErrors.ERR_GENERIC;
 import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandErrors.ERR_REASON_REQUIRED;
+import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandGuards.requireCapacity;
 import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandGuards.requireDuration;
 import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandGuards.requireExecutor;
 
@@ -45,6 +46,8 @@ public final class PlayerUnplugCommand {
         if (reason == null || reason.isBlank()) {
             throw ERR_REASON_REQUIRED.create();
         }
+
+        requireCapacity();
 
         try {
             UnpluggedPlayerManager.getInstance().createPlayer(player, new UnpluggedSession(durationMins, reason, false));

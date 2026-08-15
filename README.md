@@ -50,11 +50,11 @@ Once the time has elapsed, the unplugged player is automatically kicked from the
 
 ## Configuration
 
-| Key                 | Description                                                                                                                                | Default |
-|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------|---------|
-| debug               | Enables certain debug functionality, such as dumping a bunch of data such as the player's inventory to the server's files when they unplug | `false` |
-| maxUnpluggedPlayers | The maximum amount of unplugged players that can exist at the same time                                                                    | `16`    |
-| maxDurationMins     | The maximum duration a player can unplug for, in minutes                                                                                   | `480`   |
+| Key                 | Description                                                                                                                                | Default | Minimum |
+|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------|---------|---------|
+| debug               | Enables certain debug functionality, such as dumping a bunch of data such as the player's inventory to the server's files when they unplug | `false` |         |
+| maxUnpluggedPlayers | The maximum amount of unplugged players that can exist at the same time                                                                    | `16`    | `1`     |
+| maxDurationMins     | The maximum duration a player can unplug for, in minutes                                                                                   | `480`   | `1`     |
 
 ## Debug Functionality
 
@@ -67,7 +67,8 @@ All the functionality described in this section is gated behind the `debug` conf
 
 ### Functionality
 
-- A text file containing various data such as Unix timestamp, position, dimension, inventory contents, etc. is dumped in `plugins/unplugged-afk/dumps/` every time a player unplugs.
+- A text file containing various data such as Unix timestamp, position, dimension, inventory contents, etc. is dumped in
+  `plugins/unplugged-afk/dumps/` every time a player unplugs.
 
 ## Acknowledgements
 

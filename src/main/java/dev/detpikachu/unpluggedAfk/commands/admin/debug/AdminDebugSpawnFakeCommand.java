@@ -10,6 +10,7 @@ import dev.detpikachu.unpluggedAfk.player.UnpluggedSession;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 
+import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandGuards.requireCapacity;
 import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandGuards.requireDuration;
 import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandGuards.requireExecutor;
 
@@ -38,6 +39,8 @@ public final class AdminDebugSpawnFakeCommand {
         final var effectiveReason = (reason == null || reason.isBlank())
                 ? executor.getName().getString()
                 : reason;
+
+        requireCapacity();
 
         final var unpluggedPlayer = UnpluggedPlayerManager.getInstance()
                 .createFake(executor.level(), new UnpluggedSession(durationMins, effectiveReason, true));
