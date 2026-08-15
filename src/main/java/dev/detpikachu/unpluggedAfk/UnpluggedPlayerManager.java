@@ -60,7 +60,7 @@ public final class UnpluggedPlayerManager {
         this.players.clear();
     }
 
-    public void createPlayer(ServerPlayer player, UnpluggedSession session) {
+    public void createPlayer(ServerPlayer player, UnpluggedSession session) throws UnplugFailedException {
         final var uuid = player.getUUID();
         final var level = player.level();
         final var server = level.getServer();
