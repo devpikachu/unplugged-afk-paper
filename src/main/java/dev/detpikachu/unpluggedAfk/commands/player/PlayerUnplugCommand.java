@@ -8,7 +8,6 @@ import dev.detpikachu.unpluggedAfk.UnpluggedPlayerManager;
 import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.CraftServer;

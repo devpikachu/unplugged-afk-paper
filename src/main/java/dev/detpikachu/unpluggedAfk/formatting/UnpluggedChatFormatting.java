@@ -63,13 +63,6 @@ public final class UnpluggedChatFormatting {
         return playerName.append(unplugged);
     }
 
-    public static Component formatReplugged(Player player) {
-        final var playerName = text(player.getName(), YELLOW);
-        final var replugged = text(" has returned to inhabit their character", YELLOW);
-
-        return playerName.append(replugged);
-    }
-
     private static Component formatDuration(int durationMins) {
         if (durationMins < 60) {
             return text(durationMins, WHITE).append(text(" minute(s)", WHITE));

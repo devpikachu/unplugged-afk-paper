@@ -33,7 +33,7 @@ public final class UnpluggedConnection extends Connection {
 
     @Override
     public void handleDisconnection() {
-        // No-op
+        this.channel.close();
     }
 
     @Override

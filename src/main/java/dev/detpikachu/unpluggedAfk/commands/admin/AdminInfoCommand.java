@@ -30,6 +30,7 @@ public final class AdminInfoCommand {
     }
 
     private static int execute(CommandContext<CommandSourceStack> context) {
+        // TODO: If executor null, print error message stating command must be run by the player.
         final var server = ((CraftServer) Bukkit.getServer()).getServer();
         final var executor = context.getSource().getExecutor();
         final var level = ((CraftWorld) executor.getWorld()).getHandle();

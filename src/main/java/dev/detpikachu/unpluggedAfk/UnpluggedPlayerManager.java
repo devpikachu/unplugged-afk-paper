@@ -1,6 +1,5 @@
 package dev.detpikachu.unpluggedAfk;
 
-import com.google.common.collect.ConcurrentHashMultiset;
 import com.mojang.authlib.GameProfile;
 import dev.detpikachu.unpluggedAfk.network.UnpluggedConnection;
 import dev.detpikachu.unpluggedAfk.network.UnpluggedGamePacketListener;
@@ -10,7 +9,7 @@ import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import net.minecraft.network.chat.Component;
+import net.kyori.adventure.text.Component;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ClientInformation;
@@ -18,22 +17,20 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.util.ProblemReporter;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.storage.TagValueInput;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
-
-import static net.minecraft.world.entity.Avatar.DATA_PLAYER_MODE_CUSTOMISATION;
+import org.bukkit.event.player.PlayerKickEvent;
 
 public final class UnpluggedPlayerManager {
 
     private static final UnpluggedPlayerManager INSTANCE = new UnpluggedPlayerManager();
 
-    private final ConcurrentLinkedQueue<UUID> pending;
+    private final ConcurrentHashMap.KeySetView<UUID, Boolean> pending;
     private final ConcurrentHashMap<UUID, UnpluggedServerPlayer> players;
 
     private UnpluggedPlayerManager() {
-        this.pending = new ConcurrentLinkedQueue<>();
+        this.pending = ConcurrentHashMap.newKeySet(16);
         this.players = new ConcurrentHashMap<>(16, 0.9F, 1);
     }
 
@@ -49,49 +46,46 @@ public final class UnpluggedPlayerManager {
         return this.players.containsKey(uuid);
     }
 
+    public ConcurrentHashMap<UUID, UnpluggedServerPlayer> getPlayers() {
+        return this.players;
+    }
+
     public void remove(UnpluggedServerPlayer player) {
         this.players.remove(player.getUUID());
     }
 
     public UnpluggedServerPlayer unplugPlayer(MinecraftServer server, ServerLevel level, ServerPlayer player, int durationMins, String reason) {
-        pending.add(player.getUUID());
-        player.connection.disconnect(Component.literal("AFK'd"));
+        try {
+            pending.add(player.getUUID());
+            // TODO: Configurable message
+            player.getBukkitEntity().kick(Component.text("AFK"), PlayerKickEvent.Cause.PLUGIN);
 
-        final var unpluggedPlayer = this.create(server, level, player.gameProfile, player.clientInformation(), durationMins, reason);
+            if (server.getPlayerList().getPlayer(player.getUUID()) != null) {
+                throw new RuntimeException(UnpluggedConstants.EXCEPTION_FAILED_TO_DISCONNECT);
+            }
 
-        unpluggedPlayer.setChatSession(player.getChatSession());
-        unpluggedPlayer.setHealth(player.getHealth());
-        unpluggedPlayer.connection.teleport(player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot());
-        unpluggedPlayer.gameMode.changeGameModeForPlayer(player.gameMode.getGameModeForPlayer(), PlayerGameModeChangeEvent.Cause.PLUGIN, null);
-        unpluggedPlayer.getAttribute(Attributes.STEP_HEIGHT).setBaseValue(.6f);
-        unpluggedPlayer.getEntityData().set(DATA_PLAYER_MODE_CUSTOMISATION, player.getEntityData().get(DATA_PLAYER_MODE_CUSTOMISATION));
+            final var unpluggedPlayer = this.create(server, level, player.gameProfile, player.clientInformation(), durationMins, reason);
 
-        // Survival players shouldn't be able to fly or be invulnerable
-        if (unpluggedPlayer.gameMode.isSurvival()) {
-            unpluggedPlayer.getAbilities().flying = false;
-            unpluggedPlayer.setInvulnerable(false);
-        } else {
-            unpluggedPlayer.getAbilities().flying = player.getAbilities().flying;
+            // Load player NBT
+            try (ProblemReporter.ScopedCollector logger = new ProblemReporter.ScopedCollector(unpluggedPlayer.problemPath(), UnpluggedAfk.LOGGER)) {
+                final var opt = unpluggedPlayer
+                        .level()
+                        .getServer()
+                        .getPlayerList()
+                        .loadPlayerData(unpluggedPlayer.nameAndId())
+                        .map(nbt -> TagValueInput.create(logger, unpluggedPlayer.registryAccess(), nbt));
+
+                opt.ifPresent(data -> {
+                    unpluggedPlayer.load(data);
+                    unpluggedPlayer.loadAndSpawnEnderPearls(data);
+                    unpluggedPlayer.loadAndSpawnParentVehicle(data);
+                });
+            }
+
+            return unpluggedPlayer;
+        } finally {
+            this.pending.remove(player.getUUID());
         }
-
-        // Load player NBT
-        try (ProblemReporter.ScopedCollector logger = new ProblemReporter.ScopedCollector(unpluggedPlayer.problemPath(), UnpluggedAfk.LOGGER)) {
-            final var opt = unpluggedPlayer
-                    .level()
-                    .getServer()
-                    .getPlayerList()
-                    .loadPlayerData(unpluggedPlayer.nameAndId())
-                    .map(nbt -> TagValueInput.create(logger, unpluggedPlayer.registryAccess(), nbt));
-
-            opt.ifPresent(data -> {
-                unpluggedPlayer.load(data);
-                unpluggedPlayer.loadAndSpawnEnderPearls(data);
-                unpluggedPlayer.loadAndSpawnParentVehicle(data);
-            });
-        }
-
-        this.pending.remove(unpluggedPlayer.getUUID());
-        return unpluggedPlayer;
     }
 
     public UnpluggedServerPlayer createFake(MinecraftServer server, ServerLevel level, UUID uuid, String name, int durationMins, String reason) {

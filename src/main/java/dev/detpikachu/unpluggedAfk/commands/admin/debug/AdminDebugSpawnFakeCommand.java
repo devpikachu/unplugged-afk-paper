@@ -35,6 +35,7 @@ public final class AdminDebugSpawnFakeCommand {
     }
 
     private static int execute(CommandContext<CommandSourceStack> context) {
+        // TODO: If executor null, print error message stating command must be run by the player.
         final var server = ((CraftServer) Bukkit.getServer()).getServer();
         final var sender = context.getSource().getSender();
         final var executor = context.getSource().getExecutor();
@@ -49,6 +50,7 @@ public final class AdminDebugSpawnFakeCommand {
     }
 
     private static int executeWithReason(CommandContext<CommandSourceStack> context) {
+        // TODO: If executor null, print error message stating command must be run by the player.
         final var server = ((CraftServer) Bukkit.getServer()).getServer();
         final var sender = context.getSource().getSender();
         final var executor = context.getSource().getExecutor();

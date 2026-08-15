@@ -6,7 +6,6 @@ import dev.detpikachu.unpluggedAfk.UnpluggedPlayerManager;
 import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
 import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 import net.minecraft.network.protocol.game.ClientboundRotateHeadPacket;
 import net.minecraft.network.protocol.game.ServerboundClientCommandPacket;
@@ -28,7 +27,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     private boolean isSpawnStatePending = true;
     private int durationMins = UnpluggedOptions.getInstance().getDefaultDurationMins();
     private final long startAtMillis = System.currentTimeMillis();
-    private long timeoutAtMillis = -1L;
+    private long timeoutAtMillis = Long.MAX_VALUE;
     private String reason = "";
 
     public UnpluggedServerPlayer(MinecraftServer server, ServerLevel level, GameProfile gameProfile, ClientInformation clientInformation) {
@@ -76,13 +75,6 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     }
 
     public void kill(Component message) {
-        this.dismount();
-        UnpluggedPlayerManager.getInstance().remove(this);
-
-        if (message.getContents() instanceof TranslatableContents text && text.getKey().equals(UnpluggedConstants.DISCONNECT_DUPLICATE_LOGIN)) {
-            this.connection.onDisconnect(new DisconnectionDetails(message));
-        }
-
         final var server = this.level().getServer();
         server.schedule(
                 new TickTask(server.getTickCount(), () -> {
@@ -117,7 +109,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         }
 
         if (System.currentTimeMillis() >= this.timeoutAtMillis) {
-            final var reason = Component.literal("Expired");
+            final var reason = Component.literal(UnpluggedConstants.KILL_REASON_EXPIRED);
             this.kill(reason);
         }
 

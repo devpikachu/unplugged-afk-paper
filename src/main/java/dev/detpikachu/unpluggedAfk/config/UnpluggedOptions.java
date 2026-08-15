@@ -1,12 +1,9 @@
 package dev.detpikachu.unpluggedAfk.config;
 
 import dev.detpikachu.unpluggedAfk.UnpluggedConstants;
-import java.util.HashMap;
-import java.util.Map;
-import org.bukkit.configuration.serialization.ConfigurationSerializable;
-import org.jetbrains.annotations.NotNull;
+import org.bukkit.configuration.file.FileConfiguration;
 
-public final class UnpluggedOptions implements ConfigurationSerializable {
+public final class UnpluggedOptions {
 
     private static final UnpluggedOptions INSTANCE = new UnpluggedOptions();
 
@@ -42,25 +39,8 @@ public final class UnpluggedOptions implements ConfigurationSerializable {
         return this.maxDurationMins;
     }
 
-    @Override
-    public @NotNull Map<String, Object> serialize() {
-        final var data = new HashMap<String, Object>();
-
-        data.put(DEFAULT_DURATION_MINS, this.defaultDurationMins);
-        data.put(MAX_DURATION_MINS, this.maxDurationMins);
-
-        return data;
-    }
-
-    public static void deserialize(Map<String, Object> data) {
-        Object holder;
-
-        if ((holder = data.get(DEFAULT_DURATION_MINS)) != null) {
-            INSTANCE.defaultDurationMins = (int) holder;
-        }
-
-        if ((holder = data.get(MAX_DURATION_MINS)) != null) {
-            INSTANCE.maxDurationMins = (int) holder;
-        }
+    public static void deserialize(FileConfiguration config) {
+        INSTANCE.defaultDurationMins = config.getInt(DEFAULT_DURATION_MINS, UnpluggedConstants.DEFAULT_DURATION);
+        INSTANCE.maxDurationMins = config.getInt(MAX_DURATION_MINS, UnpluggedConstants.DEFAULT_DURATION);
     }
 }
