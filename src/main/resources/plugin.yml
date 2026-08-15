@@ -14,3 +14,7 @@ permissions:
     children:
       unplugged-afk.admin.info: true
       unplugged-afk.admin.debug: true
+  unplugged-afk.admin.info:
+    description: Gives access to the '/unplugged info' admin command
+  unplugged-afk.admin.debug:
+    description: Gives access to the '/unplugged debug' admin command and its subcommands
