@@ -50,6 +50,7 @@ public final class UnpluggedDumpFormatting {
         appendSection(builder, "Inventory", inventory.getStorageContents());
         appendSection(builder, "Armor", inventory.getArmorContents());
         appendSection(builder, "Off hand", new ItemStack[]{inventory.getItemInOffHand()});
+        appendSection(builder, "Ender chest", player.getEnderChest().getContents());
 
         return builder.toString();
     }
