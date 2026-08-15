@@ -2,6 +2,7 @@ package dev.detpikachu.unpluggedAfk.commands.admin;
 
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.detpikachu.unpluggedAfk.commands.admin.debug.AdminDebugCommands;
+import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 
@@ -31,6 +32,6 @@ public final class AdminCommands {
         return sender.hasPermission(PERM_ADMIN)
                 || sender.hasPermission(PERM_ADMIN_INFO)
                 || sender.hasPermission(PERM_ADMIN_LIST)
-                || sender.hasPermission(PERM_ADMIN_DEBUG);
+                || (UnpluggedOptions.getInstance().isDebug() && sender.hasPermission(PERM_ADMIN_DEBUG));
     }
 }

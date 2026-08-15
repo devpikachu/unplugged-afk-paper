@@ -1,6 +1,7 @@
 package dev.detpikachu.unpluggedAfk;
 
 import com.mojang.authlib.GameProfile;
+import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
 import dev.detpikachu.unpluggedAfk.exceptions.UnplugFailedException;
 import dev.detpikachu.unpluggedAfk.formatting.UnpluggedChatFormatting;
 import dev.detpikachu.unpluggedAfk.network.UnpluggedConnection;
@@ -65,6 +66,10 @@ public final class UnpluggedPlayerManager {
         final var uuid = player.getUUID();
         final var level = player.level();
         final var server = level.getServer();
+
+        if (UnpluggedOptions.getInstance().isDebug()) {
+            UnpluggedDumpWriter.write(player.getBukkitEntity(), session);
+        }
 
         try {
             pending.add(uuid);

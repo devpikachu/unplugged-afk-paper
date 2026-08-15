@@ -2,6 +2,7 @@ package dev.detpikachu.unpluggedAfk;
 
 public final class UnpluggedConstants {
 
+    public static final boolean DEFAULT_DEBUG = false;
     public static final int DEFAULT_MAX_UNPLUGGED_PLAYERS = 16;
     public static final int DEFAULT_MAX_DURATION_MINS = 480;
 

@@ -1,6 +1,7 @@
 package dev.detpikachu.unpluggedAfk.commands.admin.debug;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 
@@ -14,7 +15,8 @@ public final class AdminDebugCommands {
         final var root = Commands.literal(CMD_DEBUG);
 
         return root
-                .requires(context -> context.getSender().hasPermission(PERM_ADMIN_DEBUG))
+                .requires(context -> UnpluggedOptions.getInstance().isDebug()
+                        && context.getSender().hasPermission(PERM_ADMIN_DEBUG))
                 .then(AdminDebugSpawnFakeCommand.construct());
     }
 }
