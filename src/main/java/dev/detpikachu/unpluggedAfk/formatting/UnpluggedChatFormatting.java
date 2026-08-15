@@ -68,7 +68,7 @@ public final class UnpluggedChatFormatting {
             return text(durationMins, WHITE).append(text(" minute(s)", WHITE));
         }
 
-        final var durationHours = durationMins / 60.f;
+        final var durationHours = durationMins / 60;
         final var remainderDurationMins = durationMins % 60;
         return text(durationHours, WHITE)
                 .append(text(" hour(s) ", WHITE))
@@ -89,7 +89,7 @@ public final class UnpluggedChatFormatting {
             return text(relativeMins, WHITE).append(text(" minute(s)", WHITE));
         }
 
-        final var relativeHours = relativeMins / 60.f;
+        final var relativeHours = relativeMins / 60;
         final var remainderRelativeMins = relativeMins % 60;
         return text(relativeHours, WHITE)
                 .append(text(" hour(s) ", WHITE))
