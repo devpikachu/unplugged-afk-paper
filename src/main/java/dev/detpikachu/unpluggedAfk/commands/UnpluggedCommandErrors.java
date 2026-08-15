@@ -1,6 +1,7 @@
 package dev.detpikachu.unpluggedAfk.commands;
 
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
 import io.papermc.paper.command.brigadier.MessageComponentSerializer;
 
 import static net.kyori.adventure.text.Component.text;
@@ -25,4 +26,16 @@ public final class UnpluggedCommandErrors {
                     text("A reason must be given when unplugging.", RED)
             )
     );
+
+    public static SimpleCommandExceptionType errDurationTooLarge(int durationMins) {
+        return new SimpleCommandExceptionType(
+                MessageComponentSerializer.message().serialize(
+                        text("The duration of ", RED)
+                                .append(text(durationMins, RED))
+                                .append(text(" minute(s) is larger than the allowed maximum of ", RED))
+                                .append(text(UnpluggedOptions.getInstance().getMaxDurationMins(), RED))
+                                .append(text(" minute(s).", RED))
+                )
+        );
+    }
 }

@@ -18,6 +18,7 @@ import org.bukkit.craftbukkit.entity.CraftPlayer;
 import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.PERM_UNPLUG;
 import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandErrors.ERR_NOT_A_PLAYER;
 import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandErrors.ERR_REASON_REQUIRED;
+import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandErrors.errDurationTooLarge;
 
 public final class PlayerUnplugCommand {
 
@@ -29,7 +30,7 @@ public final class PlayerUnplugCommand {
     public static LiteralCommandNode<CommandSourceStack> construct() {
         final var root = Commands.literal(CMD_UNPLUG);
 
-        final var durationMins = Commands.argument(ARG_DURATION_MINS, IntegerArgumentType.integer(1, UnpluggedOptions.getInstance().getMaxDurationMins()));
+        final var durationMins = Commands.argument(ARG_DURATION_MINS, IntegerArgumentType.integer(1));
         final var reason = Commands.argument(ARG_REASON, StringArgumentType.greedyString());
 
         return root
@@ -47,9 +48,13 @@ public final class PlayerUnplugCommand {
         }
 
         final var level = ((CraftWorld) executor.getWorld()).getHandle();
-        final var durationMins = context.getArgument(ARG_DURATION_MINS, int.class);
-        final var reason = context.getArgument(ARG_REASON, String.class);
 
+        final var durationMins = context.getArgument(ARG_DURATION_MINS, int.class);
+        if (durationMins > UnpluggedOptions.getInstance().getMaxDurationMins()) {
+            throw errDurationTooLarge(durationMins).create();
+        }
+
+        final var reason = context.getArgument(ARG_REASON, String.class);
         if (reason == null || reason.isBlank()) {
             throw ERR_REASON_REQUIRED.create();
         }

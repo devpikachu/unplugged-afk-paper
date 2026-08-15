@@ -8,19 +8,13 @@ import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.DEFAULT_MAX_DURATIO
 public final class UnpluggedOptions {
 
     private static final UnpluggedOptions INSTANCE = new UnpluggedOptions();
-
-    private static final String KEY_DEFAULT_DURATION_MINS = "defaultDurationMins";
+    
     private static final String KEY_MAX_DURATION_MINS = "maxDurationMins";
 
-    private int defaultDurationMins = DEFAULT_MAX_DURATION_MINS;
     private int maxDurationMins = DEFAULT_MAX_DURATION_MINS;
 
     public static UnpluggedOptions getInstance() {
         return INSTANCE;
-    }
-
-    public int getDefaultDurationMins() {
-        return this.defaultDurationMins;
     }
 
     public int getMaxDurationMins() {
@@ -28,17 +22,11 @@ public final class UnpluggedOptions {
     }
 
     public static void deserialize(FileConfiguration config) {
-        INSTANCE.defaultDurationMins = config.getInt(KEY_DEFAULT_DURATION_MINS, DEFAULT_MAX_DURATION_MINS);
         INSTANCE.maxDurationMins = config.getInt(KEY_MAX_DURATION_MINS, DEFAULT_MAX_DURATION_MINS);
 
         if (INSTANCE.maxDurationMins < 1) {
             UnpluggedAfk.LOGGER.warn("Max duration of {} is invalid. The value must be greater than or equal to 1. Resetting to {}.", INSTANCE.maxDurationMins, DEFAULT_MAX_DURATION_MINS);
             INSTANCE.maxDurationMins = DEFAULT_MAX_DURATION_MINS;
-        }
-
-        if (INSTANCE.defaultDurationMins < 1 || INSTANCE.defaultDurationMins > INSTANCE.maxDurationMins) {
-            UnpluggedAfk.LOGGER.warn("Default duration of {} is invalid. The value must be between 1 and {}. Resetting to {}.", INSTANCE.defaultDurationMins, INSTANCE.maxDurationMins, INSTANCE.maxDurationMins);
-            INSTANCE.defaultDurationMins = INSTANCE.maxDurationMins;
         }
     }
 }
