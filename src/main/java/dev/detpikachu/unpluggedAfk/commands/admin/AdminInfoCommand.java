@@ -30,7 +30,7 @@ public final class AdminInfoCommand {
         final var player = Commands.argument(ARG_PLAYER, ArgumentTypes.player());
 
         return root
-                .requires(sender -> sender.getSender().hasPermission(PERM_ADMIN) || sender.getSender().hasPermission(PERM_ADMIN_INFO))
+                .requires(context -> context.getSender().hasPermission(PERM_ADMIN_INFO))
                 .executes(AdminInfoCommand::execute).then(player.executes(AdminInfoCommand::executeWithPlayer));
     }
 
@@ -49,13 +49,8 @@ public final class AdminInfoCommand {
         final var sender = context.getSource().getSender();
         final var playerResolver = context.getArgument(ARG_PLAYER, PlayerSelectorArgumentResolver.class);
 
-        try {
-            final var player = (CraftPlayer) playerResolver.resolve(context.getSource()).getFirst();
-            sender.sendMessage(UnpluggedChatFormatting.format(player));
-        } catch (CommandSyntaxException e) {
-            UnpluggedAfk.LOGGER.error(e.getRawMessage().getString());
-            throw ERR_GENERIC.create();
-        }
+        final var player = (CraftPlayer) playerResolver.resolve(context.getSource()).getFirst();
+        sender.sendMessage(UnpluggedChatFormatting.format(player));
 
         return 1;
     }

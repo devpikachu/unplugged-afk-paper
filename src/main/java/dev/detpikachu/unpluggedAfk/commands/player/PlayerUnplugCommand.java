@@ -33,7 +33,7 @@ public final class PlayerUnplugCommand {
         final var reason = Commands.argument(ARG_REASON, StringArgumentType.greedyString());
 
         return root
-                .requires(sender -> sender.getSender().hasPermission(PERM_UNPLUG))
+                .requires(context -> context.getSender().hasPermission(PERM_UNPLUG))
                 .then(durationMins.then(reason.executes(PlayerUnplugCommand::execute)))
                 .build();
     }

@@ -15,7 +15,7 @@ public final class AdminDebugCommands {
         final var root = Commands.literal(CMD_DEBUG);
 
         return root
-                .requires(sender -> sender.getSender().hasPermission(PERM_ADMIN) || sender.getSender().hasPermission(PERM_ADMIN_DEBUG))
+                .requires(context -> context.getSender().hasPermission(PERM_ADMIN_DEBUG))
                 .then(AdminDebugSpawnFakeCommand.construct());
     }
 }
