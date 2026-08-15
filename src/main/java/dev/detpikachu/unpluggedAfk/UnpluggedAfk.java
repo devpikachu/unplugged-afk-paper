@@ -59,7 +59,7 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
 
         final var player = event.getPlayer();
         if (UnpluggedPlayerManager.getInstance().isPending(player.getUniqueId())) {
-            event.quitMessage(UnpluggedChatFormatting.formatUnplugged(player));
+            event.quitMessage(UnpluggedChatFormatting.formatUnpluggedBroadcast(player));
         }
     }
 }

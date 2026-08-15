@@ -1,6 +1,7 @@
 package dev.detpikachu.unpluggedAfk;
 
 import com.mojang.authlib.GameProfile;
+import dev.detpikachu.unpluggedAfk.formatting.UnpluggedChatFormatting;
 import dev.detpikachu.unpluggedAfk.network.UnpluggedConnection;
 import dev.detpikachu.unpluggedAfk.network.UnpluggedGamePacketListener;
 import dev.detpikachu.unpluggedAfk.player.UnpluggedServerPlayer;
@@ -9,7 +10,6 @@ import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
-import net.kyori.adventure.text.Component;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ClientInformation;
@@ -55,8 +55,7 @@ public final class UnpluggedPlayerManager {
     public UnpluggedServerPlayer unplugPlayer(MinecraftServer server, ServerLevel level, ServerPlayer player, int durationMins, String reason) {
         try {
             pending.add(player.getUUID());
-            // TODO: Configurable message
-            player.getBukkitEntity().kick(Component.text("AFK"), PlayerKickEvent.Cause.PLUGIN);
+            player.getBukkitEntity().kick(UnpluggedChatFormatting.formatUnplugged(durationMins, reason), PlayerKickEvent.Cause.PLUGIN);
 
             if (server.getPlayerList().getPlayer(player.getUUID()) != null) {
                 throw new RuntimeException(EXCEPTION_FAILED_TO_DISCONNECT);

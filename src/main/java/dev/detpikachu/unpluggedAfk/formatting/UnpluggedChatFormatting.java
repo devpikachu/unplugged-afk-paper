@@ -56,7 +56,16 @@ public final class UnpluggedChatFormatting {
                 .append(isFakeLabel).append(isFakeValue);
     }
 
-    public static Component formatUnplugged(Player player) {
+    public static Component formatUnplugged(int durationMins, String reason) {
+        final var prefix = text("You have successfully unplugged. Your character will remain online for ");
+        final var duration = formatDuration(durationMins);
+        final var suffix = text(". Reason: ");
+        final var reasonComponent = text(reason);
+
+        return prefix.append(duration).append(suffix).append(reasonComponent);
+    }
+
+    public static Component formatUnpluggedBroadcast(Player player) {
         final var playerName = text(player.getName(), YELLOW);
         final var unplugged = text(" has unplugged, leaving their character behind", YELLOW);
 
