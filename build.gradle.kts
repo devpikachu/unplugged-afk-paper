@@ -34,9 +34,10 @@ tasks {
     processResources {
         val props = mapOf(
             "version" to version,
-            "apiVersion" to apiVersion
+            "apiVersion" to apiVersion,
+            "minecraftVersion" to minecraftVersion
         )
-        filesMatching("plugin.yml") {
+        filesMatching(listOf("plugin.yml", "unplugged-afk.properties")) {
             expand(props)
         }
     }

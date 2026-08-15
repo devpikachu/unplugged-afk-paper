@@ -5,6 +5,8 @@ import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
 import dev.detpikachu.unpluggedAfk.formatting.UnpluggedChatFormatting;
 import dev.detpikachu.unpluggedAfk.player.UnpluggedServerPlayer;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import java.io.IOException;
+import java.util.Properties;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.minecraft.network.chat.Component;
 import org.bukkit.Bukkit;
@@ -19,12 +21,24 @@ import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.KILL_REASON_DISABLE
 
 public final class UnpluggedAfk extends JavaPlugin implements Listener {
 
+    private static final String PROPERTIES_RESOURCE = "unplugged-afk.properties";
+    private static final String KEY_MINECRAFT_VERSION = "minecraftVersion";
+
     public static ComponentLogger LOGGER;
 
     @Override
     public void onEnable() {
-        // Logger
         LOGGER = getComponentLogger();
+
+        // Version compatibility
+        final var targetVersion = getTargetMinecraftVersion();
+        final var runningVersion = Bukkit.getMinecraftVersion();
+
+        if (targetVersion != null && !targetVersion.equals(runningVersion)) {
+            LOGGER.error("unplugged-afk targets Minecraft {} but this server runs {}", targetVersion, runningVersion);
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
 
         // Config
         saveDefaultConfig();
@@ -61,5 +75,21 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
         if (UnpluggedPlayerManager.getInstance().isPending(player.getUniqueId())) {
             event.quitMessage(UnpluggedChatFormatting.formatUnpluggedBroadcast(player));
         }
+    }
+
+    private String getTargetMinecraftVersion() {
+        final var properties = new Properties();
+
+        try (var stream = getResource(PROPERTIES_RESOURCE)) {
+            if (stream == null) {
+                return null;
+            }
+
+            properties.load(stream);
+        } catch (IOException exception) {
+            return null;
+        }
+
+        return properties.getProperty(KEY_MINECRAFT_VERSION);
     }
 }
