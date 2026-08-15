@@ -4,6 +4,10 @@ plugins {
     id("xyz.jpenilla.run-paper") version "3.1.0"
 }
 
+val minecraftVersion: String = project.property("minecraftVersion") as String
+val javaVersion: String = project.property("javaVersion") as String
+val apiVersion = minecraftVersion.split('.').take(2).joinToString(".")
+
 paperweight.reobfArtifactConfiguration = io.papermc.paperweight.userdev.ReobfArtifactConfiguration.MOJANG_PRODUCTION
 
 repositories {
@@ -11,11 +15,11 @@ repositories {
 }
 
 dependencies {
-    paperweight.paperDevBundle("1.21.11-R0.1-SNAPSHOT")
+    paperweight.paperDevBundle("$minecraftVersion-R0.1-SNAPSHOT")
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    toolchain.languageVersion = JavaLanguageVersion.of(javaVersion)
 }
 
 tasks {
@@ -23,12 +27,15 @@ tasks {
         // Configure the Minecraft version for our task.
         // This is the only required configuration besides applying the plugin.
         // Your plugin's jar (or shadowJar if present) will be used automatically.
-        minecraftVersion("1.21.11")
+        minecraftVersion(minecraftVersion)
         jvmArgs("-Xms2G", "-Xmx2G", "-Dcom.mojang.eula.agree=true")
     }
 
     processResources {
-        val props = mapOf("version" to version)
+        val props = mapOf(
+            "version" to version,
+            "apiVersion" to apiVersion
+        )
         filesMatching("plugin.yml") {
             expand(props)
         }

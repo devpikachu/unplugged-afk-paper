@@ -2,7 +2,7 @@ name: unplugged-afk
 version: '${version}'
 
 main: dev.detpikachu.unpluggedAfk.UnpluggedAfk
-api-version: '1.21.11'
+api-version: '${apiVersion}'
 load: POSTWORLD
 
 permissions:
