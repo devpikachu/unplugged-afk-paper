@@ -26,6 +26,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
 
     private boolean isFake = false;
     private boolean isSpawnStatePending = true;
+    private boolean isKilled = false;
     private int durationMins;
     private final long startAtMillis = System.currentTimeMillis();
     private long timeoutAtMillis = Long.MAX_VALUE;
@@ -76,6 +77,10 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     }
 
     public void kill(Component message) {
+        if (this.isKilled) {
+            return;
+        }
+
         final var server = this.level().getServer();
         server.schedule(
                 new TickTask(server.getTickCount(), () -> {
@@ -83,6 +88,8 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
                     this.connection.connection.channel.close();
                 })
         );
+
+        this.isKilled = true;
     }
 
     @Override
@@ -150,8 +157,8 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     }
 
     @Override
-    public void remove(@NonNull RemovalReason reason) {
-        super.remove(reason);
+    public void onRemoval(@NonNull RemovalReason reason) {
+        super.onRemoval(reason);
         this.kill(Component.literal(KILL_REASON_REMOVED));
     }
 
