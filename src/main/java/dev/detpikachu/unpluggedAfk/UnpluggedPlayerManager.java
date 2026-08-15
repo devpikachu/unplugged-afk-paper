@@ -28,7 +28,6 @@ public final class UnpluggedPlayerManager {
 
     private static final UnpluggedPlayerManager INSTANCE = new UnpluggedPlayerManager();
 
-
     private final ConcurrentHashMap.KeySetView<UUID, Boolean> pending;
     private final ConcurrentHashMap<UUID, UnpluggedServerPlayer> players;
 
@@ -55,6 +54,10 @@ public final class UnpluggedPlayerManager {
 
     public void remove(UnpluggedServerPlayer player) {
         this.players.remove(player.getUUID());
+    }
+
+    public void removeAll() {
+        this.players.clear();
     }
 
     public void createPlayer(ServerPlayer player, UnpluggedSession session) {
