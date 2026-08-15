@@ -43,7 +43,7 @@ public final class AdminDebugSpawnFakeCommand {
         final var durationMins = context.getArgument(ARG_DURATION_MINS, int.class);
 
         final var unpluggedPlayer = UnpluggedPlayerManager.getInstance().createFake(server, level, UUID.fromString(DUMMY_UUID), DUMMY_NAME, durationMins, sender.getName());
-        unpluggedPlayer.snapTo(executor.getX(), executor.getY(), executor.getZ(), executor.getYaw(), executor.getPitch());
+        unpluggedPlayer.connection.teleport(executor.getX(), executor.getY(), executor.getZ(), executor.getYaw(), executor.getPitch());
 
         return 1;
     }
@@ -62,7 +62,7 @@ public final class AdminDebugSpawnFakeCommand {
         }
 
         final var unpluggedPlayer = UnpluggedPlayerManager.getInstance().createFake(server, level, UUID.fromString(DUMMY_UUID), DUMMY_NAME, durationMins, reason);
-        unpluggedPlayer.snapTo(executor.getX(), executor.getY(), executor.getZ(), executor.getYaw(), executor.getPitch());
+        unpluggedPlayer.connection.teleport(executor.getX(), executor.getY(), executor.getZ(), executor.getYaw(), executor.getPitch());
 
         return 1;
     }

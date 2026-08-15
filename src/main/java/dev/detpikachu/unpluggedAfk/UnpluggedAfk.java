@@ -4,6 +4,7 @@ import dev.detpikachu.unpluggedAfk.commands.UnpluggedCommands;
 import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
 import dev.detpikachu.unpluggedAfk.player.UnpluggedServerPlayer;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
@@ -15,8 +16,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public final class UnpluggedAfk extends JavaPlugin implements Listener {
 
+    public static ComponentLogger LOGGER;
+
     @Override
     public void onEnable() {
+        // Logger
+        LOGGER = getComponentLogger();
+
         // Config
         saveDefaultConfig();
         ConfigurationSerialization.registerClass(UnpluggedOptions.class);
