@@ -75,7 +75,7 @@ public final class UnpluggedPlayerManager {
                 throw new UnplugFailedException(EXCEPTION_FAILED_TO_DISCONNECT);
             }
 
-            this.create(level, player.gameProfile, player.clientInformation(), session);
+            this.create(level, player.gameProfile, player.clientInformation(), session).loadPersistedData();
         } finally {
             this.pending.remove(player.getUUID());
         }
