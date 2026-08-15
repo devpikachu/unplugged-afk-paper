@@ -8,7 +8,7 @@ import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.DEFAULT_MAX_DURATIO
 public final class UnpluggedOptions {
 
     private static final UnpluggedOptions INSTANCE = new UnpluggedOptions();
-    
+
     private static final String KEY_MAX_DURATION_MINS = "maxDurationMins";
 
     private int maxDurationMins = DEFAULT_MAX_DURATION_MINS;
