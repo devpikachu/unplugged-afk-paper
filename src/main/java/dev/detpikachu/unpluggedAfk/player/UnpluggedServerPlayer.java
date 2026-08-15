@@ -20,6 +20,7 @@ import net.minecraft.world.level.portal.TeleportTransition;
 import org.jspecify.annotations.NonNull;
 
 import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.KILL_REASON_EXPIRED;
+import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.KILL_REASON_REMOVED;
 
 public final class UnpluggedServerPlayer extends ServerPlayer {
 
@@ -146,6 +147,12 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         }
 
         return this.connection.player;
+    }
+
+    @Override
+    public void remove(@NonNull RemovalReason reason) {
+        super.remove(reason);
+        this.kill(Component.literal(KILL_REASON_REMOVED));
     }
 
     private void applyDeferredSpawnState(MinecraftServer server) {

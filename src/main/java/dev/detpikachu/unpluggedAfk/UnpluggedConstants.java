@@ -6,6 +6,7 @@ public final class UnpluggedConstants {
 
     public static final String KILL_REASON_DISABLED = "Plugin disabled";
     public static final String KILL_REASON_EXPIRED = "Expired";
+    public static final String KILL_REASON_REMOVED = "Entity removed";
 
     public static final String EXCEPTION_FAILED_TO_DISCONNECT = "Failed to disconnect player";
 
