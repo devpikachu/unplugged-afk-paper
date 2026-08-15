@@ -14,7 +14,7 @@ Once the time has elapsed, the unplugged player is automatically kicked from the
 ## Prerequisites & Installation
 
 - **Server:** Paper or any fork that supports Paper plugins
-- **Minecraft Version**: 1.21.x, tested against 1.21.11
+- **Minecraft Version**: 1.21.11 exactly
 
 ## Features
 
