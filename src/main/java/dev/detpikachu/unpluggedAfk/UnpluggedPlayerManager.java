@@ -97,6 +97,7 @@ public final class UnpluggedPlayerManager {
 
         unpluggedPlayer.gameMode.changeGameModeForPlayer(GameType.DEFAULT_MODE, PlayerGameModeChangeEvent.Cause.DEFAULT_GAMEMODE, null);
         unpluggedPlayer.setIsFake(true);
+        unpluggedPlayer.getBukkitEntity().setPersistent(false);
 
         return unpluggedPlayer;
     }
