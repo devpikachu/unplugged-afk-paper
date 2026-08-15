@@ -3,6 +3,7 @@ package dev.detpikachu.unpluggedAfk.player;
 import com.mojang.authlib.GameProfile;
 import dev.detpikachu.unpluggedAfk.UnpluggedConstants;
 import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
+import dev.detpikachu.unpluggedAfk.network.UnpluggedConnection;
 import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
@@ -78,6 +79,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         server.schedule(
                 new TickTask(server.getTickCount(), () -> {
                     this.connection.onDisconnect(new DisconnectionDetails(message));
+                    this.connection.connection.channel.close();
                 })
         );
     }
