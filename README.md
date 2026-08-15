@@ -11,6 +11,11 @@ to server farming!
 
 Once the time has elapsed, the unplugged player is automatically kicked from the server to free up resources!
 
+> [!IMPORTANT]
+> The unplugged player that is left on the server is an interactable, killable version of the player! Its inventory is
+the same as the player at the time of unplugging and any items it picks up will be reflected when the player comes back.
+If the unplugged player dies, the player will be greeted with the death screen on rejoining.
+
 ## Prerequisites & Installation
 
 - **Server:** Paper or any fork that supports Paper plugins
@@ -56,6 +61,16 @@ Once the time has elapsed, the unplugged player is automatically kicked from the
 | maxUnpluggedPlayers | The maximum amount of unplugged players that can exist at the same time                                                                    | `16`    | `1`     |
 | maxDurationMins     | The maximum duration a player can unplug for, in minutes                                                                                   | `480`   | `1`     |
 
+## Permissions
+
+| Key                         | Description                                                              | Granted by            |
+|-----------------------------|--------------------------------------------------------------------------|-----------------------|
+| `unplugged-afk.unplug`      | Gives access to the `/unplug` player command                             | Default               |
+| `unplugged-afk.admin`       | Gives access to all admin commands                                       |                       |
+| `unplugged-afk.admin.info`  | Gives access to the `/unplugged info` admin command                      | `unplugged-afk.admin` |
+| `unplugged-afk.admin.list`  | Gives access to the `/unplugged list` admin command                      | `unplugged-afk.admin` |
+| `unplugged-afk.admin.debug` | Gives access to the `/unplugged debug` admin command and its subcommands | `unplugged-afk.admin` |
+
 ## Debug Functionality
 
 All the functionality described in this section is gated behind the `debug` configuration flag.
@@ -68,7 +83,7 @@ All the functionality described in this section is gated behind the `debug` conf
 ### Functionality
 
 - A text file containing various data such as Unix timestamp, position, dimension, inventory contents, etc. is dumped in
-  `plugins/unplugged-afk/dumps/` every time a player unplugs.
+  `plugins/unplugged-afk/dumps/` every time a real player unplugs.
 
 ## Acknowledgements
 
