@@ -1,10 +1,8 @@
 package dev.detpikachu.unpluggedAfk.formatting;
 
 import dev.detpikachu.unpluggedAfk.player.UnpluggedServerPlayer;
-import javax.annotation.Nullable;
 import net.kyori.adventure.text.Component;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
-import org.bukkit.entity.Player;
 
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.GOLD;
