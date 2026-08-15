@@ -8,6 +8,7 @@ import io.papermc.paper.util.KeepAlive;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.MinecraftServer;
@@ -43,8 +44,8 @@ public final class UnpluggedPlayerManager {
         return this.pending.contains(uuid);
     }
 
-    public ConcurrentHashMap<UUID, UnpluggedServerPlayer> getPlayers() {
-        return this.players;
+    public void forEach(Consumer<UnpluggedServerPlayer> action) {
+        this.players.values().forEach(action);
     }
 
     public void remove(UnpluggedServerPlayer player) {
