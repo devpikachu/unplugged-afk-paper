@@ -3,11 +3,14 @@ package dev.detpikachu.unpluggedAfk.commands.admin;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
+import dev.detpikachu.unpluggedAfk.UnpluggedAfk;
 import dev.detpikachu.unpluggedAfk.formatting.UnpluggedChatFormatting;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
+import net.minecraft.network.chat.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.CraftServer;
 import org.bukkit.craftbukkit.CraftWorld;
@@ -15,6 +18,7 @@ import org.bukkit.craftbukkit.entity.CraftPlayer;
 
 import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.PERM_ADMIN;
 import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.PERM_ADMIN_INFO;
+import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandErrors.ERR_GENERIC;
 
 public final class AdminInfoCommand {
 
@@ -43,7 +47,7 @@ public final class AdminInfoCommand {
         return 1;
     }
 
-    private static int executeWithPlayer(CommandContext<CommandSourceStack> context) {
+    private static int executeWithPlayer(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         final var sender = context.getSource().getSender();
         final var playerResolver = context.getArgument(ARG_PLAYER, PlayerSelectorArgumentResolver.class);
 
@@ -51,8 +55,8 @@ public final class AdminInfoCommand {
             final var player = (CraftPlayer) playerResolver.resolve(context.getSource()).getFirst();
             sender.sendMessage(UnpluggedChatFormatting.format(player));
         } catch (CommandSyntaxException e) {
-            // TODO: Should swallow and print user-friendly error
-            throw new RuntimeException(e);
+            UnpluggedAfk.LOGGER.error(e.getRawMessage().getString());
+            throw ERR_GENERIC.create();
         }
 
         return 1;

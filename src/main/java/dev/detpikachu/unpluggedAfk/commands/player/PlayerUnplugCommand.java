@@ -3,11 +3,14 @@ package dev.detpikachu.unpluggedAfk.commands.player;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.detpikachu.unpluggedAfk.UnpluggedPlayerManager;
 import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.CraftServer;
@@ -15,6 +18,8 @@ import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 
 import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.PERM_UNPLUG;
+import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandErrors.ERR_NOT_A_PLAYER;
+import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandErrors.ERR_REASON_REQUIRED;
 
 public final class PlayerUnplugCommand {
 
@@ -35,33 +40,31 @@ public final class PlayerUnplugCommand {
                 .build();
     }
 
-    private static int execute(CommandContext<CommandSourceStack> context) {
+    private static int execute(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         final var server = ((CraftServer) Bukkit.getServer()).getServer();
         final var executor = context.getSource().getExecutor();
-        final var level = ((CraftWorld) executor.getWorld()).getHandle();
 
+        if (executor == null) {
+            throw ERR_NOT_A_PLAYER.create();
+        }
+
+        final var level = ((CraftWorld) executor.getWorld()).getHandle();
         final var durationMins = context.getArgument(ARG_DURATION_MINS, int.class);
         final var reason = context.getArgument(ARG_REASON, String.class);
 
         if (reason == null || reason.isBlank()) {
-            // TODO: Better error message
-            executor.sendPlainMessage("Reason blank");
-            return 1;
+            throw ERR_REASON_REQUIRED.create();
         }
 
         if (!(executor instanceof CraftPlayer craftPlayer)) {
-            // TODO: Better error message
-            executor.sendPlainMessage("Invalid executor");
-            return 1;
+            throw ERR_NOT_A_PLAYER.create();
         }
 
         if (!(craftPlayer.getHandle() instanceof ServerPlayer player)) {
-            // TODO: Better error message
-            executor.sendPlainMessage("Invalid executor");
-            return 1;
+            throw ERR_NOT_A_PLAYER.create();
         }
 
-        // Spawn unplugged player
+        // TODO: Try-catch
         UnpluggedPlayerManager.getInstance().unplugPlayer(server, level, player, durationMins, reason);
 
         return 1;

@@ -87,13 +87,8 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         final var server = this.level().getServer();
 
         if (server.getTickCount() % 10 != 0) {
-            try {
-                super.tick();
-                this.doTick();
-            } catch (NullPointerException exception) {
-                // Do nothing
-            }
-
+            super.tick();
+            this.doTick();
             return;
         }
 
@@ -115,12 +110,8 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         this.connection.resetPosition();
         this.level().getChunkSource().move(this);
 
-        try {
-            super.tick();
-            this.doTick();
-        } catch (NullPointerException exception) {
-            // Do nothing
-        }
+        super.tick();
+        this.doTick();
     }
 
     @Override
