@@ -14,9 +14,9 @@ import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.PERM_ADMIN_INFO;
 
 public final class AdminInfoCommand {
 
-    private final static String CMD_INFO = "info";
+    private static final String CMD_INFO = "info";
 
-    private final static String ARG_PLAYER = "player";
+    private static final String ARG_PLAYER = "player";
 
     public static LiteralArgumentBuilder<CommandSourceStack> construct() {
         final var root = Commands.literal(CMD_INFO);

@@ -14,7 +14,7 @@ import org.jspecify.annotations.NonNull;
 
 public final class UnpluggedConnection extends Connection {
 
-    private static final SocketAddress address = new InetSocketAddress("127.0.0.1", 65535);
+    private static final SocketAddress ADDRESS = new InetSocketAddress("127.0.0.1", 65535);
 
     public UnpluggedConnection(PacketFlow receiving) {
         super(receiving);
@@ -53,6 +53,6 @@ public final class UnpluggedConnection extends Connection {
 
     @Override
     public @NonNull SocketAddress getRemoteAddress() {
-        return address;
+        return ADDRESS;
     }
 }

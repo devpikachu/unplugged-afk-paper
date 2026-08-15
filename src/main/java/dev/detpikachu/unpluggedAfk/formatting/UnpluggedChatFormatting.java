@@ -46,7 +46,7 @@ public final class UnpluggedChatFormatting {
         final var reasonValue = text(unpluggedPlayer.getReason());
 
         final var isFakeLabel = text("Is Fake: ", GRAY);
-        final var isFakeValue = unpluggedPlayer.getIsFake() ? text("true", GREEN) : text("false", RED);
+        final var isFakeValue = unpluggedPlayer.isFake() ? text("true", GREEN) : text("false", RED);
 
         return informationFor.append(playerName).append(colon).appendNewline()
                 .append(durationLabel).append(durationValue).appendNewline()

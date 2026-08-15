@@ -2,7 +2,7 @@ package dev.detpikachu.unpluggedAfk;
 
 public final class UnpluggedConstants {
 
-    public static final int DEFAULT_DURATION = 480; //min, = 8h
+    public static final int DEFAULT_DURATION_MINS = 480;
 
     public static final String KILL_REASON_DISABLED = "Plugin disabled";
     public static final String KILL_REASON_EXPIRED = "Expired";

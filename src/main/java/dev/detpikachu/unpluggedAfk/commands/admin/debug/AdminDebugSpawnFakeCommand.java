@@ -18,16 +18,16 @@ import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandErrors.ERR_NO
 
 public final class AdminDebugSpawnFakeCommand {
 
-    private final static String CMD_DUMMY = "spawn-fake";
+    private static final String CMD_SPAWN_FAKE = "spawn-fake";
 
-    private final static String ARG_DURATION_MINS = "durationMins";
-    private final static String ARG_REASON = "reason";
+    private static final String ARG_DURATION_MINS = "durationMins";
+    private static final String ARG_REASON = "reason";
 
-    private final static String DUMMY_UUID = "ccdb9503-cd7b-4ad2-b7cb-00d165a73e2a";
-    private final static String DUMMY_NAME = "Fakeson";
+    private static final String DUMMY_UUID = "ccdb9503-cd7b-4ad2-b7cb-00d165a73e2a";
+    private static final String DUMMY_NAME = "Fakeson";
 
     public static LiteralArgumentBuilder<CommandSourceStack> construct() {
-        final var root = Commands.literal(CMD_DUMMY);
+        final var root = Commands.literal(CMD_SPAWN_FAKE);
 
         final var durationMins = Commands.argument(ARG_DURATION_MINS, IntegerArgumentType.integer(1, UnpluggedOptions.getInstance().getMaxDurationMins()));
         final var reason = Commands.argument(ARG_REASON, StringArgumentType.greedyString());

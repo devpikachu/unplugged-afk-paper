@@ -11,7 +11,7 @@ import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.PERM_ADMIN_INFO;
 
 public final class AdminCommands {
 
-    private final static String CMD_UNPLUGGED = "unplugged";
+    private static final String CMD_UNPLUGGED = "unplugged";
 
     public static LiteralCommandNode<CommandSourceStack> construct() {
         final var root = Commands.literal(CMD_UNPLUGGED);

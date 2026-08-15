@@ -21,10 +21,10 @@ import static dev.detpikachu.unpluggedAfk.commands.UnpluggedCommandErrors.ERR_RE
 
 public final class PlayerUnplugCommand {
 
-    private final static String CMD_UNPLUG = "unplug";
+    private static final String CMD_UNPLUG = "unplug";
 
-    private final static String ARG_DURATION_MINS = "durationMins";
-    private final static String ARG_REASON = "reason";
+    private static final String ARG_DURATION_MINS = "durationMins";
+    private static final String ARG_REASON = "reason";
 
     public static LiteralCommandNode<CommandSourceStack> construct() {
         final var root = Commands.literal(CMD_UNPLUG);

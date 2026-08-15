@@ -8,7 +8,7 @@ import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.PERM_ADMIN_DEBUG;
 
 public final class AdminDebugCommands {
 
-    private final static String CMD_DEBUG = "debug";
+    private static final String CMD_DEBUG = "debug";
 
     public static LiteralArgumentBuilder<CommandSourceStack> construct() {
         final var root = Commands.literal(CMD_DEBUG);

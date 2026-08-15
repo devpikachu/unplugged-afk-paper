@@ -36,7 +36,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         super(server, level, gameProfile, clientInformation);
     }
 
-    public boolean getIsFake() {
+    public boolean isFake() {
         return this.isFake;
     }
 
