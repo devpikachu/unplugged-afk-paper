@@ -59,19 +59,8 @@ public final class PlayerUnplugCommand {
             return 1;
         }
 
-        // Save transform
-        final var x = executor.getX();
-        final var y = executor.getY();
-        final var z = executor.getZ();
-        final var yRot = executor.getYaw();
-        final var xRot = executor.getPitch();
-
-        // Kick player
-        player.connection.disconnect(Component.literal("AFK'd"));
-
         // Spawn unplugged player
-        final var unpluggedPlayer = UnpluggedPlayerManager.getInstance().unplugPlayer(server, level, player, durationMins, reason);
-        unpluggedPlayer.snapTo(x, y, z, yRot, xRot);
+        UnpluggedPlayerManager.getInstance().unplugPlayer(server, level, player, durationMins, reason);
 
         return 1;
     }

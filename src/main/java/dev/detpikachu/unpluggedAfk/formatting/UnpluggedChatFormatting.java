@@ -3,6 +3,7 @@ package dev.detpikachu.unpluggedAfk.formatting;
 import dev.detpikachu.unpluggedAfk.player.UnpluggedServerPlayer;
 import net.kyori.adventure.text.Component;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.entity.Player;
 
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.GOLD;
@@ -10,6 +11,7 @@ import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
 import static net.kyori.adventure.text.format.NamedTextColor.GREEN;
 import static net.kyori.adventure.text.format.NamedTextColor.RED;
 import static net.kyori.adventure.text.format.NamedTextColor.WHITE;
+import static net.kyori.adventure.text.format.NamedTextColor.YELLOW;
 
 // TODO: Configurable messages
 public final class UnpluggedChatFormatting {
@@ -52,6 +54,20 @@ public final class UnpluggedChatFormatting {
                 .append(endsAtLabel).append(endsAtValue).appendNewline()
                 .append(reasonLabel).append(reasonValue).appendNewline()
                 .append(isFakeLabel).append(isFakeValue);
+    }
+
+    public static Component formatUnplugged(Player player) {
+        final var playerName = text(player.getName(), YELLOW);
+        final var unplugged = text(" has unplugged, leaving their character behind", YELLOW);
+
+        return playerName.append(unplugged);
+    }
+
+    public static Component formatReplugged(Player player) {
+        final var playerName = text(player.getName(), YELLOW);
+        final var replugged = text(" has returned to inhabit their character", YELLOW);
+
+        return playerName.append(replugged);
     }
 
     private static Component formatDuration(int durationMins) {

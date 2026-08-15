@@ -1,5 +1,6 @@
 package dev.detpikachu.unpluggedAfk;
 
+import com.google.common.collect.ConcurrentHashMultiset;
 import com.mojang.authlib.GameProfile;
 import dev.detpikachu.unpluggedAfk.network.UnpluggedConnection;
 import dev.detpikachu.unpluggedAfk.network.UnpluggedGamePacketListener;
@@ -8,6 +9,8 @@ import io.papermc.paper.util.KeepAlive;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ClientInformation;
@@ -26,9 +29,11 @@ public final class UnpluggedPlayerManager {
 
     private static final UnpluggedPlayerManager INSTANCE = new UnpluggedPlayerManager();
 
+    private final ConcurrentLinkedQueue<UUID> pending;
     private final ConcurrentHashMap<UUID, UnpluggedServerPlayer> players;
 
     private UnpluggedPlayerManager() {
+        this.pending = new ConcurrentLinkedQueue<>();
         this.players = new ConcurrentHashMap<>(16, 0.9F, 1);
     }
 
@@ -36,11 +41,22 @@ public final class UnpluggedPlayerManager {
         return INSTANCE;
     }
 
+    public boolean isPending(UUID uuid) {
+        return this.pending.contains(uuid);
+    }
+
+    public boolean isUnplugged(UUID uuid) {
+        return this.players.containsKey(uuid);
+    }
+
     public void remove(UnpluggedServerPlayer player) {
         this.players.remove(player.getUUID());
     }
 
     public UnpluggedServerPlayer unplugPlayer(MinecraftServer server, ServerLevel level, ServerPlayer player, int durationMins, String reason) {
+        pending.add(player.getUUID());
+        player.connection.disconnect(Component.literal("AFK'd"));
+
         final var unpluggedPlayer = this.create(server, level, player.gameProfile, player.clientInformation(), durationMins, reason);
 
         unpluggedPlayer.setChatSession(player.getChatSession());
@@ -74,6 +90,7 @@ public final class UnpluggedPlayerManager {
             });
         }
 
+        this.pending.remove(unpluggedPlayer.getUUID());
         return unpluggedPlayer;
     }
 
