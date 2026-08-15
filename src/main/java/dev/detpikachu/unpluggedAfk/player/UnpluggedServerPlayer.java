@@ -159,6 +159,11 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     @Override
     public void onRemoval(@NonNull RemovalReason reason) {
         super.onRemoval(reason);
+
+        if (reason == RemovalReason.CHANGED_DIMENSION) {
+            return;
+        }
+
         this.kill(Component.literal(KILL_REASON_REMOVED));
     }
 
