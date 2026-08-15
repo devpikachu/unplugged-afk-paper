@@ -1,9 +1,7 @@
 package dev.detpikachu.unpluggedAfk.player;
 
 import com.mojang.authlib.GameProfile;
-import dev.detpikachu.unpluggedAfk.UnpluggedConstants;
 import dev.detpikachu.unpluggedAfk.config.UnpluggedOptions;
-import dev.detpikachu.unpluggedAfk.network.UnpluggedConnection;
 import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
@@ -20,6 +18,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.portal.TeleportTransition;
 import org.jspecify.annotations.NonNull;
+
+import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.KILL_REASON_EXPIRED;
 
 public final class UnpluggedServerPlayer extends ServerPlayer {
 
@@ -105,7 +105,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         }
 
         if (System.currentTimeMillis() >= this.timeoutAtMillis) {
-            final var reason = Component.literal(UnpluggedConstants.KILL_REASON_EXPIRED);
+            final var reason = Component.literal(KILL_REASON_EXPIRED);
             this.kill(reason);
         }
 

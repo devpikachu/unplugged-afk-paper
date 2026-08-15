@@ -1,7 +1,8 @@
 package dev.detpikachu.unpluggedAfk.config;
 
-import dev.detpikachu.unpluggedAfk.UnpluggedConstants;
 import org.bukkit.configuration.file.FileConfiguration;
+
+import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.DEFAULT_DURATION;
 
 public final class UnpluggedOptions {
 
@@ -20,7 +21,7 @@ public final class UnpluggedOptions {
     public int getDefaultDurationMins() {
         // TODO: This is less than ideal since this method has side-effects. Good enough for MVP.
         if (this.defaultDurationMins <= 0) {
-            this.defaultDurationMins = UnpluggedConstants.DEFAULT_DURATION;
+            this.defaultDurationMins = DEFAULT_DURATION;
         }
 
         if (this.defaultDurationMins > this.getMaxDurationMins()) {
@@ -33,14 +34,14 @@ public final class UnpluggedOptions {
     public int getMaxDurationMins() {
         // TODO: This is less than ideal since this method has side-effects. Good enough for MVP.
         if (this.maxDurationMins <= 0) {
-            this.maxDurationMins = UnpluggedConstants.DEFAULT_DURATION;
+            this.maxDurationMins = DEFAULT_DURATION;
         }
 
         return this.maxDurationMins;
     }
 
     public static void deserialize(FileConfiguration config) {
-        INSTANCE.defaultDurationMins = config.getInt(DEFAULT_DURATION_MINS, UnpluggedConstants.DEFAULT_DURATION);
-        INSTANCE.maxDurationMins = config.getInt(MAX_DURATION_MINS, UnpluggedConstants.DEFAULT_DURATION);
+        INSTANCE.defaultDurationMins = config.getInt(DEFAULT_DURATION_MINS, DEFAULT_DURATION);
+        INSTANCE.maxDurationMins = config.getInt(MAX_DURATION_MINS, DEFAULT_DURATION);
     }
 }

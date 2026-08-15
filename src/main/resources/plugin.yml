@@ -11,7 +11,6 @@ permissions:
     default: true
   unplugged-afk.admin:
     description: Gives access to all admin commands
-    default: op
   unplugged-afk.admin.info:
     description: Gives access to the '/unplugged info' admin command
   unplugged-afk.admin.debug:

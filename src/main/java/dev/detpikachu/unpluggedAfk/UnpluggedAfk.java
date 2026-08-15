@@ -15,6 +15,8 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.KILL_REASON_DISABLED;
+
 public final class UnpluggedAfk extends JavaPlugin implements Listener {
 
     public static ComponentLogger LOGGER;
@@ -37,7 +39,7 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-        UnpluggedPlayerManager.getInstance().getPlayers().forEachValue(Long.MAX_VALUE, unpluggedPlayer -> unpluggedPlayer.kill(Component.literal(UnpluggedConstants.KILL_REASON_DISABLED)));
+        UnpluggedPlayerManager.getInstance().getPlayers().forEachValue(Long.MAX_VALUE, unpluggedPlayer -> unpluggedPlayer.kill(Component.literal(KILL_REASON_DISABLED)));
     }
 
     @EventHandler

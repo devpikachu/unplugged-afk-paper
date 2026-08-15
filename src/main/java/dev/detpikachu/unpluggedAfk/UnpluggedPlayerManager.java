@@ -21,6 +21,8 @@ import net.minecraft.world.level.storage.TagValueInput;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 
+import static dev.detpikachu.unpluggedAfk.UnpluggedConstants.EXCEPTION_FAILED_TO_DISCONNECT;
+
 public final class UnpluggedPlayerManager {
 
     private static final UnpluggedPlayerManager INSTANCE = new UnpluggedPlayerManager();
@@ -56,7 +58,7 @@ public final class UnpluggedPlayerManager {
             player.getBukkitEntity().kick(Component.text("AFK"), PlayerKickEvent.Cause.PLUGIN);
 
             if (server.getPlayerList().getPlayer(player.getUUID()) != null) {
-                throw new RuntimeException(UnpluggedConstants.EXCEPTION_FAILED_TO_DISCONNECT);
+                throw new RuntimeException(EXCEPTION_FAILED_TO_DISCONNECT);
             }
 
             final var unpluggedPlayer = this.create(server, level, player.gameProfile, player.clientInformation(), durationMins, reason);
