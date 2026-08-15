@@ -23,6 +23,8 @@ Once the time has elapsed, the unplugged player is automatically kicked from the
   players
 - **Admin control:** Server admins have commands allowing them to inspect unplugged players, as well as debug various
   aspects of the plugin
+- **Capped:** Configurable limit to how many unplugged players can exist at the same time, to prevent resource
+  exhaustion on AFK players
 
 ### Planned Features
 
@@ -45,18 +47,32 @@ Once the time has elapsed, the unplugged player is automatically kicked from the
 
 - `/unplugged info <player>` - Shows the unplugged information for `player`.
 - `/unplugged list` - Shows the list of unplugged players, as well as how many slots of the cap are occupied
-- `/unplugged debug spawn-fake <duration> [reason]` - Spawns a fake player with a random UUID and name for `duration`
-  minutes, with an optional `reason`.
 
 ## Configuration
 
-| Key             | Description                                              | Default |
-|-----------------|----------------------------------------------------------|---------|
-| maxDurationMins | The maximum duration a player can unplug for, in minutes | `480`   |
+| Key                 | Description                                                                                                                                | Default |
+|---------------------|--------------------------------------------------------------------------------------------------------------------------------------------|---------|
+| debug               | Enables certain debug functionality, such as dumping a bunch of data such as the player's inventory to the server's files when they unplug | `false` |
+| maxUnpluggedPlayers | The maximum amount of unplugged players that can exist at the same time                                                                    | `16`    |
+| maxDurationMins     | The maximum duration a player can unplug for, in minutes                                                                                   | `480`   |
+
+## Debug Functionality
+
+All the functionality described in this section is gated behind the `debug` configuration flag.
+
+### Admin Commands
+
+- `/unplugged debug spawn-fake <duration> [reason]` - Spawns a fake player with a random UUID and name for `duration`
+  minutes, with an optional `reason`.
+
+### Functionality
+
+- A text file containing various data such as Unix timestamp, position, dimension, inventory contents, etc. is dumped in `plugins/unplugged-afk/dumps/` every time a player unplugs.
 
 ## Acknowledgements
 
-Huge thanks to Sakura Ryoko for their mod [Unplugged-AFK](https://github.com/sakura-ryoko/unplugged-afk) of which this is a port of. This plugin wouldn't exist without their work.
+Huge thanks to Sakura Ryoko for their mod [Unplugged-AFK](https://github.com/sakura-ryoko/unplugged-afk) of which this
+is a port of. This plugin wouldn't exist without their work.
 
 ## License
 
