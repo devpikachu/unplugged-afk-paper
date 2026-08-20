@@ -13,6 +13,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Extract release notes
+        run: ./scripts/changelog.sh notes "${GITHUB_REF_NAME#v}" > release-notes.md
+
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -28,5 +31,6 @@ jobs:
         with:
           draft: true
           generate_release_notes: true
+          body_path: release-notes.md
           files: '*/build/libs/*.jar'
           fail_on_unmatched_files: true

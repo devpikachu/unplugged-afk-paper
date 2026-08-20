@@ -1,0 +1,40 @@
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+Entries under `## [Unreleased]` are written by hand. `scripts/changelog.sh bump` stamps them into a released section and
+tags the release; pushing that tag makes CI publish the section as the GitHub release notes.
+
+## [Unreleased]
+
+### Added
+
+- **Proxy support:** behind Velocity, unplugging disconnects you from the whole network
+- **Companion plugin:** a second JAR for the proxy, which sends you back to the backend your unplugged player is on
+- **Session persistence:** the proxy keeps its routing records across a restart or crash
+
+### Changed
+
+- **Logging:** more detail on unplugging, expiry, and proxy session events
+
+### Fixed
+
+- **Duplicate players:** the unplugged player is now created only after the real player has fully disconnected
+
+## [0.1.0] - 2026-08-15
+
+### Added
+
+- **Go green:** Turn off your computer and leave your unplugged player to AFK for you
+- **Customizable limits:** Server operators can configure the maximum duration, as well as a global cap of unplugged
+  players
+- **Admin control:** Server admins have commands allowing them to inspect unplugged players, as well as debug various
+  aspects of the plugin
+- **Capped:** Configurable limit to how many unplugged players can exist at the same time, to prevent resource
+  exhaustion on AFK players
+
+[unreleased]: https://github.com/devpikachu/unplugged-afk-paper/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/devpikachu/unplugged-afk-paper/releases/tag/v0.1.0
