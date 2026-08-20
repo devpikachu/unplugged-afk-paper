@@ -17,4 +17,7 @@ public final class UnpluggedConstants {
     public static final String PERM_ADMIN_DEBUG = "unplugged-afk.admin.debug";
 
     public static final String EXCEPTION_FAILED_TO_DISCONNECT = "Failed to disconnect player";
+
+    public static final String CHANNEL_BUNGEE = "BungeeCord";
+    public static final String SUBCHANNEL_KICK_PLAYER_RAW = "KickPlayerRaw";
 }

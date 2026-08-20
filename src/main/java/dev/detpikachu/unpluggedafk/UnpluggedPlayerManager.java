@@ -1,5 +1,6 @@
 package dev.detpikachu.unpluggedafk;
 
+import com.google.common.io.ByteStreams;
 import com.mojang.authlib.GameProfile;
 import dev.detpikachu.unpluggedafk.config.UnpluggedOptions;
 import dev.detpikachu.unpluggedafk.exceptions.UnplugFailedException;
@@ -9,22 +10,30 @@ import dev.detpikachu.unpluggedafk.network.UnpluggedGamePacketListener;
 import dev.detpikachu.unpluggedafk.player.UnpluggedFakeIdentity;
 import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
 import dev.detpikachu.unpluggedafk.player.UnpluggedSession;
+import io.papermc.paper.configuration.GlobalConfiguration;
 import io.papermc.paper.util.KeepAlive;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.world.level.GameType;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.plugin.java.JavaPlugin;
 
+import static dev.detpikachu.unpluggedafk.UnpluggedConstants.CHANNEL_BUNGEE;
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.EXCEPTION_FAILED_TO_DISCONNECT;
+import static dev.detpikachu.unpluggedafk.UnpluggedConstants.SUBCHANNEL_KICK_PLAYER_RAW;
 
 public final class UnpluggedPlayerManager {
 
@@ -66,6 +75,7 @@ public final class UnpluggedPlayerManager {
         final var uuid = player.getUUID();
         final var level = player.level();
         final var server = level.getServer();
+        final var message = UnpluggedChatFormatting.formatUnplugged(session.durationMins(), session.reason());
 
         if (UnpluggedOptions.getInstance().isDebug()) {
             UnpluggedDumpWriter.write(player.getBukkitEntity(), session);
@@ -73,9 +83,8 @@ public final class UnpluggedPlayerManager {
 
         try {
             pending.add(uuid);
-            player.getBukkitEntity().kick(
-                    UnpluggedChatFormatting.formatUnplugged(session.durationMins(), session.reason()),
-                    PlayerKickEvent.Cause.PLUGIN);
+            this.disconnectFromProxy(player.getBukkitEntity(), message);
+            player.getBukkitEntity().kick(message, PlayerKickEvent.Cause.PLUGIN);
 
             if (server.getPlayerList().getPlayer(player.getUUID()) != null) {
                 throw new UnplugFailedException(EXCEPTION_FAILED_TO_DISCONNECT);
@@ -109,5 +118,18 @@ public final class UnpluggedPlayerManager {
         this.players.put(unpluggedPlayer.getUUID(), unpluggedPlayer);
 
         return unpluggedPlayer;
+    }
+
+    private void disconnectFromProxy(Player player, Component message) {
+        if (!GlobalConfiguration.get().proxies.velocity.enabled) {
+            return;
+        }
+
+        final var out = ByteStreams.newDataOutput();
+        out.writeUTF(SUBCHANNEL_KICK_PLAYER_RAW);
+        out.writeUTF(player.getName());
+        out.writeUTF(GsonComponentSerializer.gson().serialize(message));
+
+        player.sendPluginMessage(JavaPlugin.getPlugin(UnpluggedAfk.class), CHANNEL_BUNGEE, out.toByteArray());
     }
 }
