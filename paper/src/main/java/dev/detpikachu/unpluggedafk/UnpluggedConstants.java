@@ -20,4 +20,7 @@ public final class UnpluggedConstants {
 
     public static final String CHANNEL_BUNGEE = "BungeeCord";
     public static final String SUBCHANNEL_KICK_PLAYER_RAW = "KickPlayerRaw";
+
+    public static final String CHANNEL_SESSIONS = "unplugged-afk:sessions";
+    public static final String MESSAGE_SESSION_START = "SESSION_START";
 }

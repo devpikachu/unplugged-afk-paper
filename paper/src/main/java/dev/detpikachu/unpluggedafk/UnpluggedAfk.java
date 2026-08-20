@@ -18,6 +18,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.CHANNEL_BUNGEE;
+import static dev.detpikachu.unpluggedafk.UnpluggedConstants.CHANNEL_SESSIONS;
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.KILL_REASON_DISABLED;
 
 public final class UnpluggedAfk extends JavaPlugin implements Listener {
@@ -53,6 +54,7 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
 
         // Networking
         getServer().getMessenger().registerOutgoingPluginChannel(this, CHANNEL_BUNGEE);
+        getServer().getMessenger().registerOutgoingPluginChannel(this, CHANNEL_SESSIONS);
     }
 
     @Override

@@ -31,7 +31,9 @@ import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.CHANNEL_BUNGEE;
+import static dev.detpikachu.unpluggedafk.UnpluggedConstants.CHANNEL_SESSIONS;
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.EXCEPTION_FAILED_TO_DISCONNECT;
+import static dev.detpikachu.unpluggedafk.UnpluggedConstants.MESSAGE_SESSION_START;
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.SUBCHANNEL_KICK_PLAYER_RAW;
 
 public final class UnpluggedPlayerManager {
@@ -82,6 +84,7 @@ public final class UnpluggedPlayerManager {
 
         try {
             pending.add(uuid);
+            this.announceSessionToProxy(player.getBukkitEntity(), session);
             this.disconnectFromProxy(player.getBukkitEntity(), message);
             player.getBukkitEntity().kick(message, PlayerKickEvent.Cause.PLUGIN);
 
@@ -130,5 +133,17 @@ public final class UnpluggedPlayerManager {
         out.writeUTF(GsonComponentSerializer.gson().serialize(message));
 
         player.sendPluginMessage(JavaPlugin.getPlugin(UnpluggedAfk.class), CHANNEL_BUNGEE, out.toByteArray());
+    }
+
+    private void announceSessionToProxy(Player player, UnpluggedSession session) {
+        if (!GlobalConfiguration.get().proxies.velocity.enabled) {
+            return;
+        }
+
+        final var out = ByteStreams.newDataOutput();
+        out.writeUTF(MESSAGE_SESSION_START);
+        out.writeInt(session.durationMins());
+
+        player.sendPluginMessage(JavaPlugin.getPlugin(UnpluggedAfk.class), CHANNEL_SESSIONS, out.toByteArray());
     }
 }
