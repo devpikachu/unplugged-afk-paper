@@ -18,11 +18,10 @@ import static net.kyori.adventure.text.format.NamedTextColor.RED;
 import static net.kyori.adventure.text.format.NamedTextColor.WHITE;
 import static net.kyori.adventure.text.format.NamedTextColor.YELLOW;
 
-// TODO: Configurable messages
 public final class UnpluggedChatFormatting {
 
-    public static Component formatPlayer(CraftPlayer player) {
-        if (player.getHandle() instanceof UnpluggedServerPlayer unpluggedPlayer) {
+    public static Component formatPlayer(Player player) {
+        if (((CraftPlayer) player).getHandle() instanceof UnpluggedServerPlayer unpluggedPlayer) {
             return formatPlayer(unpluggedPlayer);
         }
 

@@ -8,7 +8,6 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
 
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.PERM_ADMIN_INFO;
 
@@ -32,7 +31,7 @@ public final class AdminInfoCommand {
         final var sender = context.getSource().getSender();
         final var playerResolver = context.getArgument(ARG_PLAYER, PlayerSelectorArgumentResolver.class);
 
-        final var player = (CraftPlayer) playerResolver.resolve(context.getSource()).getFirst();
+        final var player = playerResolver.resolve(context.getSource()).getFirst();
         sender.sendMessage(UnpluggedChatFormatting.formatPlayer(player));
 
         return 1;
