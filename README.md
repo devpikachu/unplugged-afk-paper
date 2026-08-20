@@ -27,6 +27,7 @@ the declared time is up, the unplugged player is kicked and its resources are fr
 
 - **Bypass max duration:** a permission letting staff or VIPs unplug for longer than the configured maximum
 - **Bypass cap:** a permission letting staff or VIPs unplug even once the cap is reached
+- **Configurable messages:** move the plugin's chat messages into the config, so operators can reword or translate them
 - **Count unplugged players in the server list:** report them in the player count and hover list on a proxy, the way a
   single server already does, behind a config toggle
 - **Historical data:** persist records to disk so staff can review how players have used the plugin when handling
