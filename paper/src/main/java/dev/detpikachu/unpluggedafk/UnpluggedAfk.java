@@ -4,6 +4,7 @@ import dev.detpikachu.unpluggedafk.commands.UnpluggedCommands;
 import dev.detpikachu.unpluggedafk.config.UnpluggedOptions;
 import dev.detpikachu.unpluggedafk.formatting.UnpluggedChatFormatting;
 import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
+import io.papermc.paper.configuration.GlobalConfiguration;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.io.IOException;
 import java.util.Properties;
@@ -27,6 +28,12 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
     private static final String KEY_MINECRAFT_VERSION = "minecraftVersion";
 
     public static ComponentLogger LOGGER;
+
+    public static void logDebug(String message, Object... arguments) {
+        if (UnpluggedOptions.getInstance().isDebug()) {
+            LOGGER.info(message, arguments);
+        }
+    }
 
     @Override
     public void onEnable() {
@@ -55,13 +62,21 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
         // Networking
         getServer().getMessenger().registerOutgoingPluginChannel(this, CHANNEL_BUNGEE);
         getServer().getMessenger().registerOutgoingPluginChannel(this, CHANNEL_SESSIONS);
+
+        logStartupSummary();
     }
 
     @Override
     public void onDisable() {
-        UnpluggedPlayerManager.getInstance().getPlayers()
-                .forEach(unpluggedPlayer -> unpluggedPlayer.deferredDisconnect(Component.literal(KILL_REASON_DISABLED)));
-        UnpluggedPlayerManager.getInstance().removeAll();
+        final var manager = UnpluggedPlayerManager.getInstance();
+        final var unpluggedPlayers = manager.getPlayers();
+
+        if (!unpluggedPlayers.isEmpty()) {
+            LOGGER.warn("Disabling with {} unplugged player(s) still active. Their spots will no longer be held.", unpluggedPlayers.size());
+        }
+
+        unpluggedPlayers.forEach(unpluggedPlayer -> unpluggedPlayer.deferredDisconnect(Component.literal(KILL_REASON_DISABLED)));
+        manager.removeAll();
     }
 
     @EventHandler
@@ -75,6 +90,7 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         if (((CraftPlayer) event.getPlayer()).getHandle() instanceof UnpluggedServerPlayer unpluggedPlayer) {
             UnpluggedPlayerManager.getInstance().remove(unpluggedPlayer);
+            logDebug("Removed unplugged player {} ({}). {} still active.", event.getPlayer().getName(), event.getPlayer().getUniqueId(), UnpluggedPlayerManager.getInstance().count());
             event.quitMessage(null);
             return;
         }
@@ -83,6 +99,25 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
         if (UnpluggedPlayerManager.getInstance().isPending(player.getUniqueId())) {
             event.quitMessage(UnpluggedChatFormatting.formatUnpluggedBroadcast(player));
         }
+    }
+
+    private void logStartupSummary() {
+        final var options = UnpluggedOptions.getInstance();
+
+        LOGGER.info(
+                "Enabled for Minecraft {}. debug={}, maxUnpluggedPlayers={}, maxDurationMins={}",
+                Bukkit.getMinecraftVersion(),
+                options.isDebug(),
+                options.getMaxUnpluggedPlayers(),
+                options.getMaxDurationMins()
+        );
+
+        if (GlobalConfiguration.get().proxies.velocity.enabled) {
+            LOGGER.info("Proxy mode is on. /unplug disconnects the player from the proxy, which needs bungee-plugin-message-channel = true in the Velocity config to take effect.");
+            return;
+        }
+
+        LOGGER.info("Proxy mode is off (proxies.velocity.enabled in paper-global.yml). /unplug only kicks locally, which behind a proxy redirects the player to the try list instead of disconnecting them.");
     }
 
     private String getTargetMinecraftVersion() {

@@ -5,6 +5,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import dev.detpikachu.unpluggedafk.UnpluggedPlayerManager;
 import dev.detpikachu.unpluggedafk.player.UnpluggedSession;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -45,6 +46,17 @@ public final class AdminDebugSpawnFakeCommand {
         final var unpluggedPlayer = UnpluggedPlayerManager.getInstance()
                 .createFake(executor.level(), new UnpluggedSession(durationMins, effectiveReason, true));
         unpluggedPlayer.connection.teleport(executor.getX(), executor.getY(), executor.getZ(), executor.getYRot(), executor.getXRot());
+
+        UnpluggedAfk.LOGGER.info(
+                "{} spawned fake unplugged player {} at {}, {}, {} in {} for {} minute(s).",
+                executor.getName().getString(),
+                unpluggedPlayer.getName().getString(),
+                (int) executor.getX(),
+                (int) executor.getY(),
+                (int) executor.getZ(),
+                executor.level().dimension().identifier(),
+                durationMins
+        );
 
         return 1;
     }

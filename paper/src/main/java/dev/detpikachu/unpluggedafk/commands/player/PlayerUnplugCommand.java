@@ -52,7 +52,8 @@ public final class PlayerUnplugCommand {
         try {
             UnpluggedPlayerManager.getInstance().createPlayer(player, new UnpluggedSession(durationMins, reason, false));
         } catch (UnplugFailedException exception) {
-            UnpluggedAfk.LOGGER.error("Failed to unplug player {} ({})", player.getName(), player.getUUID(), exception);
+            UnpluggedAfk.LOGGER.error("Failed to unplug player {} ({})",
+                    player.getName().getString(), player.getUUID(), exception);
             throw ERR_GENERIC.create();
         }
 

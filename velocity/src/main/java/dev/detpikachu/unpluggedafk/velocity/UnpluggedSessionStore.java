@@ -48,8 +48,12 @@ public final class UnpluggedSessionStore {
 
     public void start(UUID uuid, String serverName, int durationMins) {
         final var expiresAt = Instant.now().plus(Duration.ofMinutes(durationMins + SESSION_GRACE_MINS));
+        final var previous = this.sessions.put(uuid, new UnpluggedSession(serverName, expiresAt));
 
-        this.sessions.put(uuid, new UnpluggedSession(serverName, expiresAt));
+        if (previous != null && !previous.isExpired()) {
+            this.logger.warn("{} already had a live session on {}, now replaced by {}. Both backends may be holding a bot for them.", uuid, previous.serverName(), serverName);
+        }
+
         this.save();
     }
 
@@ -61,11 +65,18 @@ public final class UnpluggedSessionStore {
         }
 
         this.save();
-        return session.isExpired() ? Optional.empty() : Optional.of(session);
+
+        if (session.isExpired()) {
+            this.logger.info("The session for {} on {} expired at {}, so they fall back to the try list.", uuid, session.serverName(), session.expiresAt());
+            return Optional.empty();
+        }
+
+        return Optional.of(session);
     }
 
     public void load() {
         if (!Files.isRegularFile(this.file)) {
+            this.logger.info("No session file at {} yet, starting with no sessions.", this.file);
             return;
         }
 
@@ -82,7 +93,7 @@ public final class UnpluggedSessionStore {
                 }
             });
 
-            this.logger.info("Loaded {} unplugged session(s), pruned {}.", this.sessions.size(), persisted.size() - this.sessions.size());
+            this.logger.info("Loaded {} unplugged session(s) from {}, pruned {}.", this.sessions.size(), this.file, persisted.size() - this.sessions.size());
         } catch (IOException | JsonParseException exception) {
             this.logger.warn("Could not read {} - starting with no sessions.", this.file, exception);
         }

@@ -2,6 +2,7 @@ package dev.detpikachu.unpluggedafk.commands;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import dev.detpikachu.unpluggedafk.UnpluggedPlayerManager;
 import dev.detpikachu.unpluggedafk.config.UnpluggedOptions;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -24,8 +25,10 @@ public final class UnpluggedCommandGuards {
 
     public static int requireDuration(CommandContext<CommandSourceStack> context, String argument) throws CommandSyntaxException {
         final var durationMins = context.getArgument(argument, int.class);
+        final var maxDurationMins = UnpluggedOptions.getInstance().getMaxDurationMins();
 
-        if (durationMins > UnpluggedOptions.getInstance().getMaxDurationMins()) {
+        if (durationMins > maxDurationMins) {
+            UnpluggedAfk.logDebug("{} asked for {} minute(s), over the {} minute cap.", context.getSource().getSender().getName(), durationMins, maxDurationMins);
             throw errDurationTooLarge(durationMins).create();
         }
 
@@ -33,7 +36,10 @@ public final class UnpluggedCommandGuards {
     }
 
     public static void requireCapacity() throws CommandSyntaxException {
-        if (UnpluggedPlayerManager.getInstance().count() >= UnpluggedOptions.getInstance().getMaxUnpluggedPlayers()) {
+        final var maxUnpluggedPlayers = UnpluggedOptions.getInstance().getMaxUnpluggedPlayers();
+
+        if (UnpluggedPlayerManager.getInstance().count() >= maxUnpluggedPlayers) {
+            UnpluggedAfk.LOGGER.warn("Refused an unplug request: all {} slot(s) are in use. Raise maxUnpluggedPlayers to allow more.", maxUnpluggedPlayers);
             throw errCapReached().create();
         }
     }

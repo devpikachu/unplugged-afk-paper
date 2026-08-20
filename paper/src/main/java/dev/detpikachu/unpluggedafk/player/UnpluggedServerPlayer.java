@@ -27,7 +27,8 @@ import static dev.detpikachu.unpluggedafk.UnpluggedConstants.KILL_REASON_REMOVED
 
 public final class UnpluggedServerPlayer extends ServerPlayer {
 
-    private final UnpluggedConnection unpluggedConnection;
+    private static final long MILLIS_PER_MINUTE = 60_000L;
+
     private final UnpluggedSession session;
     private final long startAtMillis = System.currentTimeMillis();
     private final long timeoutAtMillis;
@@ -35,11 +36,10 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     private boolean isSpawnStatePending = true;
     private boolean isDisconnectScheduled = false;
 
-    public UnpluggedServerPlayer(MinecraftServer server, ServerLevel level, GameProfile gameProfile, ClientInformation clientInformation, UnpluggedConnection unpluggedConnection, UnpluggedSession session) {
+    public UnpluggedServerPlayer(MinecraftServer server, ServerLevel level, GameProfile gameProfile, ClientInformation clientInformation, UnpluggedSession session) {
         super(server, level, gameProfile, clientInformation);
-        this.unpluggedConnection = unpluggedConnection;
         this.session = session;
-        this.timeoutAtMillis = this.startAtMillis + (session.durationMins() * 60_000L);
+        this.timeoutAtMillis = this.startAtMillis + (session.durationMins() * MILLIS_PER_MINUTE);
     }
 
     public boolean isFake() {
@@ -106,6 +106,8 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     public void die(@NonNull DamageSource damageSource) {
         this.dismount();
         super.die(damageSource);
+
+        UnpluggedAfk.LOGGER.warn("Unplugged player {} ({}) died. Their items dropped and their spot is no longer held.", this.getName().getString(), this.getUUID());
         this.deferredDisconnect(this.getCombatTracker().getDeathMessage());
     }
 
@@ -133,6 +135,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
             return;
         }
 
+        UnpluggedAfk.logDebug("Unplugged player {} ({}) was removed from the world: {}.", this.getName().getString(), this.getUUID(), reason);
         this.deferredDisconnect(Component.literal(KILL_REASON_REMOVED));
     }
 
@@ -142,23 +145,37 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         }
         this.isDisconnectScheduled = true;
 
+        UnpluggedAfk.LOGGER.info(
+                "Killing unplugged player {} ({}) after {} of {} minute(s): {}",
+                this.getName().getString(),
+                this.getUUID(),
+                (System.currentTimeMillis() - this.startAtMillis) / MILLIS_PER_MINUTE,
+                this.session.durationMins(),
+                message.getString()
+        );
+
         final var server = this.level().getServer();
         server.schedule(new TickTask(server.getTickCount(), () -> this.connection.onDisconnect(new DisconnectionDetails(message))));
     }
 
     public void loadPersistedData() {
         try (var reporter = new ProblemReporter.ScopedCollector(this.problemPath(), UnpluggedAfk.LOGGER)) {
-            this
+            final var persisted = this
                     .level()
                     .getServer()
                     .getPlayerList()
-                    .loadPlayerData(this.nameAndId())
-                    .map(nbt -> TagValueInput.create(reporter, this.registryAccess(), nbt))
-                    .ifPresent(data -> {
-                        this.load(data);
-                        this.loadAndSpawnEnderPearls(data);
-                        this.loadAndSpawnParentVehicle(data);
-                    });
+                    .loadPlayerData(this.nameAndId());
+
+            if (persisted.isEmpty()) {
+                UnpluggedAfk.LOGGER.warn("No persisted data for {} ({}). The bot holds world spawn with an empty inventory.", this.getName().getString(), this.getUUID());
+                return;
+            }
+
+            final var data = TagValueInput.create(reporter, this.registryAccess(), persisted.get());
+
+            this.load(data);
+            this.loadAndSpawnEnderPearls(data);
+            this.loadAndSpawnParentVehicle(data);
         }
     }
 
@@ -170,6 +187,8 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         playerList.broadcastAll(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LISTED, this));
 
         this.isSpawnStatePending = false;
+
+        UnpluggedAfk.logDebug("Sent deferred spawn packets for {} ({}) after {}ms.", this.getName().getString(), this.getUUID(), System.currentTimeMillis() - this.startAtMillis);
     }
 
     private void dismount() {

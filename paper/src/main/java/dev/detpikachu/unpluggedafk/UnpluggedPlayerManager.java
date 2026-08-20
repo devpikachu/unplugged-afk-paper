@@ -74,10 +74,12 @@ public final class UnpluggedPlayerManager {
 
     public void createPlayer(ServerPlayer player, UnpluggedSession session) throws UnplugFailedException {
         final var uuid = player.getUUID();
+        final var name = player.getName().getString();
         final var level = player.level();
         final var server = level.getServer();
         final var message = UnpluggedChatFormatting.formatUnplugged(session.durationMins(), session.reason());
 
+        UnpluggedAfk.LOGGER.info("Unplugging {} ({}) for {} minute(s): {}", name, uuid, session.durationMins(), session.reason());
         if (UnpluggedOptions.getInstance().isDebug()) {
             UnpluggedDumpWriter.write(player.getBukkitEntity(), session);
         }
@@ -89,10 +91,32 @@ public final class UnpluggedPlayerManager {
             player.getBukkitEntity().kick(message, PlayerKickEvent.Cause.PLUGIN);
 
             if (server.getPlayerList().getPlayer(player.getUUID()) != null) {
+                UnpluggedAfk.LOGGER.error("{} ({}) is still connected after the kick, so nothing holds their spot.", name, uuid);
                 throw new UnplugFailedException(EXCEPTION_FAILED_TO_DISCONNECT);
             }
 
-            this.create(level, player.gameProfile, player.clientInformation(), session).loadPersistedData();
+            // From here the player is gone, so a failure leaves them disconnected with their spot unheld.
+            final UnpluggedServerPlayer unpluggedPlayer;
+
+            try {
+                unpluggedPlayer = this.create(level, player.gameProfile, player.clientInformation(), session);
+                unpluggedPlayer.loadPersistedData();
+            } catch (RuntimeException exception) {
+                UnpluggedAfk.LOGGER.error("{} ({}) was disconnected but no bot could be created to hold their spot.", name, uuid, exception);
+                throw exception;
+            }
+
+            UnpluggedAfk.LOGGER.info(
+                    "{} ({}) is unplugged at {}, {}, {} in {}. {} of {} slot(s) in use.",
+                    name,
+                    uuid,
+                    (int) unpluggedPlayer.getX(),
+                    (int) unpluggedPlayer.getY(),
+                    (int) unpluggedPlayer.getZ(),
+                    unpluggedPlayer.level().dimension().identifier(),
+                    this.count(),
+                    UnpluggedOptions.getInstance().getMaxUnpluggedPlayers()
+            );
         } finally {
             this.pending.remove(player.getUUID());
         }
@@ -112,7 +136,7 @@ public final class UnpluggedPlayerManager {
         final var cookie = new CommonListenerCookie(profile, 0, clientInformation, true, null, new HashSet<>(), new KeepAlive());
         final var connection = new UnpluggedConnection(PacketFlow.SERVERBOUND);
 
-        final var unpluggedPlayer = new UnpluggedServerPlayer(server, level, profile, clientInformation, connection, session);
+        final var unpluggedPlayer = new UnpluggedServerPlayer(server, level, profile, clientInformation, session);
 
         server.getPlayerList().placeNewPlayer(connection, unpluggedPlayer, cookie);
         unpluggedPlayer.connection = new UnpluggedGamePacketListener(server, connection, unpluggedPlayer, cookie);
@@ -137,6 +161,7 @@ public final class UnpluggedPlayerManager {
 
     private void announceSessionToProxy(Player player, UnpluggedSession session) {
         if (!GlobalConfiguration.get().proxies.velocity.enabled) {
+            UnpluggedAfk.logDebug("Proxy mode is off, so no SESSION_START was announced for {}.", player.getName());
             return;
         }
 
@@ -145,5 +170,6 @@ public final class UnpluggedPlayerManager {
         out.writeInt(session.durationMins());
 
         player.sendPluginMessage(JavaPlugin.getPlugin(UnpluggedAfk.class), CHANNEL_SESSIONS, out.toByteArray());
+        UnpluggedAfk.LOGGER.info("Announced SESSION_START for {} ({}) to the proxy: {} minute(s).", player.getName(), player.getUniqueId(), session.durationMins());
     }
 }

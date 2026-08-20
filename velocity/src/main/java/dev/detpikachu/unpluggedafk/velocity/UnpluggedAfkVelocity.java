@@ -1,11 +1,13 @@
 package dev.detpikachu.unpluggedafk.velocity;
 
+import com.google.common.io.ByteArrayDataInput;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
@@ -54,23 +56,33 @@ public final class UnpluggedAfkVelocity {
         event.setResult(PluginMessageEvent.ForwardResult.handled());
 
         if (!(event.getSource() instanceof ServerConnection source)) {
+            final var origin = event.getSource() instanceof Player player ? player.getUsername() : "an unknown source";
+
+            this.logger.warn("Ignoring a {} message from {}. Only a backend server may start a session, so this may be a client trying to pin itself to a server.", CHANNEL_SESSIONS, origin);
             return;
         }
 
-        final var in = event.dataAsDataStream();
+        try {
+            this.handleSessionMessage(source, event.dataAsDataStream());
+        } catch (RuntimeException exception) {
+            this.logger.warn("Could not read a {} message from {}. That backend may be running a different version of the plugin.", CHANNEL_SESSIONS, source.getServerInfo().getName(), exception);
+        }
+    }
+
+    private void handleSessionMessage(ServerConnection source, ByteArrayDataInput in) {
+        final var serverName = source.getServerInfo().getName();
         final var message = in.readUTF();
 
         if (!MESSAGE_SESSION_START.equals(message)) {
-            this.logger.warn("Received unexpected message {} from server.", message);
+            this.logger.warn("Received unexpected message {} from {}.", message, serverName);
             return;
         }
 
         final var durationMins = in.readInt();
         final var player = source.getPlayer();
-        final var serverName = source.getServerInfo().getName();
 
         this.sessionStore.start(player.getUniqueId(), serverName, durationMins);
-        this.logger.info("SESSION_START: {} on {} for {} minute(s)", player.getUsername(), serverName, durationMins);
+        this.logger.info("SESSION_START: {} ({}) on {} for {} minute(s)", player.getUsername(), player.getUniqueId(), serverName, durationMins);
     }
 
     @Subscribe
