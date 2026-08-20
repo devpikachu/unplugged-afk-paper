@@ -5,10 +5,12 @@ import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.plugin.Plugin;
+import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import jakarta.inject.Inject;
+import java.nio.file.Path;
 import org.slf4j.Logger;
 
 import static dev.detpikachu.unpluggedafk.velocity.UnpluggedConstants.CHANNEL_SESSIONS;
@@ -28,17 +30,19 @@ public final class UnpluggedAfkVelocity {
 
     private final Logger logger;
     private final ProxyServer proxyServer;
-    private final UnpluggedSessionStore sessionStore = new UnpluggedSessionStore();
+    private final UnpluggedSessionStore sessionStore;
 
     @Inject
-    public UnpluggedAfkVelocity(Logger logger, ProxyServer proxyServer) {
+    public UnpluggedAfkVelocity(Logger logger, ProxyServer proxyServer, @DataDirectory Path dataDirectory) {
         this.logger = logger;
         this.proxyServer = proxyServer;
+        this.sessionStore = new UnpluggedSessionStore(dataDirectory, logger);
     }
 
     @Subscribe
     public void onProxyInitialize(ProxyInitializeEvent event) {
         this.proxyServer.getChannelRegistrar().register(SESSIONS_CHANNEL);
+        this.sessionStore.load();
         this.logger.info("Unplugged AFK has been enabled.");
     }
 
