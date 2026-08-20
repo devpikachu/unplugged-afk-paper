@@ -4,7 +4,7 @@ description: Save electricity by disconnecting from the server and leaving your 
 author: Andrei "detpikachu" Hava
 website: https://github.com/devpikachu/unplugged-afk-paper
 
-main: dev.detpikachu.unpluggedAfk.UnpluggedAfk
+main: dev.detpikachu.unpluggedafk.UnpluggedAfk
 api-version: '${apiVersion}'
 load: POSTWORLD
 
