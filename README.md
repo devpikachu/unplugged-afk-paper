@@ -34,6 +34,9 @@ the declared time is up, the unplugged player is kicked and its resources are fr
   support requests or reports
 - **Re-spawn unplugged players on server reboot:** bring them back automatically when a backend restarts
 - **More admin commands:** unplug an online player on their behalf, unplug an offline player, and similar
+- **PlaceholderAPI support:** register an expansion with
+  [PlaceholderAPI](https://github.com/PlaceholderAPI/PlaceholderAPI), so scoreboards, tab lists and chat plugins can
+  show who is unplugged, for how long, and why
 
 ## Installation
 
