@@ -10,6 +10,8 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-20
+
 ### Added
 
 - **Proxy support:** behind Velocity, unplugging disconnects you from the whole network
@@ -36,5 +38,6 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 - **Capped:** Configurable limit to how many unplugged players can exist at the same time, to prevent resource
   exhaustion on AFK players
 
-[unreleased]: https://github.com/devpikachu/unplugged-afk-paper/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/devpikachu/unplugged-afk-paper/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/devpikachu/unplugged-afk-paper/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/devpikachu/unplugged-afk-paper/releases/tag/v0.1.0
