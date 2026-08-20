@@ -17,8 +17,10 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
@@ -40,6 +42,9 @@ public final class UnpluggedPlayerManager {
 
     private static final UnpluggedPlayerManager INSTANCE = new UnpluggedPlayerManager();
 
+    private static final int SPAWN_SETTLE_TICKS = 1;
+    private static final int SPAWN_TIMEOUT_TICKS = 100;
+
     private final ConcurrentHashMap.KeySetView<UUID, Boolean> pending;
     private final ConcurrentHashMap<UUID, UnpluggedServerPlayer> players;
 
@@ -53,7 +58,7 @@ public final class UnpluggedPlayerManager {
     }
 
     public int count() {
-        return this.players.size();
+        return this.players.size() + this.pending.size();
     }
 
     public boolean isPending(UUID uuid) {
@@ -78,11 +83,16 @@ public final class UnpluggedPlayerManager {
         final var level = player.level();
         final var server = level.getServer();
         final var message = UnpluggedChatFormatting.formatUnplugged(session.durationMins(), session.reason());
+        final var oldConnection = player.connection.connection;
+        final var clientInformation = player.clientInformation();
+        final var gameProfile = player.gameProfile;
 
         UnpluggedAfk.LOGGER.info("Unplugging {} ({}) for {} minute(s): {}", name, uuid, session.durationMins(), session.reason());
         if (UnpluggedOptions.getInstance().isDebug()) {
             UnpluggedDumpWriter.write(player.getBukkitEntity(), session);
         }
+
+        var spawnScheduled = false;
 
         try {
             pending.add(uuid);
@@ -90,35 +100,17 @@ public final class UnpluggedPlayerManager {
             this.disconnectFromProxy(player.getBukkitEntity(), message);
             player.getBukkitEntity().kick(message, PlayerKickEvent.Cause.PLUGIN);
 
-            if (server.getPlayerList().getPlayer(player.getUUID()) != null) {
+            if (server.getPlayerList().getPlayer(uuid) != null) {
                 UnpluggedAfk.LOGGER.error("{} ({}) is still connected after the kick, so nothing holds their spot.", name, uuid);
                 throw new UnplugFailedException(EXCEPTION_FAILED_TO_DISCONNECT);
             }
 
-            // From here the player is gone, so a failure leaves them disconnected with their spot unheld.
-            final UnpluggedServerPlayer unpluggedPlayer;
-
-            try {
-                unpluggedPlayer = this.create(level, player.gameProfile, player.clientInformation(), session);
-                unpluggedPlayer.loadPersistedData();
-            } catch (RuntimeException exception) {
-                UnpluggedAfk.LOGGER.error("{} ({}) was disconnected but no bot could be created to hold their spot.", name, uuid, exception);
-                throw exception;
-            }
-
-            UnpluggedAfk.LOGGER.info(
-                    "{} ({}) is unplugged at {}, {}, {} in {}. {} of {} slot(s) in use.",
-                    name,
-                    uuid,
-                    (int) unpluggedPlayer.getX(),
-                    (int) unpluggedPlayer.getY(),
-                    (int) unpluggedPlayer.getZ(),
-                    unpluggedPlayer.level().dimension().identifier(),
-                    this.count(),
-                    UnpluggedOptions.getInstance().getMaxUnpluggedPlayers()
-            );
+            this.spawnWhenSettled(uuid, name, level, gameProfile, clientInformation, session, oldConnection);
+            spawnScheduled = true;
         } finally {
-            this.pending.remove(player.getUUID());
+            if (!spawnScheduled) {
+                this.pending.remove(uuid);
+            }
         }
     }
 
@@ -129,6 +121,62 @@ public final class UnpluggedPlayerManager {
         unpluggedPlayer.getBukkitEntity().setPersistent(false);
 
         return unpluggedPlayer;
+    }
+
+    private void spawnWhenSettled(UUID uuid, String name, ServerLevel level, GameProfile profile,
+                                  ClientInformation clientInformation, UnpluggedSession session,
+                                  Connection oldConnection) {
+        final var server = level.getServer();
+        final var plugin = JavaPlugin.getPlugin(UnpluggedAfk.class);
+        final var waited = new AtomicInteger();
+        final var settled = new AtomicInteger();
+
+        plugin.getServer().getGlobalRegionScheduler().runAtFixedRate(plugin, task -> {
+            if (server.getPlayerList().getPlayer(uuid) != null) {
+                task.cancel();
+                this.pending.remove(uuid);
+                UnpluggedAfk.LOGGER.warn("{} ({}) reconnected before their bot existed, so none was created.", name, uuid);
+                return;
+            }
+
+            if (oldConnection.isConnected()) {
+                if (waited.incrementAndGet() < SPAWN_TIMEOUT_TICKS) {
+                    return;
+                }
+
+                UnpluggedAfk.LOGGER.warn("{} ({}) still had an open connection after {} tick(s). Creating their bot anyway.", name, uuid, SPAWN_TIMEOUT_TICKS);
+            } else if (settled.getAndIncrement() < SPAWN_SETTLE_TICKS) {
+                return;
+            }
+
+            task.cancel();
+            this.pending.remove(uuid);
+            this.spawn(uuid, name, level, profile, clientInformation, session);
+        }, 1L, 1L);
+    }
+
+    private void spawn(UUID uuid, String name, ServerLevel level, GameProfile profile, ClientInformation clientInformation, UnpluggedSession session) {
+        final UnpluggedServerPlayer unpluggedPlayer;
+
+        try {
+            unpluggedPlayer = this.create(level, profile, clientInformation, session);
+            unpluggedPlayer.loadPersistedData();
+        } catch (RuntimeException exception) {
+            UnpluggedAfk.LOGGER.error("{} ({}) was disconnected but no bot could be created to hold their spot.", name, uuid, exception);
+            return;
+        }
+
+        UnpluggedAfk.LOGGER.info(
+                "{} ({}) is unplugged at {}, {}, {} in {}. {} of {} slot(s) in use.",
+                name,
+                uuid,
+                (int) unpluggedPlayer.getX(),
+                (int) unpluggedPlayer.getY(),
+                (int) unpluggedPlayer.getZ(),
+                unpluggedPlayer.level().dimension().identifier(),
+                this.count(),
+                UnpluggedOptions.getInstance().getMaxUnpluggedPlayers()
+        );
     }
 
     private UnpluggedServerPlayer create(ServerLevel level, GameProfile profile, ClientInformation clientInformation, UnpluggedSession session) {

@@ -6,6 +6,9 @@ public final class UnpluggedConstants {
     public static final int DEFAULT_MAX_UNPLUGGED_PLAYERS = 16;
     public static final int DEFAULT_MAX_DURATION_MINS = 480;
 
+    public static final int SPAWN_SETTLE_TICKS = 1;
+    public static final int SPAWN_TIMEOUT_TICKS = 100;
+
     public static final String KILL_REASON_DISABLED = "Plugin disabled";
     public static final String KILL_REASON_EXPIRED = "Expired";
     public static final String KILL_REASON_REMOVED = "Entity removed";
