@@ -33,7 +33,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     private final long timeoutAtMillis;
 
     private boolean isSpawnStatePending = true;
-    private boolean isKilled = false;
+    private boolean isDisconnectScheduled = false;
 
     public UnpluggedServerPlayer(MinecraftServer server, ServerLevel level, GameProfile gameProfile, ClientInformation clientInformation, UnpluggedConnection unpluggedConnection, UnpluggedSession session) {
         super(server, level, gameProfile, clientInformation);
@@ -83,8 +83,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         }
 
         if (System.currentTimeMillis() >= this.timeoutAtMillis) {
-            final var reason = Component.literal(KILL_REASON_EXPIRED);
-            this.kill(reason);
+            this.deferredDisconnect(Component.literal(KILL_REASON_EXPIRED));
         }
 
         this.connection.resetPosition();
@@ -107,7 +106,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     public void die(@NonNull DamageSource damageSource) {
         this.dismount();
         super.die(damageSource);
-        this.kill(this.getCombatTracker().getDeathMessage());
+        this.deferredDisconnect(this.getCombatTracker().getDeathMessage());
     }
 
     @Override
@@ -134,23 +133,17 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
             return;
         }
 
-        this.kill(Component.literal(KILL_REASON_REMOVED));
+        this.deferredDisconnect(Component.literal(KILL_REASON_REMOVED));
     }
 
-    public void kill(Component message) {
-        if (this.isKilled) {
+    public void deferredDisconnect(Component message) {
+        if (this.isDisconnectScheduled || this.connection.processedDisconnect) {
             return;
         }
+        this.isDisconnectScheduled = true;
 
         final var server = this.level().getServer();
-        server.schedule(
-                new TickTask(server.getTickCount(), () -> {
-                    this.connection.onDisconnect(new DisconnectionDetails(message));
-                    this.unpluggedConnection.closeChannel();
-                })
-        );
-
-        this.isKilled = true;
+        server.schedule(new TickTask(server.getTickCount(), () -> this.connection.onDisconnect(new DisconnectionDetails(message))));
     }
 
     public void loadPersistedData() {
