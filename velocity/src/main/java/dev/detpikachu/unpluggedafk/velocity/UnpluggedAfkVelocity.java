@@ -2,6 +2,7 @@ package dev.detpikachu.unpluggedafk.velocity;
 
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
+import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.proxy.ProxyServer;
@@ -27,6 +28,7 @@ public final class UnpluggedAfkVelocity {
 
     private final Logger logger;
     private final ProxyServer proxyServer;
+    private final UnpluggedSessionStore sessionStore = new UnpluggedSessionStore();
 
     @Inject
     public UnpluggedAfkVelocity(Logger logger, ProxyServer proxyServer) {
@@ -59,6 +61,32 @@ public final class UnpluggedAfkVelocity {
             return;
         }
 
-        this.logger.info("SESSION_START: {} on {} for {} minute(s)", source.getPlayer().getUsername(), source.getServerInfo().getName(), in.readInt());
+        final var durationMins = in.readInt();
+        final var player = source.getPlayer();
+        final var serverName = source.getServerInfo().getName();
+
+        this.sessionStore.start(player.getUniqueId(), serverName, durationMins);
+        this.logger.info("SESSION_START: {} on {} for {} minute(s)", player.getUsername(), serverName, durationMins);
+    }
+
+    @Subscribe
+    public void onPlayerChooseInitialServer(PlayerChooseInitialServerEvent event) {
+        final var player = event.getPlayer();
+        final var session = this.sessionStore.consume(player.getUniqueId());
+
+        if (session.isEmpty()) {
+            return;
+        }
+
+        final var serverName = session.get().serverName();
+        final var server = this.proxyServer.getServer(serverName);
+
+        if (server.isEmpty()) {
+            this.logger.warn("{} unplugged on {}, which is no longer registered - falling back to the try list.", player.getUsername(), serverName);
+            return;
+        }
+
+        event.setInitialServer(server.get());
+        this.logger.info("Routing {} back to {}", player.getUsername(), serverName);
     }
 }
