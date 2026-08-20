@@ -1,52 +1,102 @@
 # Unplugged-AFK Paper
 
-**Unplugged-AFK Paper** is a **feature-incomplete** port / rewrite of the
-amazing [Unplugged-AFK](https://github.com/sakura-ryoko/unplugged-afk) Fabric mod by Sakura Ryoko, published under the
+**Unplugged-AFK Paper** is a **feature-incomplete** port of
+[Unplugged-AFK](https://github.com/sakura-ryoko/unplugged-afk), the Fabric mod by Sakura Ryoko, published under the
 LGPL3-or-later license.
 
-This is an eco-friendly Paper plugin that allows Players to "go unplugged" for a certain amount of time. By executing a
-command, a bot (or unplugged player) of themselves is spawned to stand AFK at farms, at the same time disconnecting
-their client. This allows players to safely shut down their computers, saving electricity and promoting a green approach
-to server farming!
-
-Once the time has elapsed, the unplugged player is automatically kicked from the server to free up resources!
+It lets players "go unplugged". One command disconnects your client and leaves an unplugged player standing exactly
+where you were, holding your spot at a farm. Shut the computer down, save the electricity, keep the farm running. Once
+the declared time is up, the unplugged player is kicked and its resources are freed.
 
 > [!IMPORTANT]
-> The unplugged player that is left on the server is an interactable, killable version of the player! Its inventory is
-the same as the player at the time of unplugging and any items it picks up will be reflected when the player comes back.
-If the unplugged player dies, the player will be greeted with the death screen on rejoining.
+> The unplugged player left behind is an interactable, killable version of you. Its inventory is the one you had at the
+> moment you unplugged, and anything it picks up will be there when you come back. If it dies, you will be greeted with
+> the death screen on rejoining.
 
-## Prerequisites & Installation
+## Features
 
-- **Server:** Paper or any fork that supports Paper plugins
-- **Minecraft Version**: 1.21.11 exactly
+- **Go green:** turn off your computer and leave your unplugged player to AFK for you
+- **Inventory carries over:** the unplugged player starts with your inventory, and hands back whatever it collected
+- **Configurable limits:** operators set the maximum duration and a global cap on how many unplugged players can exist
+  at once, so an AFK crowd cannot exhaust the server
+- **Admin control:** commands to inspect who is unplugged, and to debug the plugin's behaviour
+- **Proxy aware:** behind Velocity, unplugging disconnects you from the whole network, and returning puts you back on
+  the server your unplugged player is on
 
-Each release ships two jars:
+### Planned
 
-| Jar | Goes in | Required |
-|-----|---------|----------|
-| `unplugged-afk-<version>.jar` | every backend's `plugins/` | Yes |
+- **Bypass max duration:** a permission letting staff or VIPs unplug for longer than the configured maximum
+- **Bypass cap:** a permission letting staff or VIPs unplug even once the cap is reached
+- **Count unplugged players in the server list:** report them in the player count and hover list on a proxy, the way a
+  single server already does, behind a config toggle
+- **Historical data:** persist records to disk so staff can review how players have used the plugin when handling
+  support requests or reports
+- **Re-spawn unplugged players on server reboot:** bring them back automatically when a backend restarts
+- **More admin commands:** unplug an online player on their behalf, unplug an offline player, and similar
+
+## Installation
+
+- **Server:** Paper, or any fork that supports Paper plugins
+- **Minecraft version:** 1.21.11 exactly. The plugin refuses to enable on anything else.
+
+Each release ships two JARs:
+
+| JAR                                    | Goes in                         | Required                |
+|----------------------------------------|---------------------------------|-------------------------|
+| `unplugged-afk-<version>.jar`          | every backend's `plugins/`      | Yes                     |
 | `unplugged-afk-velocity-<version>.jar` | the Velocity proxy's `plugins/` | Only on a proxy network |
 
-Install both from the same release. The two sides share a message format that is kept in sync by hand and is not
+Install both from the same release. The two sides share a message format that is kept in sync by hand, and is not
 version-checked at runtime.
+
+Running behind a proxy also needs two settings that live outside this plugin. See [Proxy Support](#proxy-support).
+
+## Commands
+
+| Command                                           | Description                                                                                         | Permission                  |
+|---------------------------------------------------|-----------------------------------------------------------------------------------------------------|-----------------------------|
+| `/unplug <duration> <reason>`                     | Disconnects you and leaves an unplugged player in your place for `duration` minutes, with `reason`. | `unplugged-afk.unplug`      |
+| `/unplugged info <player>`                        | Shows the unplugged information for `player`.                                                       | `unplugged-afk.admin.info`  |
+| `/unplugged list`                                 | Lists every unplugged player, and how many slots of the cap are in use.                             | `unplugged-afk.admin.list`  |
+| `/unplugged debug spawn-fake <duration> [reason]` | Spawns a throwaway unplugged player with a random UUID and name. Requires `debug: true`.            | `unplugged-afk.admin.debug` |
+
+## Configuration
+
+| Key                 | Description                                                 | Default | Minimum |
+|---------------------|-------------------------------------------------------------|---------|---------|
+| debug               | Enables debug functionality. See [Debug Mode](#debug-mode). | `false` |         |
+| maxUnpluggedPlayers | How many unplugged players may exist at the same time       | `16`    | `1`     |
+| maxDurationMins     | The longest a player may unplug for, in minutes             | `480`   | `1`     |
+
+An invalid value is clamped back to its default, with a warning in the console. The proxy companion has no configuration
+of its own.
+
+## Permissions
+
+| Node                        | Grants                                 | Default                       |
+|-----------------------------|----------------------------------------|-------------------------------|
+| `unplugged-afk.unplug`      | `/unplug`                              | Everyone                      |
+| `unplugged-afk.admin`       | Every admin node below                 |                               |
+| `unplugged-afk.admin.info`  | `/unplugged info`                      | Held by `unplugged-afk.admin` |
+| `unplugged-afk.admin.list`  | `/unplugged list`                      | Held by `unplugged-afk.admin` |
+| `unplugged-afk.admin.debug` | `/unplugged debug` and its subcommands | Held by `unplugged-afk.admin` |
 
 ## Proxy Support
 
-Requires **Velocity 3.5+**. The proxy companion is optional: without it `/unplug` still disconnects you from the network
-correctly, you just are not routed back to the right backend when you return.
+Requires **Velocity 3.5+** and the companion JAR on the proxy. The companion is optional: without it `/unplug` still
+disconnects you from the network correctly, you just are not routed back to the right backend when you return.
 
 Two settings outside this plugin have to be enabled, and nothing works without them:
 
-| File | Setting |
-|------|---------|
-| `velocity.toml`, under `[advanced]` | `bungee-plugin-message-channel = true` |
-| each backend's `config/paper-global.yml` | `proxies.velocity.enabled: true` |
+| File                                     | Setting                                |
+|------------------------------------------|----------------------------------------|
+| `velocity.toml`, under `[advanced]`      | `bungee-plugin-message-channel = true` |
+| each backend's `config/paper-global.yml` | `proxies.velocity.enabled: true`       |
 
 With those in place:
 
-- `/unplug` disconnects you from the **network** rather than the current backend. A plain kick would make Velocity send
-  you to the next server in its `try` list instead of disconnecting you.
+- `/unplug` disconnects you from the **network**, not just the backend you are on. Without the companion's forced
+  disconnect, Velocity reads the kick as a failed backend and sends you to the next server in its `try` list.
 - Reconnecting puts you back on the backend holding your unplugged player, instead of the default lobby.
 - That routing survives a proxy restart or crash.
 
@@ -59,89 +109,31 @@ writeUTF("SESSION_START")
 writeInt(durationMins)
 ```
 
-Notes for anyone reading the source or writing their own companion:
+Worth knowing if you are reading the source, or writing your own companion:
 
-- Traffic is backend to proxy only, and the proxy ignores anything that does not arrive from a server connection.
-- Neither the UUID nor the server name is sent. The proxy takes both from the connection the message arrived on, which
-  is what stops a client from forging a session to pin itself to an arbitrary backend.
-- The proxy stores `UUID -> (server, expiry)` in `plugins/unplugged-afk/sessions.json`, rewritten on every change and
-  pruned of expired entries at startup. An entry routes exactly one login and is then discarded.
-- Expiry is the requested duration plus a five minute grace period. Overshooting is intentional.
-- There is no `SESSION_END`. The unplugged player sits on a connection that drops every outgoing packet, so it cannot
-  report its own death; the proxy expires the entry on its own timer instead.
+- Traffic is backend to proxy only, and the proxy ignores anything that did not arrive over a server connection.
+- Neither the UUID nor the server name is sent. The proxy takes both from the connection the message came in on, which
+  is what stops a client forging a message to pin itself to an arbitrary backend.
+- The proxy keeps `UUID -> (server, expiry)` in `plugins/unplugged-afk/sessions.json`, rewritten on every change and
+  pruned of expired entries at startup. An entry routes exactly one login, and is then discarded.
+- Expiry is the requested duration plus a five minute grace period. Overshooting is deliberate: sending a returning
+  player to the right server slightly too long beats sending them to the wrong one slightly too early.
+- There is no `SESSION_END`. The unplugged player sits on a connection that discards every outgoing packet, so it cannot
+  report its own death. The proxy expires the entry on its own timer instead.
 
-## Features
+## Debug Mode
 
-- **Go green:** Turn off your computer and leave your unplugged player to AFK for you
-- **Customizable limits:** Server operators can configure the maximum duration, as well as a global cap of unplugged
-  players
-- **Admin control:** Server admins have commands allowing them to inspect unplugged players, as well as debug various
-  aspects of the plugin
-- **Capped:** Configurable limit to how many unplugged players can exist at the same time, to prevent resource
-  exhaustion on AFK players
-- **Proxy aware:** Unplugging behind Velocity disconnects you from the whole network, and returning puts you back on the
-  server your unplugged player is on
+Everything here is gated behind the `debug` configuration flag, which is off by default.
 
-### Planned Features
-
-- **Bypass max duration:** A permission to bypass the max duration to allow staff or VIPs to enjoy longer AFK times
-- **Bypass cap:** A permission to bypass the cap to allow staff or VIPs to go unplugged even when the limit has been
-  reached
-- **Historical data:** Persist historical data to disk to allow staff to review players' interaction with the mod and
-  empower them to act on support requests or reports
-- **Re-spawn unplugged players on server reboot:** Automatically re-spawn unplugged players when a backend restarts
-- **More admin commands:** Unplug an online player on their behalf, unplug an offline player, etc.
-
-## Commands
-
-### Player Commands
-
-- `/unplug <duration> <reason>` - Disconnects you and spawns an unplugged player in your place for `duration` minutes,
-  with `reason`.
-
-### Admin Commands
-
-- `/unplugged info <player>` - Shows the unplugged information for `player`.
-- `/unplugged list` - Shows the list of unplugged players, as well as how many slots of the cap are occupied
-
-## Configuration
-
-| Key                 | Description                                                                                                                               | Default | Minimum |
-|---------------------|-------------------------------------------------------------------------------------------------------------------------------------------|---------|---------|
-| debug               | Enables certain debug functionality, such as dumping a bunch of data such as the player's inventory to the server's files when they unplug | `false` |         |
-| maxUnpluggedPlayers | The maximum amount of unplugged players that can exist at the same time                                                                   | `16`    | `1`     |
-| maxDurationMins     | The maximum duration a player can unplug for, in minutes                                                                                  | `480`   | `1`     |
-
-The proxy companion has no configuration.
-
-## Permissions
-
-| Key                         | Description                                                              | Granted by            |
-|-----------------------------|--------------------------------------------------------------------------|-----------------------|
-| `unplugged-afk.unplug`      | Gives access to the `/unplug` player command                             | Everyone, by default  |
-| `unplugged-afk.admin`       | Gives access to all admin commands                                       |                       |
-| `unplugged-afk.admin.info`  | Gives access to the `/unplugged info` admin command                      | `unplugged-afk.admin` |
-| `unplugged-afk.admin.list`  | Gives access to the `/unplugged list` admin command                      | `unplugged-afk.admin` |
-| `unplugged-afk.admin.debug` | Gives access to the `/unplugged debug` admin command and its subcommands | `unplugged-afk.admin` |
-
-## Debug Functionality
-
-All the functionality described in this section is gated behind the `debug` configuration flag.
-
-### Admin Commands
-
-- `/unplugged debug spawn-fake <duration> [reason]` - Spawns a fake player with a random UUID and name for `duration`
-  minutes, with an optional `reason`.
-
-### Functionality
-
-- A text file containing various data such as Unix timestamp, position, dimension, inventory contents, etc. is dumped in
-  `plugins/unplugged-afk/dumps/` every time a real player unplugs.
+- `/unplugged debug spawn-fake` becomes available. It spawns a throwaway unplugged player with a random UUID and name,
+  for testing without tying up a real account.
+- Every time a real player unplugs, a text file is written to `plugins/unplugged-afk/dumps/` holding the Unix timestamp,
+  position, dimension, inventory contents and more.
 
 ## Acknowledgements
 
-Huge thanks to Sakura Ryoko for their mod [Unplugged-AFK](https://github.com/sakura-ryoko/unplugged-afk) of which this
-is a port of. This plugin wouldn't exist without their work.
+Huge thanks to Sakura Ryoko for [Unplugged-AFK](https://github.com/sakura-ryoko/unplugged-afk), the mod this ports. This
+plugin would not exist without their work.
 
 ## License
 
