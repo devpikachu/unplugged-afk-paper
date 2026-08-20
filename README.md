@@ -45,10 +45,10 @@ the declared time is up, the unplugged player is kicked and its resources are fr
 
 Each release ships two JARs:
 
-| JAR                                    | Goes in                         | Required                |
-|----------------------------------------|---------------------------------|-------------------------|
-| `unplugged-afk-<version>.jar`          | every backend's `plugins/`      | Yes                     |
-| `unplugged-afk-velocity-<version>.jar` | the Velocity proxy's `plugins/` | Only on a proxy network |
+| JAR                                    | Goes in                         | Required                   |
+|----------------------------------------|---------------------------------|----------------------------|
+| `unplugged-afk-<version>.jar`          | every backend's `plugins/`      | Yes                        |
+| `unplugged-afk-velocity-<version>.jar` | the Velocity proxy's `plugins/` | Recommended on a proxy     |
 
 Install both from the same release. The two sides share a message format that is kept in sync by hand, and is not
 version-checked at runtime.
@@ -87,22 +87,24 @@ of its own.
 
 ## Proxy Support
 
-Requires **Velocity 3.5+** and the companion JAR on the proxy. The companion is optional: without it `/unplug` still
-disconnects you from the network correctly, you just are not routed back to the right backend when you return.
-
-Two settings outside this plugin have to be enabled, and nothing works without them:
+Requires **Velocity 3.5+**. Two settings outside this plugin have to be enabled, and nothing works without them:
 
 | File                                     | Setting                                |
 |------------------------------------------|----------------------------------------|
 | `velocity.toml`, under `[advanced]`      | `bungee-plugin-message-channel = true` |
 | each backend's `config/paper-global.yml` | `proxies.velocity.enabled: true`       |
 
-With those in place:
+Those two are what make `/unplug` disconnect you from the **network** rather than from the one backend you are on.
+Without them the kick reaches Velocity as a backend failure, so it forwards you to the next entry in its `try` list
+instead of disconnecting you. `/unplug` then only appears to work for players who happened to be on the last server in
+that list, and silently relocates everyone else.
 
-- `/unplug` disconnects you from the **network**, not just the backend you are on. Without the companion's forced
-  disconnect, Velocity reads the kick as a failed backend and sends you to the next server in its `try` list.
+The companion JAR on the proxy is optional on top of that, and buys the return trip:
+
 - Reconnecting puts you back on the backend holding your unplugged player, instead of the default lobby.
 - That routing survives a proxy restart or crash.
+
+Without the companion the network disconnect still works, you are just sent to the default lobby when you come back.
 
 ### Message format
 
