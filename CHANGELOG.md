@@ -10,6 +10,8 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-21
+
 ### Fixed
 
 - Unplugged bots no longer die a tick after spawning on servers running ProtocolLib alongside PacketEvents. The bot's fake connection now carries a vanilla-shaped Netty pipeline, so ProtocolLib injects into it instead of throwing `NoSuchElementException: encoder` on every unplug, and PacketEvents' injection kick is refused for unplugged bots only.
@@ -42,6 +44,7 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 - **Capped:** Configurable limit to how many unplugged players can exist at the same time, to prevent resource
   exhaustion on AFK players
 
-[unreleased]: https://github.com/devpikachu/unplugged-afk-paper/compare/v0.2.0...HEAD
+[unreleased]: https://github.com/devpikachu/unplugged-afk-paper/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/devpikachu/unplugged-afk-paper/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/devpikachu/unplugged-afk-paper/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/devpikachu/unplugged-afk-paper/releases/tag/v0.1.0
