@@ -182,7 +182,7 @@ public final class UnpluggedPlayerManager {
     private UnpluggedServerPlayer create(ServerLevel level, GameProfile profile, ClientInformation clientInformation, UnpluggedSession session) {
         final var server = level.getServer();
         final var cookie = new CommonListenerCookie(profile, 0, clientInformation, true, null, new HashSet<>(), new KeepAlive());
-        final var connection = new UnpluggedConnection(PacketFlow.SERVERBOUND);
+        final var connection = new UnpluggedConnection(server, PacketFlow.SERVERBOUND);
 
         final var unpluggedPlayer = new UnpluggedServerPlayer(server, level, profile, clientInformation, session);
 

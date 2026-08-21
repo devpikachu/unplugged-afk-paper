@@ -2,7 +2,6 @@ package dev.detpikachu.unpluggedafk.player;
 
 import com.mojang.authlib.GameProfile;
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
-import dev.detpikachu.unpluggedafk.network.UnpluggedConnection;
 import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
@@ -22,8 +21,8 @@ import net.minecraft.world.level.portal.TeleportTransition;
 import net.minecraft.world.level.storage.TagValueInput;
 import org.jspecify.annotations.NonNull;
 
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.KILL_REASON_EXPIRED;
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.KILL_REASON_REMOVED;
+import static dev.detpikachu.unpluggedafk.UnpluggedConstants.KICK_REASON_EXPIRED;
+import static dev.detpikachu.unpluggedafk.UnpluggedConstants.KICK_REASON_REMOVED;
 
 public final class UnpluggedServerPlayer extends ServerPlayer {
 
@@ -83,7 +82,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         }
 
         if (System.currentTimeMillis() >= this.timeoutAtMillis) {
-            this.deferredDisconnect(Component.literal(KILL_REASON_EXPIRED));
+            this.deferredDisconnect(Component.literal(KICK_REASON_EXPIRED));
         }
 
         this.connection.resetPosition();
@@ -136,7 +135,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         }
 
         UnpluggedAfk.logDebug("Unplugged player {} ({}) was removed from the world: {}.", this.getName().getString(), this.getUUID(), reason);
-        this.deferredDisconnect(Component.literal(KILL_REASON_REMOVED));
+        this.deferredDisconnect(Component.literal(KICK_REASON_REMOVED));
     }
 
     public void deferredDisconnect(Component message) {

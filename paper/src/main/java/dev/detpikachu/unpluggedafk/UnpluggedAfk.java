@@ -9,18 +9,22 @@ import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.io.IOException;
 import java.util.Properties;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minecraft.network.chat.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.CHANNEL_BUNGEE;
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.CHANNEL_SESSIONS;
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.KILL_REASON_DISABLED;
+import static dev.detpikachu.unpluggedafk.UnpluggedConstants.KICK_REASON_DISABLED;
+import static dev.detpikachu.unpluggedafk.UnpluggedConstants.KICK_REASON_PACKETEVENTS;
 
 public final class UnpluggedAfk extends JavaPlugin implements Listener {
 
@@ -75,7 +79,7 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
             LOGGER.warn("Disabling with {} unplugged player(s) still active. Their spots will no longer be held.", unpluggedPlayers.size());
         }
 
-        unpluggedPlayers.forEach(unpluggedPlayer -> unpluggedPlayer.deferredDisconnect(Component.literal(KILL_REASON_DISABLED)));
+        unpluggedPlayers.forEach(unpluggedPlayer -> unpluggedPlayer.deferredDisconnect(Component.literal(KICK_REASON_DISABLED)));
         manager.removeAll();
     }
 
@@ -99,6 +103,23 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
         if (UnpluggedPlayerManager.getInstance().isPending(player.getUniqueId())) {
             event.quitMessage(UnpluggedChatFormatting.formatUnpluggedBroadcast(player));
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerKick(PlayerKickEvent event) {
+        if (!(((CraftPlayer) event.getPlayer()).getHandle() instanceof UnpluggedServerPlayer)) {
+            return;
+        }
+
+        final var reason = PlainTextComponentSerializer.plainText().serialize(event.reason());
+
+        if (!KICK_REASON_PACKETEVENTS.equals(reason)) {
+            logDebug("Let a kick of unplugged player {} ({}) through: {}", event.getPlayer().getName(), event.getPlayer().getUniqueId(), reason);
+            return;
+        }
+
+        event.setCancelled(true);
+        logDebug("Refused a kick of unplugged player {} ({}): {}", event.getPlayer().getName(), event.getPlayer().getUniqueId(), event.reason());
     }
 
     private void logStartupSummary() {
