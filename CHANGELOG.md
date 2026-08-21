@@ -10,6 +10,10 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ## [Unreleased]
 
+### Fixed
+
+- Unplugged bots no longer die a tick after spawning on servers running ProtocolLib alongside PacketEvents. The bot's fake connection now carries a vanilla-shaped Netty pipeline, so ProtocolLib injects into it instead of throwing `NoSuchElementException: encoder` on every unplug, and PacketEvents' injection kick is refused for unplugged bots only.
+
 ## [0.2.0] - 2026-08-20
 
 ### Added
