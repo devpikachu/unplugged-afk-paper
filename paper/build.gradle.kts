@@ -9,7 +9,10 @@ plugins {
 }
 
 val minecraftVersion: String = project.property("minecraftVersion") as String
+val huskSyncVersion: String = project.property("huskSyncVersion") as String
+
 val javaVersion: String = project.property("javaVersion") as String
+
 val errorproneVersion: String = project.property("errorproneVersion") as String
 val nullawayVersion: String = project.property("nullawayVersion") as String
 val jspecifyVersion: String = project.property("jspecifyVersion") as String
@@ -19,6 +22,10 @@ val apiVersion = minecraftVersion.split('.').take(2).joinToString(".")
 
 paperweight.reobfArtifactConfiguration = io.papermc.paperweight.userdev.ReobfArtifactConfiguration.MOJANG_PRODUCTION
 
+repositories {
+    maven("https://repo.william278.net/releases")
+}
+
 base {
     archivesName = "unplugged-afk"
 }
@@ -26,6 +33,7 @@ base {
 dependencies {
     paperweight.paperDevBundle("$minecraftVersion-R0.1-SNAPSHOT")
 
+    compileOnly("net.william278.husksync:husksync-bukkit:$huskSyncVersion")
     compileOnly("com.google.errorprone:error_prone_annotations:$errorproneVersion")
     compileOnly("org.jspecify:jspecify:$jspecifyVersion")
     compileOnly("org.jetbrains:annotations:$jetbrainsAnnotationsVersion")

@@ -6,6 +6,8 @@ import dev.detpikachu.unpluggedafk.Constants.SessionsChannel;
 import dev.detpikachu.unpluggedafk.api.UnpluggedAfkApi;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent;
 import dev.detpikachu.unpluggedafk.commands.CommandTree;
+import dev.detpikachu.unpluggedafk.compat.husksync.HuskSyncCompat;
+import dev.detpikachu.unpluggedafk.compat.packetevents.PacketEventsCompat;
 import dev.detpikachu.unpluggedafk.config.Options;
 import dev.detpikachu.unpluggedafk.listeners.PaperListener;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
@@ -53,6 +55,7 @@ public final class UnpluggedAfk extends JavaPlugin {
 
         registerApi();
         registerListeners();
+        registerCompat();
         registerPluginChannels();
 
         logStartupSummary();
@@ -97,6 +100,11 @@ public final class UnpluggedAfk extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PaperListener(), this);
         getLifecycleManager()
                 .registerEventHandler(LifecycleEvents.COMMANDS, commands -> CommandTree.register(commands.registrar()));
+    }
+
+    private void registerCompat() {
+        PacketEventsCompat.register(this);
+        HuskSyncCompat.register(this);
     }
 
     private void registerPluginChannels() {

@@ -1,6 +1,5 @@
 package dev.detpikachu.unpluggedafk.listeners;
 
-import dev.detpikachu.unpluggedafk.Constants.PacketEventsCompat;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
 import dev.detpikachu.unpluggedafk.formatting.ChatMessages;
@@ -70,7 +69,7 @@ public final class PaperListener implements Listener {
         logDebug("Captured a snapshot of {} ({}) for their bot.", player.getName(), player.getUniqueId());
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerKick(PlayerKickEvent event) {
         final var player = event.getPlayer();
         final var bot = UnpluggedServerPlayer.from(player);
@@ -79,18 +78,11 @@ public final class PaperListener implements Listener {
             return;
         }
 
-        final var reason = PlainTextComponentSerializer.plainText().serialize(event.reason());
-
-        if (PacketEventsCompat.KICK_MESSAGE.equals(reason)) {
-            event.setCancelled(true);
-            logDebug("Refused a kick of bot {} ({}): {}", player.getName(), player.getUniqueId(), reason);
-            return;
-        }
-
         if (event.getCause() == PlayerKickEvent.Cause.DUPLICATE_LOGIN) {
             bot.setRemoveReason(Reason.PLAYER_RETURNED);
         }
 
+        final var reason = PlainTextComponentSerializer.plainText().serialize(event.reason());
         logDebug("Let a kick of bot {} ({}) through: {}", player.getName(), player.getUniqueId(), reason);
     }
 }

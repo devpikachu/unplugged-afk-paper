@@ -7,7 +7,9 @@ plugins {
 }
 
 val velocityVersion: String = project.property("velocityVersion") as String
+
 val javaVersion: String = project.property("javaVersion") as String
+
 val errorproneVersion: String = project.property("errorproneVersion") as String
 val nullawayVersion: String = project.property("nullawayVersion") as String
 val jspecifyVersion: String = project.property("jspecifyVersion") as String

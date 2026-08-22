@@ -40,9 +40,4 @@ public final class Constants {
         public static final String NAME = "unplugged-afk:sessions";
         public static final String SESSION_START = "SESSION_START";
     }
-
-    public static final class PacketEventsCompat {
-
-        public static final String KICK_MESSAGE = "PacketEvents failed to inject into a channel";
-    }
 }
