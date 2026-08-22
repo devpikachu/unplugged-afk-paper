@@ -1,6 +1,6 @@
-# Unplugged-AFK Paper
+# Unplugged AFK Paper
 
-**Unplugged-AFK Paper** is a **feature-incomplete** port of
+**Unplugged AFK Paper** is a **feature-incomplete** port of
 [Unplugged-AFK](https://github.com/sakura-ryoko/unplugged-afk), the Fabric mod by Sakura Ryoko, published under the
 LGPL3-or-later license.
 
