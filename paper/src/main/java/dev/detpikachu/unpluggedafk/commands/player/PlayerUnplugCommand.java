@@ -15,9 +15,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.PERM_UNPLUG;
 import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandErrors.ERR_GENERIC;
 import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandErrors.ERR_REASON_REQUIRED;
-import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandGuards.requireCapacity;
-import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandGuards.requireDuration;
-import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandGuards.requireExecutor;
+import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandGuards.*;
 
 public final class PlayerUnplugCommand {
 

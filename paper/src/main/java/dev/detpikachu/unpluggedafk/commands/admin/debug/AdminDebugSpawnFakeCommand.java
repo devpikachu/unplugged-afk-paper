@@ -11,9 +11,7 @@ import dev.detpikachu.unpluggedafk.player.UnpluggedSession;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 
-import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandGuards.requireCapacity;
-import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandGuards.requireDuration;
-import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandGuards.requireExecutor;
+import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandGuards.*;
 
 public final class AdminDebugSpawnFakeCommand {
 

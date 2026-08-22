@@ -2,21 +2,17 @@ package dev.detpikachu.unpluggedafk.formatting;
 
 import dev.detpikachu.unpluggedafk.config.UnpluggedOptions;
 import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+
 import static net.kyori.adventure.text.Component.text;
-import static net.kyori.adventure.text.format.NamedTextColor.GOLD;
-import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
-import static net.kyori.adventure.text.format.NamedTextColor.GREEN;
-import static net.kyori.adventure.text.format.NamedTextColor.RED;
-import static net.kyori.adventure.text.format.NamedTextColor.WHITE;
-import static net.kyori.adventure.text.format.NamedTextColor.YELLOW;
+import static net.kyori.adventure.text.format.NamedTextColor.*;
 
 public final class UnpluggedChatFormatting {
 

@@ -1,6 +1,13 @@
 package dev.detpikachu.unpluggedafk.formatting;
 
 import dev.detpikachu.unpluggedafk.player.UnpluggedSession;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.block.Container;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.*;
+
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -8,16 +15,6 @@ import java.util.Comparator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import org.bukkit.block.Container;
-import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.BlockStateMeta;
-import org.bukkit.inventory.meta.BundleMeta;
-import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.EnchantmentStorageMeta;
-import org.bukkit.inventory.meta.ItemMeta;
 
 public final class UnpluggedDumpFormatting {
 

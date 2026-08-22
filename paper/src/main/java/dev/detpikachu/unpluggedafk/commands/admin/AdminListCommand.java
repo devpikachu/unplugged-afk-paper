@@ -24,7 +24,7 @@ public final class AdminListCommand {
     private static int execute(CommandContext<CommandSourceStack> context) {
         final var sender = context.getSource().getSender();
 
-        sender.sendMessage(UnpluggedChatFormatting.formatList(UnpluggedPlayerManager.getInstance().getPlayers()));
+        sender.sendMessage(UnpluggedChatFormatting.formatList(UnpluggedPlayerManager.getInstance().all()));
 
         return 1;
     }

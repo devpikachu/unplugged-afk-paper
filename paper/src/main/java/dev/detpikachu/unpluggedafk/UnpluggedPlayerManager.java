@@ -12,12 +12,6 @@ import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
 import dev.detpikachu.unpluggedafk.player.UnpluggedSession;
 import io.papermc.paper.configuration.GlobalConfiguration;
 import io.papermc.paper.util.KeepAlive;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.minecraft.network.Connection;
@@ -32,11 +26,14 @@ import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.CHANNEL_BUNGEE;
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.CHANNEL_SESSIONS;
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.EXCEPTION_FAILED_TO_DISCONNECT;
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.MESSAGE_SESSION_START;
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.SUBCHANNEL_KICK_PLAYER_RAW;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static dev.detpikachu.unpluggedafk.UnpluggedConstants.*;
 
 public final class UnpluggedPlayerManager {
 
@@ -57,15 +54,23 @@ public final class UnpluggedPlayerManager {
         return INSTANCE;
     }
 
+    public boolean isUnplugging(UUID uuid) {
+        return this.pending.contains(uuid);
+    }
+
+    public boolean isUnplugged(UUID uuid) {
+        return this.players.containsKey(uuid);
+    }
+
     public int count() {
         return this.players.size() + this.pending.size();
     }
 
-    public boolean isPending(UUID uuid) {
-        return this.pending.contains(uuid);
+    public UnpluggedServerPlayer find(UUID uuid) {
+        return this.players.get(uuid);
     }
 
-    public Collection<UnpluggedServerPlayer> getPlayers() {
+    public Collection<UnpluggedServerPlayer> all() {
         return Collections.unmodifiableCollection(this.players.values());
     }
 

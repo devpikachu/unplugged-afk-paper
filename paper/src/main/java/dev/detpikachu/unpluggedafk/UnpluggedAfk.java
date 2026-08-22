@@ -1,13 +1,12 @@
 package dev.detpikachu.unpluggedafk;
 
+import dev.detpikachu.unpluggedafk.api.UnpluggedAfkApi;
 import dev.detpikachu.unpluggedafk.commands.UnpluggedCommands;
 import dev.detpikachu.unpluggedafk.config.UnpluggedOptions;
 import dev.detpikachu.unpluggedafk.formatting.UnpluggedChatFormatting;
 import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
 import io.papermc.paper.configuration.GlobalConfiguration;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import java.io.IOException;
-import java.util.Properties;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.minecraft.network.chat.Component;
@@ -19,12 +18,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.CHANNEL_BUNGEE;
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.CHANNEL_SESSIONS;
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.KICK_REASON_DISABLED;
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.KICK_REASON_PACKETEVENTS;
+import java.io.IOException;
+import java.util.Properties;
+
+import static dev.detpikachu.unpluggedafk.UnpluggedConstants.*;
 
 public final class UnpluggedAfk extends JavaPlugin implements Listener {
 
@@ -42,6 +42,7 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         LOGGER = getComponentLogger();
+        final var server = getServer();
 
         // Version compatibility
         final var targetVersion = getTargetMinecraftVersion();
@@ -49,13 +50,16 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
 
         if (targetVersion != null && !targetVersion.equals(runningVersion)) {
             LOGGER.error("unplugged-afk targets Minecraft {} but this server runs {}", targetVersion, runningVersion);
-            getServer().getPluginManager().disablePlugin(this);
+            server.getPluginManager().disablePlugin(this);
             return;
         }
 
         // Config
         saveDefaultConfig();
         UnpluggedOptions.deserialize(getConfig());
+
+        // API
+        server.getServicesManager().register(UnpluggedAfkApi.class, new UnpluggedApiService(), this, ServicePriority.Normal);
 
         // Events
         Bukkit.getPluginManager().registerEvents(this, this);
@@ -64,8 +68,9 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
         });
 
         // Networking
-        getServer().getMessenger().registerOutgoingPluginChannel(this, CHANNEL_BUNGEE);
-        getServer().getMessenger().registerOutgoingPluginChannel(this, CHANNEL_SESSIONS);
+        final var messenger = server.getMessenger();
+        messenger.registerOutgoingPluginChannel(this, CHANNEL_BUNGEE);
+        messenger.registerOutgoingPluginChannel(this, CHANNEL_SESSIONS);
 
         logStartupSummary();
     }
@@ -73,7 +78,9 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
     @Override
     public void onDisable() {
         final var manager = UnpluggedPlayerManager.getInstance();
-        final var unpluggedPlayers = manager.getPlayers();
+        final var unpluggedPlayers = manager.all();
+
+        getServer().getServicesManager().unregisterAll(this);
 
         if (!unpluggedPlayers.isEmpty()) {
             LOGGER.warn("Disabling with {} unplugged player(s) still active. Their spots will no longer be held.", unpluggedPlayers.size());
@@ -100,7 +107,7 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
         }
 
         final var player = event.getPlayer();
-        if (UnpluggedPlayerManager.getInstance().isPending(player.getUniqueId())) {
+        if (UnpluggedPlayerManager.getInstance().isUnplugging(player.getUniqueId())) {
             event.quitMessage(UnpluggedChatFormatting.formatUnpluggedBroadcast(player));
         }
     }

@@ -3,9 +3,7 @@ package dev.detpikachu.unpluggedafk.config;
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import org.bukkit.configuration.file.FileConfiguration;
 
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.DEFAULT_DEBUG;
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.DEFAULT_MAX_DURATION_MINS;
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.DEFAULT_MAX_UNPLUGGED_PLAYERS;
+import static dev.detpikachu.unpluggedafk.UnpluggedConstants.*;
 
 public final class UnpluggedOptions {
 

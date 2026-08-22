@@ -2,14 +2,15 @@ package dev.detpikachu.unpluggedafk;
 
 import dev.detpikachu.unpluggedafk.formatting.UnpluggedDumpFormatting;
 import dev.detpikachu.unpluggedafk.player.UnpluggedSession;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
-import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
 public final class UnpluggedDumpWriter {
 

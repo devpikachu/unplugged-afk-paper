@@ -6,10 +6,7 @@ import dev.detpikachu.unpluggedafk.config.UnpluggedOptions;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.PERM_ADMIN;
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.PERM_ADMIN_DEBUG;
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.PERM_ADMIN_INFO;
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.PERM_ADMIN_LIST;
+import static dev.detpikachu.unpluggedafk.UnpluggedConstants.*;
 
 public final class AdminCommands {
 

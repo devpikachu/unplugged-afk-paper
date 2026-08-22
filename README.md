@@ -45,10 +45,10 @@ the declared time is up, the unplugged player is kicked and its resources are fr
 
 Each release ships two JARs:
 
-| JAR                                    | Goes in                         | Required                   |
-|----------------------------------------|---------------------------------|----------------------------|
-| `unplugged-afk-<version>.jar`          | every backend's `plugins/`      | Yes                        |
-| `unplugged-afk-velocity-<version>.jar` | the Velocity proxy's `plugins/` | Recommended on a proxy     |
+| JAR                                    | Goes in                         | Required               |
+|----------------------------------------|---------------------------------|------------------------|
+| `unplugged-afk-<version>.jar`          | every backend's `plugins/`      | Yes                    |
+| `unplugged-afk-velocity-<version>.jar` | the Velocity proxy's `plugins/` | Recommended on a proxy |
 
 Install both from the same release. The two sides share a message format that is kept in sync by hand, and is not
 version-checked at runtime.
@@ -119,6 +119,48 @@ Everything here is gated behind the `debug` configuration flag, which is off by 
   for testing without tying up a real account.
 - Every time a real player unplugs, a text file is written to `plugins/unplugged-afk/dumps/` holding the Unix timestamp,
   position, dimension, inventory contents and more.
+
+## For Plugin Developers
+
+Other plugins can ask who is unplugged. This matters because an unplugged player is a real `Player` on the server
+carrying the real player's UUID, so anything that treats join, quit or death as bookkeeping for an account will see a
+bot and take it for the account holder. The API is how you tell the two apart.
+
+Add the plugin JAR to your compile classpath and list `unplugged-afk` under `softdepend` in your `plugin.yml`, which
+guarantees it has enabled before you first look for it. Then take the service from Bukkit:
+
+```java
+var registration = Bukkit.getServicesManager().getRegistration(UnpluggedAfkApi.class);
+if (registration != null) {
+    UnpluggedAfkApi api = registration.getProvider();
+    if (api.isUnplugged(player.getUniqueId())) {
+        // A bot is holding this player's spot. Do not treat it as the player logging in.
+    }
+}
+```
+
+A null registration means the plugin is absent or disabled. Treat that as "nobody is unplugged" rather than as an error,
+so your plugin still works on servers that do not run this one.
+
+| Method               | Returns                                                           |
+|----------------------|-------------------------------------------------------------------|
+| `isUnplugged(UUID)`  | Whether a bot is holding that player's spot right now             |
+| `isUnplugging(UUID)` | Whether an unplug is in flight, kicked but the bot not yet placed |
+| `find(UUID)`         | An `Optional<UnpluggedPlayerInfo>` describing that bot            |
+| `all()`              | An immutable snapshot of every bot currently standing in          |
+
+`UnpluggedPlayerInfo` is an immutable record carrying the UUID, name, requested duration, reason, start and expiry
+times, and whether it is a throwaway bot from `spawn-fake`. Its `remaining()` recomputes against the current clock on
+every call, so it stays accurate for as long as you hold the record.
+
+Three things worth knowing:
+
+- `isUnplugged` and `isUnplugging` are disjoint, and there is a short gap between the kick and the bot appearing. If you
+  mean "leave this account alone", check both.
+- Every method is safe to call from any thread, and results are point-in-time snapshots.
+- Nothing in the `dev.detpikachu.unpluggedafk.api` package references server internals, so compiling against it does not
+  saddle your plugin with this one's exact-Minecraft-version requirement. Do not implement `UnpluggedAfkApi`
+  yourself; it is marked non-extendable because methods will be added to it.
 
 ## Acknowledgements
 
