@@ -45,8 +45,8 @@ public final class UnpluggedAfk extends JavaPlugin {
         final var targetVersion = getTargetMinecraftVersion();
         final var runningVersion = Bukkit.getMinecraftVersion();
 
-        if (targetVersion != null && !targetVersion.equals(runningVersion)) {
-            LOGGER.error("unplugged-afk targets Minecraft {} but this server runs {}", targetVersion, runningVersion);
+        if (!runningVersion.equals(targetVersion)) {
+            LOGGER.error("Unplugged AFK targets Minecraft {} but this server runs {}", targetVersion, runningVersion);
             server.getPluginManager().disablePlugin(this);
             return;
         }
@@ -115,11 +115,13 @@ public final class UnpluggedAfk extends JavaPlugin {
 
         try (var stream = getResource(PROPERTIES_RESOURCE)) {
             if (stream == null) {
+                LOGGER.error("{} is missing from the JAR.", PROPERTIES_RESOURCE);
                 return null;
             }
 
             properties.load(stream);
         } catch (IOException exception) {
+            LOGGER.error("Could not read {} from the JAR.", PROPERTIES_RESOURCE, exception);
             return null;
         }
 

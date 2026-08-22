@@ -2,6 +2,7 @@ package dev.detpikachu.unpluggedafk.formatting;
 
 import dev.detpikachu.unpluggedafk.config.Options;
 import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
+import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import org.bukkit.entity.Player;
@@ -94,12 +95,8 @@ public final class ChatMessages {
     }
 
     public static Component formatList(Collection<UnpluggedServerPlayer> bots) {
-        final var header = text("Unplugged players: ", WHITE).append(text(bots.size(), GOLD))
-                .append(text("/", WHITE))
-                .append(text(Options.getInstance().getMaxUnpluggedPlayers(), GOLD));
-
         final var lines = new ArrayList<Component>();
-        lines.add(header);
+        lines.add(formatListHeader(bots.size(), SessionRegistry.getInstance().countUnplugging()));
 
         bots.stream()
                 .sorted(Comparator.comparing(UnpluggedServerPlayer::getExpiresAt))
@@ -107,6 +104,24 @@ public final class ChatMessages {
                 .forEach(lines::add);
 
         return Component.join(JoinConfiguration.newlines(), lines);
+    }
+
+    private static Component formatListHeader(int unplugged, int unplugging) {
+        final var label = text("Unplugged players: ", WHITE);
+        final var unpluggedValue = text(unplugged, GOLD);
+        final var pendingMarker = formatPendingMarker(unplugging);
+        final var separator = text("/", WHITE);
+        final var capValue = text(Options.getInstance().getMaxUnpluggedPlayers(), GOLD);
+
+        return label.append(unpluggedValue).append(pendingMarker).append(separator).append(capValue);
+    }
+
+    private static Component formatPendingMarker(int unplugging) {
+        if (unplugging < 1) {
+            return Component.empty();
+        }
+
+        return text("(+", GRAY).append(text(unplugging, GOLD)).append(text(")", GRAY));
     }
 
     private static Component formatListEntry(UnpluggedServerPlayer bot) {

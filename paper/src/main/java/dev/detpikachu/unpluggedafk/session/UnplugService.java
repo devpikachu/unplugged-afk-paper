@@ -9,6 +9,9 @@ import dev.detpikachu.unpluggedafk.exceptions.UnplugFailedException;
 import dev.detpikachu.unpluggedafk.formatting.ChatMessages;
 import dev.detpikachu.unpluggedafk.network.ProxyManager;
 import dev.detpikachu.unpluggedafk.player.BotFactory;
+import io.papermc.paper.adventure.PaperAdventure;
+import net.kyori.adventure.text.Component;
+import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.server.level.ServerPlayer;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.jetbrains.annotations.ApiStatus;
@@ -24,6 +27,7 @@ public final class UnplugService {
         final var name = player.getName().getString();
         final var level = player.level();
         final var server = level.getServer();
+        final var playerList = server.getPlayerList();
         final var message = ChatMessages.formatUnplugged(session.durationMins(), session.reason());
         final var oldConnection = player.connection.connection;
         final var clientInformation = player.clientInformation();
@@ -48,8 +52,16 @@ public final class UnplugService {
             ProxyManager.disconnectFromProxy(player.getBukkitEntity(), message);
             player.getBukkitEntity().kick(message, PlayerKickEvent.Cause.PLUGIN);
 
-            if (server.getPlayerList().getPlayer(uuid) != null) {
-                throw new PlayerStillConnectedException(uuid, name);
+            if (playerList.getPlayer(uuid) != null) {
+                LOGGER.warn(
+                        "A plugin cancelled the kick of {} ({}), but the unplug is already committed. Forcing it.",
+                        name,
+                        uuid);
+                forceDisconnect(player, message);
+
+                if (playerList.getPlayer(uuid) != null) {
+                    throw new PlayerStillConnectedException(uuid, name);
+                }
             }
 
             BotFactory.spawnWhenSettled(uuid, name, level, gameProfile, clientInformation, session, oldConnection);
@@ -59,5 +71,12 @@ public final class UnplugService {
                 registry.clearUnplugging(uuid);
             }
         }
+    }
+
+    private static void forceDisconnect(ServerPlayer player, Component message) {
+        final var details = new DisconnectionDetails(PaperAdventure.asVanilla(message));
+
+        player.connection.onDisconnect(details);
+        player.connection.connection.disconnect(details);
     }
 }

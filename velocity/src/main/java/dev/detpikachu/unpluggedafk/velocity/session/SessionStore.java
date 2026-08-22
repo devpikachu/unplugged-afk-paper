@@ -115,7 +115,7 @@ public final class SessionStore {
         }
     }
 
-    private void save() {
+    private synchronized void save() {
         final var temp = this.file.resolveSibling(Sessions.FILE_NAME + TEMP_SUFFIX);
 
         try {

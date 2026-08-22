@@ -34,6 +34,10 @@ public final class SessionRegistry {
         this.unplugging.add(uuid);
     }
 
+    public int countUnplugging() {
+        return this.unplugging.size();
+    }
+
     public void clearUnplugging(UUID uuid) {
         this.unplugging.remove(uuid);
     }
@@ -63,6 +67,7 @@ public final class SessionRegistry {
     }
 
     public void removeAll() {
+        this.unplugging.clear();
         this.unplugged.clear();
     }
 }

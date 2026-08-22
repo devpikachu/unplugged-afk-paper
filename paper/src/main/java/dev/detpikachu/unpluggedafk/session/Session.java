@@ -9,7 +9,11 @@ import java.time.Instant;
 public record Session(int durationMins, String reason, Instant startedAt, Instant expiresAt, boolean isFake) {
 
     public Session(int durationMins, String reason, boolean isFake) {
-        this(durationMins, reason, Instant.now(), Instant.now().plus(Duration.ofMinutes(durationMins)), isFake);
+        this(durationMins, reason, Instant.now(), isFake);
+    }
+
+    private Session(int durationMins, String reason, Instant startedAt, boolean isFake) {
+        this(durationMins, reason, startedAt, startedAt.plus(Duration.ofMinutes(durationMins)), isFake);
     }
 
     public boolean isExpired() {
