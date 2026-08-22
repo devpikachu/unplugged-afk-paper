@@ -10,6 +10,17 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ## [Unreleased]
 
+### Added
+
+- **Developer API:** other plugins can read unplugged player state, and can cancel an unplug before it happens
+- **HuskSync support:** inventories now survive both handoffs on servers running HuskSync
+
+### Fixed
+
+- **Inventory handoff:** the unplugged player now receives your inventory directly, before it joins. It no longer starts empty in front of plugins that read inventory on join, and no longer relies on a save file the server may never write
+- **Failed spawns:** a spawn that fails no longer leaves a phantom unplugged player holding a slot
+- **Proxy sessions:** simultaneous unplugs can no longer corrupt the proxy's routing records
+
 ## [0.3.0] - 2026-08-21
 
 ### Fixed
