@@ -106,26 +106,10 @@ The companion JAR on the proxy is optional on top of that, and buys the return t
 
 Without the companion the network disconnect still works, you are just sent to the default lobby when you come back.
 
-### Message format
-
-The backend sends one message on the `unplugged-afk:sessions` channel, immediately before disconnecting the player:
-
-```
-writeUTF("SESSION_START")
-writeInt(durationMins)
-```
-
-Worth knowing if you are reading the source, or writing your own companion:
-
-- Traffic is backend to proxy only, and the proxy ignores anything that did not arrive over a server connection.
-- Neither the UUID nor the server name is sent. The proxy takes both from the connection the message came in on, which
-  is what stops a client forging a message to pin itself to an arbitrary backend.
-- The proxy keeps `UUID -> (server, expiry)` in `plugins/unplugged-afk/sessions.json`, rewritten on every change and
-  pruned of expired entries at startup. An entry routes exactly one login, and is then discarded.
-- Expiry is the requested duration plus a five minute grace period. Overshooting is deliberate: sending a returning
-  player to the right server slightly too long beats sending them to the wrong one slightly too early.
-- There is no `SESSION_END`. The unplugged player sits on a connection that discards every outgoing packet, so it cannot
-  report its own death. The proxy expires the entry on its own timer instead.
+A routing record is used once, on the next login, and then discarded. It expires on the proxy's own clock, at the
+requested duration plus a five minute grace period. Overshooting is deliberate: sending a returning player to the right
+server slightly too long beats sending them to the wrong one slightly too early. Records live in
+`plugins/unplugged-afk/sessions.json` on the proxy, rewritten on every change and pruned of expired entries at startup.
 
 ## Debug Mode
 
