@@ -2,6 +2,7 @@ package dev.detpikachu.unpluggedafk.api;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -28,6 +29,20 @@ public record UnpluggedPlayerInfo(
         Instant startedAt,
         Instant expiresAt,
         boolean isFake) {
+
+    /**
+     * Rejects a null reference component, so a consumer that builds one by hand fails here rather than inside an
+     * unrelated listener later.
+     *
+     * @throws NullPointerException if any of the reference components is {@code null}
+     */
+    public UnpluggedPlayerInfo {
+        Objects.requireNonNull(uuid, "uuid");
+        Objects.requireNonNull(name, "name");
+        Objects.requireNonNull(reason, "reason");
+        Objects.requireNonNull(startedAt, "startedAt");
+        Objects.requireNonNull(expiresAt, "expiresAt");
+    }
 
     /**
      * How long is left before this bot is due to be reaped, recomputed against the current clock on every call.
