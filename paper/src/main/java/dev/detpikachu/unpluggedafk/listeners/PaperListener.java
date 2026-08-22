@@ -2,6 +2,8 @@ package dev.detpikachu.unpluggedafk.listeners;
 
 import dev.detpikachu.unpluggedafk.Constants.PacketEventsCompat;
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
+import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent;
+import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
 import dev.detpikachu.unpluggedafk.formatting.ChatMessages;
 import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
@@ -33,13 +35,22 @@ public final class PaperListener implements Listener {
         final var bot = UnpluggedServerPlayer.from(player);
 
         if (bot != null) {
+            final var reason = bot.getRemoveReason();
+
             registry.remove(bot);
+            event.quitMessage(null);
+
             UnpluggedAfk.logDebug(
                     "Removed bot {} ({}). {} still active.",
                     player.getName(),
                     player.getUniqueId(),
                     registry.count());
-            event.quitMessage(null);
+
+            new UnpluggedPlayerRemoveEvent(
+                    bot.getBukkitEntity(),
+                    bot.toInfo(),
+                    reason != null ? reason : Reason.UNKNOWN).callEvent();
+
             return;
         }
 
@@ -51,20 +62,24 @@ public final class PaperListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerKick(PlayerKickEvent event) {
         final var player = event.getPlayer();
+        final var bot = UnpluggedServerPlayer.from(player);
 
-        if (UnpluggedServerPlayer.from(player) == null) {
+        if (bot == null) {
             return;
         }
 
         final var reason = PlainTextComponentSerializer.plainText().serialize(event.reason());
 
-        if (!PacketEventsCompat.KICK_MESSAGE.equals(reason)) {
-            UnpluggedAfk
-                    .logDebug("Let a kick of bot {} ({}) through: {}", player.getName(), player.getUniqueId(), reason);
+        if (PacketEventsCompat.KICK_MESSAGE.equals(reason)) {
+            event.setCancelled(true);
+            UnpluggedAfk.logDebug("Refused a kick of bot {} ({}): {}", player.getName(), player.getUniqueId(), reason);
             return;
         }
 
-        event.setCancelled(true);
-        UnpluggedAfk.logDebug("Refused a kick of bot {} ({}): {}", player.getName(), player.getUniqueId(), reason);
+        if (event.getCause() == PlayerKickEvent.Cause.DUPLICATE_LOGIN) {
+            bot.setRemoveReason(Reason.PLAYER_RETURNED);
+        }
+
+        UnpluggedAfk.logDebug("Let a kick of bot {} ({}) through: {}", player.getName(), player.getUniqueId(), reason);
     }
 }

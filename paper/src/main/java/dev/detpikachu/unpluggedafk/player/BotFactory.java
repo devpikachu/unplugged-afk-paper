@@ -2,6 +2,7 @@ package dev.detpikachu.unpluggedafk.player;
 
 import com.mojang.authlib.GameProfile;
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
+import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerSpawnEvent;
 import dev.detpikachu.unpluggedafk.config.Options;
 import dev.detpikachu.unpluggedafk.network.GamePacketListener;
 import dev.detpikachu.unpluggedafk.network.UnpluggedConnection;
@@ -62,6 +63,8 @@ public final class BotFactory {
                 (int) position.z(),
                 level.dimension().identifier(),
                 session.durationMins());
+
+        new UnpluggedPlayerSpawnEvent(bot.getBukkitEntity(), bot.toInfo()).callEvent();
     }
 
     private static UnpluggedServerPlayer spawn(
@@ -81,11 +84,17 @@ public final class BotFactory {
         final var connection = new UnpluggedConnection(server, PacketFlow.SERVERBOUND);
 
         final var bot = new UnpluggedServerPlayer(server, level, profile, clientInformation, session);
+        final var registry = SessionRegistry.getInstance();
 
-        server.getPlayerList().placeNewPlayer(connection, bot, cookie);
-        bot.connection = new GamePacketListener(server, connection, bot, cookie);
+        registry.add(bot);
 
-        SessionRegistry.getInstance().add(bot);
+        try {
+            server.getPlayerList().placeNewPlayer(connection, bot, cookie);
+            bot.connection = new GamePacketListener(server, connection, bot, cookie);
+        } catch (RuntimeException exception) {
+            registry.remove(bot);
+            throw exception;
+        }
 
         return bot;
     }
@@ -183,6 +192,8 @@ public final class BotFactory {
                     bot.level().dimension().identifier(),
                     SessionRegistry.getInstance().count(),
                     Options.getInstance().getMaxUnpluggedPlayers());
+
+            new UnpluggedPlayerSpawnEvent(bot.getBukkitEntity(), bot.toInfo()).callEvent();
         }
     }
 }

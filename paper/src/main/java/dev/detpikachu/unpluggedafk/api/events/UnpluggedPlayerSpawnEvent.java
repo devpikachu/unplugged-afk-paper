@@ -11,12 +11,13 @@ import org.bukkit.event.player.PlayerEvent;
  * <p>{@link #getPlayer()} is the bot, not the player it stands in for. It is a real {@link Player} on the server
  * carrying that player's UUID, so by this point
  * {@link dev.detpikachu.unpluggedafk.api.UnpluggedAfkApi#isUnplugged(java.util.UUID)} already returns {@code true}
- * for it, and its inventory and position have been loaded.
+ * for it, and the player's inventory and position have been loaded onto it.
  *
- * <p>The bot's own {@link org.bukkit.event.player.PlayerJoinEvent} has already fired by this point, and fires again
- * for the real player when they come back.
+ * <p>The bot's own {@link org.bukkit.event.player.PlayerJoinEvent} has already fired by this point, and
+ * {@code isUnplugged} was already {@code true} throughout it. It fires again for the real player on their return.
  *
- * <p>Also fired for throwaway bots from {@code /unplugged debug spawn-fake}. Check
+ * <p>Also fired for throwaway bots from {@code /unplugged debug spawn-fake}, which stand in for nobody: they have a
+ * random UUID and name, an empty inventory, and the position of whoever ran the command. Check
  * {@link dev.detpikachu.unpluggedafk.api.UnpluggedPlayerInfo#isFake()} to tell those apart.
  */
 public final class UnpluggedPlayerSpawnEvent extends PlayerEvent {

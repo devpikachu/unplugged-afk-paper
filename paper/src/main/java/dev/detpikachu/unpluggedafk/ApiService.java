@@ -25,22 +25,11 @@ final class ApiService implements UnpluggedAfkApi {
 
     @Override
     public Optional<UnpluggedPlayerInfo> find(UUID uuid) {
-        return Optional.ofNullable(SessionRegistry.getInstance().find(uuid)).map(ApiService::map);
+        return Optional.ofNullable(SessionRegistry.getInstance().find(uuid)).map(UnpluggedServerPlayer::toInfo);
     }
 
     @Override
     public List<UnpluggedPlayerInfo> all() {
-        return SessionRegistry.getInstance().all().stream().map(ApiService::map).toList();
-    }
-
-    private static UnpluggedPlayerInfo map(UnpluggedServerPlayer bot) {
-        return new UnpluggedPlayerInfo(
-                bot.getUUID(),
-                bot.getName().getString(),
-                bot.getDurationMins(),
-                bot.getReason(),
-                bot.getStartedAt(),
-                bot.getExpiresAt(),
-                bot.isFake());
+        return SessionRegistry.getInstance().all().stream().map(UnpluggedServerPlayer::toInfo).toList();
     }
 }

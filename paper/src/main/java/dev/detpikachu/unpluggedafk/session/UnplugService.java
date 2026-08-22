@@ -1,8 +1,10 @@
 package dev.detpikachu.unpluggedafk.session;
 
 import dev.detpikachu.unpluggedafk.DumpWriter;
+import dev.detpikachu.unpluggedafk.api.events.PlayerUnplugEvent;
 import dev.detpikachu.unpluggedafk.config.Options;
 import dev.detpikachu.unpluggedafk.exceptions.PlayerStillConnectedException;
+import dev.detpikachu.unpluggedafk.exceptions.UnplugCancelledException;
 import dev.detpikachu.unpluggedafk.exceptions.UnplugFailedException;
 import dev.detpikachu.unpluggedafk.formatting.ChatMessages;
 import dev.detpikachu.unpluggedafk.network.ProxyManager;
@@ -26,6 +28,12 @@ public final class UnplugService {
         final var oldConnection = player.connection.connection;
         final var clientInformation = player.clientInformation();
         final var gameProfile = player.gameProfile;
+        final var event = new PlayerUnplugEvent(player.getBukkitEntity(), session.durationMins(), session.reason());
+
+        if (!event.callEvent()) {
+            LOGGER.info("Refused to unplug {} ({}): another plugin cancelled the request.", name, uuid);
+            throw new UnplugCancelledException(event.getCancelMessage());
+        }
 
         LOGGER.info("Unplugging {} ({}) for {} minute(s): {}", name, uuid, session.durationMins(), session.reason());
         if (Options.getInstance().isDebug()) {

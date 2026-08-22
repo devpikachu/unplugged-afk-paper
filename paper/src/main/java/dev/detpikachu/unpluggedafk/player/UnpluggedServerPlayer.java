@@ -3,6 +3,7 @@ package dev.detpikachu.unpluggedafk.player;
 import com.mojang.authlib.GameProfile;
 import dev.detpikachu.unpluggedafk.Constants.KickReasons;
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
+import dev.detpikachu.unpluggedafk.api.UnpluggedPlayerInfo;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
 import dev.detpikachu.unpluggedafk.session.Session;
 import io.papermc.paper.adventure.PaperAdventure;
@@ -94,6 +95,17 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
 
     public void setRemoveReason(@Nullable Reason reason) {
         this.removeReason = reason;
+    }
+
+    public UnpluggedPlayerInfo toInfo() {
+        return new UnpluggedPlayerInfo(
+                this.getUUID(),
+                this.getName().getString(),
+                this.session.durationMins(),
+                this.session.reason(),
+                this.session.startedAt(),
+                this.session.expiresAt(),
+                this.session.isFake());
     }
 
     @Override

@@ -6,6 +6,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.detpikachu.unpluggedafk.Constants.Permissions;
+import dev.detpikachu.unpluggedafk.exceptions.UnplugCancelledException;
 import dev.detpikachu.unpluggedafk.exceptions.UnplugFailedException;
 import dev.detpikachu.unpluggedafk.session.Session;
 import dev.detpikachu.unpluggedafk.session.UnplugService;
@@ -16,6 +17,7 @@ import org.jetbrains.annotations.ApiStatus;
 import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_GENERIC;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_REASON_REQUIRED;
+import static dev.detpikachu.unpluggedafk.commands.CommandErrors.errUnplugCancelled;
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireCapacity;
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireDuration;
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireExecutor;
@@ -44,7 +46,7 @@ public final class PlayerUnplugCommand {
         final var durationMins = requireDuration(context, ARG_DURATION_MINS);
         final var reason = context.getArgument(ARG_REASON, String.class);
 
-        if (reason == null || reason.isBlank()) {
+        if (reason.isBlank()) {
             throw ERR_REASON_REQUIRED.create();
         }
 
@@ -52,6 +54,8 @@ public final class PlayerUnplugCommand {
 
         try {
             UnplugService.unplug(player, new Session(durationMins, reason, false));
+        } catch (UnplugCancelledException exception) {
+            throw errUnplugCancelled(exception.getCancelMessage()).create();
         } catch (UnplugFailedException exception) {
             LOGGER.error("Failed to unplug player {} ({})", player.getName().getString(), player.getUUID(), exception);
             throw ERR_GENERIC.create();
