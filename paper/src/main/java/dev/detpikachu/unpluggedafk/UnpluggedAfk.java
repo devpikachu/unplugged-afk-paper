@@ -119,7 +119,7 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
         }
 
         event.setCancelled(true);
-        logDebug("Refused a kick of unplugged player {} ({}): {}", event.getPlayer().getName(), event.getPlayer().getUniqueId(), event.reason());
+        logDebug("Refused a kick of unplugged player {} ({}): {}", event.getPlayer().getName(), event.getPlayer().getUniqueId(), reason);
     }
 
     private void logStartupSummary() {
