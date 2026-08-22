@@ -2,6 +2,7 @@ package dev.detpikachu.unpluggedafk.player;
 
 import com.mojang.authlib.GameProfile;
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
+import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
 import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
@@ -20,6 +21,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.portal.TeleportTransition;
 import net.minecraft.world.level.storage.TagValueInput;
 import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.Nullable;
 
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.KICK_REASON_EXPIRED;
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.KICK_REASON_REMOVED;
@@ -35,6 +37,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
 
     private boolean isSpawnStatePending = true;
     private boolean isDisconnectScheduled = false;
+    private @Nullable Reason removeReason = null;
 
     public UnpluggedServerPlayer(MinecraftServer server, ServerLevel level, GameProfile gameProfile, ClientInformation clientInformation, UnpluggedSession session) {
         super(server, level, gameProfile, clientInformation);
@@ -62,6 +65,14 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         return this.timeoutAtMillis;
     }
 
+    public @Nullable Reason getRemoveReason() {
+        return this.removeReason;
+    }
+
+    public void setRemoveReason(@Nullable Reason reason) {
+        this.removeReason = reason;
+    }
+
     @Override
     public void tick() {
         final var server = this.level().getServer();
@@ -83,7 +94,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         }
 
         if (System.currentTimeMillis() >= this.timeoutAtMillis) {
-            this.deferredDisconnect(Component.literal(KICK_REASON_EXPIRED));
+            this.deferredDisconnect(Component.literal(KICK_REASON_EXPIRED), Reason.EXPIRED);
         }
 
         this.connection.resetPosition();
@@ -108,7 +119,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         super.die(damageSource);
 
         UnpluggedAfk.LOGGER.warn("Unplugged player {} ({}) died. Their items dropped and their spot is no longer held.", this.getName().getString(), this.getUUID());
-        this.deferredDisconnect(this.getCombatTracker().getDeathMessage());
+        this.deferredDisconnect(this.getCombatTracker().getDeathMessage(), Reason.DIED);
     }
 
     @Override
@@ -136,14 +147,16 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         }
 
         UnpluggedAfk.logDebug("Unplugged player {} ({}) was removed from the world: {}.", this.getName().getString(), this.getUUID(), reason);
-        this.deferredDisconnect(Component.literal(KICK_REASON_REMOVED));
+        this.deferredDisconnect(Component.literal(KICK_REASON_REMOVED), Reason.ENTITY_REMOVED);
     }
 
-    public void deferredDisconnect(Component message) {
+    public void deferredDisconnect(Component message, @Nullable Reason reason) {
         if (this.isDisconnectScheduled || this.connection.processedDisconnect) {
             return;
         }
+
         this.isDisconnectScheduled = true;
+        this.setRemoveReason(reason);
 
         UnpluggedAfk.LOGGER.info(
                 "Killing unplugged player {} ({}) after {} of {} minute(s): {}",

@@ -3,7 +3,9 @@ package dev.detpikachu.unpluggedafk.commands;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import dev.detpikachu.unpluggedafk.config.UnpluggedOptions;
 import io.papermc.paper.command.brigadier.MessageComponentSerializer;
+import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.Nullable;
 
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.RED;
@@ -47,6 +49,16 @@ public final class UnpluggedCommandErrors {
                         text("The server already has ", RED)
                                 .append(text(UnpluggedOptions.getInstance().getMaxUnpluggedPlayers(), RED))
                                 .append(text(" unplugged player(s). Please try again later.", RED))
+                )
+        );
+    }
+
+    public static SimpleCommandExceptionType errUnplugCancelled(@Nullable Component cancelMessage) {
+        return new SimpleCommandExceptionType(
+                MessageComponentSerializer.message().serialize(
+                        cancelMessage != null
+                                ? cancelMessage
+                                : text("Your unplug request was refused.", RED)
                 )
         );
     }

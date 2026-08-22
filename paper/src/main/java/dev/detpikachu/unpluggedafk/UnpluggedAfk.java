@@ -1,6 +1,7 @@
 package dev.detpikachu.unpluggedafk;
 
 import dev.detpikachu.unpluggedafk.api.UnpluggedAfkApi;
+import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent;
 import dev.detpikachu.unpluggedafk.commands.UnpluggedCommands;
 import dev.detpikachu.unpluggedafk.config.UnpluggedOptions;
 import dev.detpikachu.unpluggedafk.formatting.UnpluggedChatFormatting;
@@ -34,7 +35,7 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
     private static final String PROPERTIES_RESOURCE = "unplugged-afk.properties";
     private static final String KEY_MINECRAFT_VERSION = "minecraftVersion";
 
-    public static ComponentLogger LOGGER;
+    public static ComponentLogger LOGGER = ComponentLogger.logger();
 
     public static void logDebug(String message, Object... arguments) {
         if (UnpluggedOptions.getInstance().isDebug()) {
@@ -89,7 +90,7 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
             LOGGER.warn("Disabling with {} unplugged player(s) still active. Their spots will no longer be held.", unpluggedPlayers.size());
         }
 
-        unpluggedPlayers.forEach(unpluggedPlayer -> unpluggedPlayer.deferredDisconnect(Component.literal(KICK_REASON_DISABLED)));
+        unpluggedPlayers.forEach(unpluggedPlayer -> unpluggedPlayer.deferredDisconnect(Component.literal(KICK_REASON_DISABLED), UnpluggedPlayerRemoveEvent.Reason.PLUGIN_DISABLED));
         manager.removeAll();
     }
 
