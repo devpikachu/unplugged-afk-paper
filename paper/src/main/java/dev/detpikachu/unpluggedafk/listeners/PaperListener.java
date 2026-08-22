@@ -1,7 +1,6 @@
 package dev.detpikachu.unpluggedafk.listeners;
 
 import dev.detpikachu.unpluggedafk.Constants.PacketEventsCompat;
-import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
 import dev.detpikachu.unpluggedafk.formatting.ChatMessages;
@@ -15,6 +14,8 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.ApiStatus;
+
+import static dev.detpikachu.unpluggedafk.UnpluggedAfk.logDebug;
 
 @ApiStatus.Internal
 public final class PaperListener implements Listener {
@@ -40,11 +41,7 @@ public final class PaperListener implements Listener {
             registry.remove(bot);
             event.quitMessage(null);
 
-            UnpluggedAfk.logDebug(
-                    "Removed bot {} ({}). {} still active.",
-                    player.getName(),
-                    player.getUniqueId(),
-                    registry.count());
+            logDebug("Removed bot {} ({}). {} still active.", player.getName(), player.getUniqueId(), registry.count());
 
             new UnpluggedPlayerRemoveEvent(
                     bot.getBukkitEntity(),
@@ -72,7 +69,7 @@ public final class PaperListener implements Listener {
 
         if (PacketEventsCompat.KICK_MESSAGE.equals(reason)) {
             event.setCancelled(true);
-            UnpluggedAfk.logDebug("Refused a kick of bot {} ({}): {}", player.getName(), player.getUniqueId(), reason);
+            logDebug("Refused a kick of bot {} ({}): {}", player.getName(), player.getUniqueId(), reason);
             return;
         }
 
@@ -80,6 +77,6 @@ public final class PaperListener implements Listener {
             bot.setRemoveReason(Reason.PLAYER_RETURNED);
         }
 
-        UnpluggedAfk.logDebug("Let a kick of bot {} ({}) through: {}", player.getName(), player.getUniqueId(), reason);
+        logDebug("Let a kick of bot {} ({}) through: {}", player.getName(), player.getUniqueId(), reason);
     }
 }

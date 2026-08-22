@@ -42,7 +42,7 @@ public final class UnpluggedPlayerRemoveEvent extends PlayerEvent {
      * @return a snapshot of the bot as it was when it stopped holding the spot
      */
     public UnpluggedPlayerInfo getInfo() {
-        return info;
+        return this.info;
     }
 
     /**
@@ -51,7 +51,7 @@ public final class UnpluggedPlayerRemoveEvent extends PlayerEvent {
      * @return what ended the session
      */
     public Reason getReason() {
-        return reason;
+        return this.reason;
     }
 
     @Override

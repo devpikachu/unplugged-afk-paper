@@ -37,25 +37,22 @@ public final class Options {
 
     public static void deserialize(FileConfiguration config) {
         INSTANCE.isDebug = config.getBoolean(KEY_DEBUG, Defaults.DEBUG);
-        INSTANCE.maxUnpluggedPlayers = config.getInt(KEY_MAX_UNPLUGGED_PLAYERS, Defaults.MAX_UNPLUGGED_PLAYERS);
-        INSTANCE.maxDurationMins = config.getInt(KEY_MAX_DURATION_MINS, Defaults.MAX_DURATION_MINS);
+        INSTANCE.maxUnpluggedPlayers = atLeastOne(config, KEY_MAX_UNPLUGGED_PLAYERS, Defaults.MAX_UNPLUGGED_PLAYERS);
+        INSTANCE.maxDurationMins = atLeastOne(config, KEY_MAX_DURATION_MINS, Defaults.MAX_DURATION_MINS);
+    }
 
-        if (INSTANCE.maxUnpluggedPlayers < 1) {
-            LOGGER.warn(
-                    "{} of {} is invalid. The value must be greater than or equal to 1. Resetting to {}.",
-                    KEY_MAX_UNPLUGGED_PLAYERS,
-                    INSTANCE.maxUnpluggedPlayers,
-                    Defaults.MAX_UNPLUGGED_PLAYERS);
-            INSTANCE.maxUnpluggedPlayers = Defaults.MAX_UNPLUGGED_PLAYERS;
+    private static int atLeastOne(FileConfiguration config, String key, int fallback) {
+        final var value = config.getInt(key, fallback);
+
+        if (value >= 1) {
+            return value;
         }
 
-        if (INSTANCE.maxDurationMins < 1) {
-            LOGGER.warn(
-                    "{} of {} is invalid. The value must be greater than or equal to 1. Resetting to {}.",
-                    KEY_MAX_DURATION_MINS,
-                    INSTANCE.maxDurationMins,
-                    Defaults.MAX_DURATION_MINS);
-            INSTANCE.maxDurationMins = Defaults.MAX_DURATION_MINS;
-        }
+        LOGGER.warn(
+                "{} of {} is invalid. The value must be greater than or equal to 1. Resetting to {}.",
+                key,
+                value,
+                fallback);
+        return fallback;
     }
 }

@@ -60,7 +60,7 @@ public final class PlayerUnplugEvent extends PlayerEvent implements Cancellable 
     }
 
     /**
-     * The message shown to the player if this event is canceled.
+     * Returns the message shown to the player if this event is cancelled.
      *
      * @return the message, or {@code null} if a generic refusal should be used
      */
@@ -69,7 +69,7 @@ public final class PlayerUnplugEvent extends PlayerEvent implements Cancellable 
     }
 
     /**
-     * Sets the message shown to the player if this event is canceled. Set it alongside cancelling, otherwise the
+     * Sets the message shown to the player if this event is cancelled. Set it alongside cancelling, otherwise the
      * player is told only that the request was refused.
      *
      * @param cancelMessage the message, or {@code null} for a generic refusal

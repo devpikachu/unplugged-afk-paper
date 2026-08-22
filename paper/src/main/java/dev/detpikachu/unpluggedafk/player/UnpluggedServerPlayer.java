@@ -2,7 +2,6 @@ package dev.detpikachu.unpluggedafk.player;
 
 import com.mojang.authlib.GameProfile;
 import dev.detpikachu.unpluggedafk.Constants.KickReasons;
-import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import dev.detpikachu.unpluggedafk.api.UnpluggedPlayerInfo;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
 import dev.detpikachu.unpluggedafk.session.Session;
@@ -30,9 +29,9 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
 import java.time.Duration;
-import java.time.Instant;
 
 import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
+import static dev.detpikachu.unpluggedafk.UnpluggedAfk.logDebug;
 
 @ApiStatus.Internal
 public final class UnpluggedServerPlayer extends ServerPlayer {
@@ -40,6 +39,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     // Copied verbatim from source mod:
     // Delay sending the ADD_PLAYER packets... because Mojang.
     private static final Duration SPAWN_PACKET_DELAY = Duration.ofMillis(200);
+    private static final int PERIODIC_TICK_INTERVAL = 10;
 
     private final Session session;
 
@@ -61,32 +61,8 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         return ((CraftPlayer) player).getHandle() instanceof UnpluggedServerPlayer bot ? bot : null;
     }
 
-    public int getDurationMins() {
-        return this.session.durationMins();
-    }
-
-    public String getReason() {
-        return this.session.reason();
-    }
-
-    public Instant getStartedAt() {
-        return this.session.startedAt();
-    }
-
-    public Instant getExpiresAt() {
-        return this.session.expiresAt();
-    }
-
-    public Duration elapsed() {
-        return this.session.elapsed();
-    }
-
-    public Duration remaining() {
-        return this.session.remaining();
-    }
-
-    public boolean isFake() {
-        return this.session.isFake();
+    public Session getSession() {
+        return this.session;
     }
 
     public @Nullable Reason getRemoveReason() {
@@ -100,7 +76,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     public UnpluggedPlayerInfo toInfo() {
         return new UnpluggedPlayerInfo(
                 this.getUUID(),
-                this.getName().getString(),
+                this.getPlainTextName(),
                 this.session.durationMins(),
                 this.session.reason(),
                 this.session.startedAt(),
@@ -112,29 +88,16 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     public void tick() {
         final var server = this.level().getServer();
 
-        if (server.getTickCount() % 10 != 0) {
-            super.tick();
-            this.doTick();
-            return;
+        if (server.getTickCount() % PERIODIC_TICK_INTERVAL == 0) {
+            this.tickPeriodic(server);
         }
-
-        if (this.isSpawnStatePending && this.session.elapsed().compareTo(SPAWN_PACKET_DELAY) >= 0) {
-            this.applyDeferredSpawnState(server);
-        }
-
-        if (this.session.isExpired()) {
-            this.deferredDisconnect(Component.text(KickReasons.EXPIRED), Reason.EXPIRED);
-        }
-
-        this.connection.resetPosition();
-        this.level().getChunkSource().move(this);
 
         super.tick();
         this.doTick();
     }
 
     @Override
-    public void onEquipItem(final EquipmentSlot slot, final ItemStack previous, final ItemStack stack) {
+    public void onEquipItem(EquipmentSlot slot, ItemStack previous, ItemStack stack) {
         if (this.isUsingItem()) {
             return;
         }
@@ -149,7 +112,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
 
         LOGGER.warn(
                 "Bot {} ({}) died. Their items dropped and their spot is no longer held.",
-                this.getName().getString(),
+                this.getPlainTextName(),
                 this.getUUID());
         this.deferredDisconnect(PaperAdventure.asAdventure(this.getCombatTracker().getDeathMessage()), Reason.DIED);
     }
@@ -178,11 +141,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
             return;
         }
 
-        UnpluggedAfk.logDebug(
-                "Bot {} ({}) was removed from the world: {}.",
-                this.getName().getString(),
-                this.getUUID(),
-                reason);
+        logDebug("Bot {} ({}) was removed from the world: {}.", this.getPlainTextName(), this.getUUID(), reason);
         this.deferredDisconnect(Component.text(KickReasons.REMOVED), Reason.ENTITY_REMOVED);
     }
 
@@ -196,7 +155,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
 
         LOGGER.info(
                 "Killing bot {} ({}) after {} of {} minute(s): {}",
-                this.getName().getString(),
+                this.getPlainTextName(),
                 this.getUUID(),
                 this.session.elapsed().toMinutes(),
                 this.session.durationMins(),
@@ -214,7 +173,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
             if (persisted.isEmpty()) {
                 LOGGER.warn(
                         "No persisted data for {} ({}). The bot holds world spawn with an empty inventory.",
-                        this.getName().getString(),
+                        this.getPlainTextName(),
                         this.getUUID());
                 return;
             }
@@ -225,6 +184,19 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
             this.loadAndSpawnEnderPearls(data);
             this.loadAndSpawnParentVehicle(data);
         }
+    }
+
+    private void tickPeriodic(MinecraftServer server) {
+        if (this.isSpawnStatePending && this.session.elapsed().compareTo(SPAWN_PACKET_DELAY) >= 0) {
+            this.applyDeferredSpawnState(server);
+        }
+
+        if (this.session.isExpired()) {
+            this.deferredDisconnect(Component.text(KickReasons.EXPIRED), Reason.EXPIRED);
+        }
+
+        this.connection.resetPosition();
+        this.level().getChunkSource().move(this);
     }
 
     private void applyDeferredSpawnState(MinecraftServer server) {
@@ -240,9 +212,9 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
 
         this.isSpawnStatePending = false;
 
-        UnpluggedAfk.logDebug(
+        logDebug(
                 "Sent deferred spawn packets for {} ({}) after {}ms.",
-                this.getName().getString(),
+                this.getPlainTextName(),
                 this.getUUID(),
                 this.session.elapsed().toMillis());
     }

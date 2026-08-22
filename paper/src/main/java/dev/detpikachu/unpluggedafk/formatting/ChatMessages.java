@@ -28,54 +28,13 @@ public final class ChatMessages {
         final var bot = UnpluggedServerPlayer.from(player);
 
         if (bot != null) {
-            return formatPlayer(bot);
+            return formatBot(bot);
         }
 
         final var playerName = text(player.getName(), GOLD);
         final var realPlayer = text(" is a real player.", WHITE);
 
         return playerName.append(realPlayer);
-    }
-
-    public static Component formatPlayer(UnpluggedServerPlayer bot) {
-        final var informationFor = text("Unplugged information for ", WHITE);
-        final var playerName = text(bot.getName().getString(), GOLD);
-        final var colon = text(":", WHITE);
-
-        final var durationLabel = text("Duration: ", GRAY);
-        final var durationValue = formatDuration(Duration.ofMinutes(bot.getDurationMins()));
-
-        final var reasonLabel = text("Reason: ", GRAY);
-        final var reasonValue = text(bot.getReason());
-
-        final var startAtPrefix = text("Unplugged: ", GRAY);
-        final var startAtValue = formatDuration(bot.elapsed());
-        final var startAtSuffix = text(" ago", GRAY);
-
-        final var endsAtLabel = text("Expires: in ", GRAY);
-        final var endsAtValue = formatDuration(bot.remaining());
-
-        final var isFakeLabel = text("Is Fake: ", GRAY);
-        final var isFakeValue = bot.isFake() ? text("true", GREEN) : text("false", RED);
-
-        return informationFor.append(playerName)
-                .append(colon)
-                .appendNewline()
-                .append(durationLabel)
-                .append(durationValue)
-                .appendNewline()
-                .append(reasonLabel)
-                .append(reasonValue)
-                .appendNewline()
-                .append(startAtPrefix)
-                .append(startAtValue)
-                .append(startAtSuffix)
-                .appendNewline()
-                .append(endsAtLabel)
-                .append(endsAtValue)
-                .appendNewline()
-                .append(isFakeLabel)
-                .append(isFakeValue);
     }
 
     public static Component formatUnplugged(int durationMins, String reason) {
@@ -99,11 +58,30 @@ public final class ChatMessages {
         lines.add(formatListHeader(bots.size(), SessionRegistry.getInstance().countUnplugging()));
 
         bots.stream()
-                .sorted(Comparator.comparing(UnpluggedServerPlayer::getExpiresAt))
+                .sorted(Comparator.comparing(bot -> bot.getSession().expiresAt()))
                 .map(ChatMessages::formatListEntry)
                 .forEach(lines::add);
 
         return Component.join(JoinConfiguration.newlines(), lines);
+    }
+
+    private static Component formatBot(UnpluggedServerPlayer bot) {
+        final var session = bot.getSession();
+        final var name = text(bot.getPlainTextName(), GOLD);
+        final var header = text("Unplugged information for ", WHITE).append(name).append(text(":", WHITE));
+
+        return Component.join(
+                JoinConfiguration.newlines(),
+                header,
+                formatRow("Duration: ", formatDuration(Duration.ofMinutes(session.durationMins()))),
+                formatRow("Reason: ", text(session.reason())),
+                formatRow("Unplugged: ", formatDuration(session.elapsed()).append(text(" ago", GRAY))),
+                formatRow("Expires: in ", formatDuration(session.remaining())),
+                formatRow("Is Fake: ", session.isFake() ? text("true", GREEN) : text("false", RED)));
+    }
+
+    private static Component formatRow(String label, Component value) {
+        return text(label, GRAY).append(value);
     }
 
     private static Component formatListHeader(int unplugged, int unplugging) {
@@ -125,10 +103,12 @@ public final class ChatMessages {
     }
 
     private static Component formatListEntry(UnpluggedServerPlayer bot) {
-        final var name = text(bot.getName().getString(), GOLD);
-        final var fakeMarker = bot.isFake() ? text(" (fake)", RED) : Component.empty();
+        final var session = bot.getSession();
+
+        final var name = text(bot.getPlainTextName(), GOLD);
+        final var fakeMarker = session.isFake() ? text(" (fake)", RED) : Component.empty();
         final var expiresLabel = text(" - expires in ", GRAY);
-        final var expiresValue = formatDuration(bot.remaining());
+        final var expiresValue = formatDuration(session.remaining());
 
         return name.append(fakeMarker).append(expiresLabel).append(expiresValue);
     }
@@ -136,16 +116,14 @@ public final class ChatMessages {
     private static Component formatDuration(Duration duration) {
         final var seconds = duration.toSeconds();
         if (seconds < 60) {
-            return text(seconds, WHITE).append(text(" second(s)", WHITE));
+            return text(seconds + " second(s)", WHITE);
         }
 
         final var minutes = duration.toMinutes();
         if (minutes < 60) {
-            return text(minutes, WHITE).append(text(" minute(s)", WHITE));
+            return text(minutes + " minute(s)", WHITE);
         }
 
-        return text(duration.toHours(), WHITE).append(text(" hour(s) ", WHITE))
-                .append(text(duration.toMinutesPart(), WHITE))
-                .append(text(" minute(s)", WHITE));
+        return text(duration.toHours() + " hour(s) " + duration.toMinutesPart() + " minute(s)", WHITE);
     }
 }

@@ -13,7 +13,6 @@ import io.papermc.paper.configuration.GlobalConfiguration;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.ApiStatus;
@@ -30,6 +29,10 @@ public final class UnpluggedAfk extends JavaPlugin {
 
     public static ComponentLogger LOGGER = ComponentLogger.logger();
 
+    public static UnpluggedAfk getInstance() {
+        return JavaPlugin.getPlugin(UnpluggedAfk.class);
+    }
+
     public static void logDebug(String message, Object... arguments) {
         if (Options.getInstance().isDebug()) {
             LOGGER.info(message, arguments);
@@ -39,35 +42,18 @@ public final class UnpluggedAfk extends JavaPlugin {
     @Override
     public void onEnable() {
         LOGGER = getComponentLogger();
-        final var server = getServer();
 
-        // Version compatibility
-        final var targetVersion = getTargetMinecraftVersion();
-        final var runningVersion = Bukkit.getMinecraftVersion();
-
-        if (!runningVersion.equals(targetVersion)) {
-            LOGGER.error("Unplugged AFK targets Minecraft {} but this server runs {}", targetVersion, runningVersion);
-            server.getPluginManager().disablePlugin(this);
+        if (!isTargetMinecraftVersion()) {
+            getServer().getPluginManager().disablePlugin(this);
             return;
         }
 
-        // Config
         saveDefaultConfig();
         Options.deserialize(getConfig());
 
-        // API
-        server.getServicesManager().register(UnpluggedAfkApi.class, new ApiService(), this, ServicePriority.Normal);
-
-        // Events
-        Bukkit.getPluginManager().registerEvents(new PaperListener(), this);
-        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
-            CommandTree.register(commands.registrar());
-        });
-
-        // Networking
-        final var messenger = server.getMessenger();
-        messenger.registerOutgoingPluginChannel(this, BungeeChannel.NAME);
-        messenger.registerOutgoingPluginChannel(this, SessionsChannel.NAME);
+        registerApi();
+        registerListeners();
+        registerPluginChannels();
 
         logStartupSummary();
     }
@@ -90,12 +76,42 @@ public final class UnpluggedAfk extends JavaPlugin {
         registry.removeAll();
     }
 
+    private boolean isTargetMinecraftVersion() {
+        final var targetVersion = getTargetMinecraftVersion();
+        final var runningVersion = getServer().getMinecraftVersion();
+
+        if (runningVersion.equals(targetVersion)) {
+            return true;
+        }
+
+        LOGGER.error("Unplugged AFK targets Minecraft {} but this server runs {}", targetVersion, runningVersion);
+        return false;
+    }
+
+    private void registerApi() {
+        getServer().getServicesManager()
+                .register(UnpluggedAfkApi.class, new ApiService(), this, ServicePriority.Normal);
+    }
+
+    private void registerListeners() {
+        getServer().getPluginManager().registerEvents(new PaperListener(), this);
+        getLifecycleManager()
+                .registerEventHandler(LifecycleEvents.COMMANDS, commands -> CommandTree.register(commands.registrar()));
+    }
+
+    private void registerPluginChannels() {
+        final var messenger = getServer().getMessenger();
+
+        messenger.registerOutgoingPluginChannel(this, BungeeChannel.NAME);
+        messenger.registerOutgoingPluginChannel(this, SessionsChannel.NAME);
+    }
+
     private void logStartupSummary() {
         final var options = Options.getInstance();
 
         LOGGER.info(
                 "Enabled for Minecraft {}. debug={}, maxUnpluggedPlayers={}, maxDurationMins={}",
-                Bukkit.getMinecraftVersion(),
+                getServer().getMinecraftVersion(),
                 options.isDebug(),
                 options.getMaxUnpluggedPlayers(),
                 options.getMaxDurationMins());

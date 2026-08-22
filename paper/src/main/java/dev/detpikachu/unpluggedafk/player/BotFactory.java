@@ -18,7 +18,6 @@ import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.HashSet;
@@ -33,16 +32,14 @@ public final class BotFactory {
     private static final int SPAWN_TIMEOUT_TICKS = 100;
 
     public static void spawnWhenSettled(
-            UUID uuid,
-            String name,
             ServerLevel level,
             GameProfile profile,
             ClientInformation clientInformation,
             Session session,
             Connection oldConnection) {
-        final var plugin = JavaPlugin.getPlugin(UnpluggedAfk.class);
+        final var plugin = UnpluggedAfk.getInstance();
         final var scheduler = plugin.getServer().getGlobalRegionScheduler();
-        final var deferred = new DeferredSpawn(uuid, name, level, profile, clientInformation, session, oldConnection);
+        final var deferred = new DeferredSpawn(level, profile, clientInformation, session, oldConnection);
 
         scheduler.runAtFixedRate(plugin, deferred::tick, 1L, 1L);
     }
@@ -57,7 +54,7 @@ public final class BotFactory {
 
         LOGGER.info(
                 "Spawned fake bot {} at {}, {}, {} in {} for {} minute(s).",
-                bot.getName().getString(),
+                bot.getPlainTextName(),
                 (int) position.x(),
                 (int) position.y(),
                 (int) position.z(),
@@ -113,15 +110,13 @@ public final class BotFactory {
         private int settled = 0;
 
         private DeferredSpawn(
-                UUID uuid,
-                String name,
                 ServerLevel level,
                 GameProfile profile,
                 ClientInformation clientInformation,
                 Session session,
                 Connection oldConnection) {
-            this.uuid = uuid;
-            this.name = name;
+            this.uuid = profile.id();
+            this.name = profile.name();
             this.level = level;
             this.profile = profile;
             this.clientInformation = clientInformation;

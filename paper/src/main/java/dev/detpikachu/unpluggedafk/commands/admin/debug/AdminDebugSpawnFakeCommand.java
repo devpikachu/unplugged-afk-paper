@@ -12,6 +12,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
+import static dev.detpikachu.unpluggedafk.commands.CommandGuards.ARG_DURATION_MINS;
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireCapacity;
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireDuration;
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireExecutor;
@@ -21,27 +22,26 @@ public final class AdminDebugSpawnFakeCommand {
 
     private static final String CMD_SPAWN_FAKE = "spawn-fake";
 
-    private static final String ARG_DURATION_MINS = "durationMins";
     private static final String ARG_REASON = "reason";
 
     public static LiteralArgumentBuilder<CommandSourceStack> construct() {
         final var root = Commands.literal(CMD_SPAWN_FAKE);
 
-        final var durationMins = Commands.argument(ARG_DURATION_MINS, IntegerArgumentType.integer(1));
-        final var reason = Commands.argument(ARG_REASON, StringArgumentType.greedyString());
+        final var reason = Commands.argument(ARG_REASON, StringArgumentType.greedyString())
+                .executes(context -> execute(context, context.getArgument(ARG_REASON, String.class)));
+        final var durationMins = Commands.argument(ARG_DURATION_MINS, IntegerArgumentType.integer(1))
+                .then(reason)
+                .executes(context -> execute(context, null));
 
-        return root.then(
-                durationMins.then(
-                        reason.executes(context -> execute(context, context.getArgument(ARG_REASON, String.class))))
-                        .executes(context -> execute(context, null)));
+        return root.then(durationMins);
     }
 
     private static int execute(CommandContext<CommandSourceStack> context, @Nullable String reason)
             throws CommandSyntaxException {
         final var executor = requireExecutor(context);
-        final var durationMins = requireDuration(context, ARG_DURATION_MINS);
+        final var durationMins = requireDuration(context);
 
-        final var effectiveReason = (reason == null || reason.isBlank()) ? executor.getName().getString() : reason;
+        final var effectiveReason = (reason == null || reason.isBlank()) ? executor.getPlainTextName() : reason;
 
         requireCapacity();
 

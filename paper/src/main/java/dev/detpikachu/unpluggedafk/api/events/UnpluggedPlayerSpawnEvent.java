@@ -41,7 +41,7 @@ public final class UnpluggedPlayerSpawnEvent extends PlayerEvent {
      * @return a snapshot of the bot as it stands now
      */
     public UnpluggedPlayerInfo getInfo() {
-        return info;
+        return this.info;
     }
 
     @Override

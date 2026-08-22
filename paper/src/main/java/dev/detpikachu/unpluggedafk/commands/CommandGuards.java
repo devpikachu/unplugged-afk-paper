@@ -2,7 +2,6 @@ package dev.detpikachu.unpluggedafk.commands;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import dev.detpikachu.unpluggedafk.config.Options;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -11,12 +10,15 @@ import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.jetbrains.annotations.ApiStatus;
 
 import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
+import static dev.detpikachu.unpluggedafk.UnpluggedAfk.logDebug;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_NOT_A_PLAYER;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.errCapReached;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.errDurationTooLarge;
 
 @ApiStatus.Internal
 public final class CommandGuards {
+
+    public static final String ARG_DURATION_MINS = "durationMins";
 
     public static ServerPlayer requireExecutor(CommandContext<CommandSourceStack> context)
             throws CommandSyntaxException {
@@ -27,13 +29,12 @@ public final class CommandGuards {
         return craftPlayer.getHandle();
     }
 
-    public static int requireDuration(CommandContext<CommandSourceStack> context, String argument)
-            throws CommandSyntaxException {
-        final var durationMins = context.getArgument(argument, int.class);
+    public static int requireDuration(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        final var durationMins = context.getArgument(ARG_DURATION_MINS, int.class);
         final var maxDurationMins = Options.getInstance().getMaxDurationMins();
 
         if (durationMins > maxDurationMins) {
-            UnpluggedAfk.logDebug(
+            logDebug(
                     "{} asked for {} minute(s), over the {} minute cap.",
                     context.getSource().getSender().getName(),
                     durationMins,

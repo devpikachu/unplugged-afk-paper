@@ -39,24 +39,30 @@ public final class DumpFormatting {
         final var inventory = player.getInventory();
         final var builder = new StringBuilder();
 
-        appendField(builder, "Timestamp", timestamp.toEpochMilli() + " (" + TIMESTAMP_FORMAT.format(timestamp) + ")");
-        appendField(builder, "Player", player.getName() + " (" + player.getUniqueId() + ")");
+        appendField(
+                builder,
+                "Timestamp",
+                format("%d (%s)", timestamp.toEpochMilli(), TIMESTAMP_FORMAT.format(timestamp)));
+        appendField(builder, "Player", format("%s (%s)", player.getName(), player.getUniqueId()));
         appendField(builder, "Duration", session.durationMins() + " minute(s)");
         appendField(builder, "Reason", session.reason());
         appendField(
                 builder,
                 "Expires",
                 TIMESTAMP_FORMAT.format(timestamp.plus(Duration.ofMinutes(session.durationMins()))));
-        appendField(builder, "World", player.getWorld().getName() + " (" + player.getWorld().getKey().asString() + ")");
+        appendField(
+                builder,
+                "World",
+                format("%s (%s)", player.getWorld().getName(), player.getWorld().getKey().asString()));
         appendField(builder, "Position", format("%.2f, %.2f, %.2f", location.getX(), location.getY(), location.getZ()));
         appendField(builder, "Rotation", format("yaw %.2f, pitch %.2f", location.getYaw(), location.getPitch()));
         appendField(builder, "Game mode", player.getGameMode().name());
         appendField(builder, "Health", format("%.1f", player.getHealth()));
-        appendField(builder, "Food", player.getFoodLevel() + format(" (saturation %.1f)", player.getSaturation()));
+        appendField(builder, "Food", format("%d (saturation %.1f)", player.getFoodLevel(), player.getSaturation()));
         appendField(
                 builder,
                 "Experience",
-                "level " + player.getLevel() + " (" + player.getTotalExperience() + " total)");
+                format("level %d (%d total)", player.getLevel(), player.getTotalExperience()));
 
         appendSection(builder, "Inventory", inventory.getStorageContents());
         appendSection(builder, "Armor", inventory.getArmorContents());

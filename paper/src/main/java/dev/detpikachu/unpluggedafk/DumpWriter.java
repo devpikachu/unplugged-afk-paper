@@ -3,7 +3,6 @@ package dev.detpikachu.unpluggedafk;
 import dev.detpikachu.unpluggedafk.formatting.DumpFormatting;
 import dev.detpikachu.unpluggedafk.session.Session;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.nio.file.Files;
@@ -42,7 +41,7 @@ public final class DumpWriter {
     }
 
     private static Path dumpsDirectory() {
-        return JavaPlugin.getPlugin(UnpluggedAfk.class).getDataPath().resolve(DUMPS_DIRECTORY);
+        return UnpluggedAfk.getInstance().getDataPath().resolve(DUMPS_DIRECTORY);
     }
 
     private static String fileName(String playerName, Instant timestamp) {

@@ -16,7 +16,7 @@ public class UnplugCancelledException extends UnplugFailedException {
     }
 
     public @Nullable Component getCancelMessage() {
-        return cancelMessage;
+        return this.cancelMessage;
     }
 
     private static String describe(@Nullable Component cancelMessage) {

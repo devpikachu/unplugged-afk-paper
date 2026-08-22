@@ -22,7 +22,7 @@ public final class GamePacketListener extends ServerGamePacketListenerImpl {
     }
 
     @Override
-    public void onDisconnect(final DisconnectionDetails details) {
+    public void onDisconnect(DisconnectionDetails details) {
         super.onDisconnect(details);
         this.unpluggedConnection.closeChannel();
     }

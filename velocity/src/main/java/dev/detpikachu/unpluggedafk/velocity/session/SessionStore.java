@@ -92,7 +92,7 @@ public final class SessionStore {
             return;
         }
 
-        try (final var reader = Files.newBufferedReader(this.file)) {
+        try (var reader = Files.newBufferedReader(this.file)) {
             final Map<UUID, Session> persisted = GSON.fromJson(reader, SESSIONS_TYPE);
 
             if (persisted == null) {

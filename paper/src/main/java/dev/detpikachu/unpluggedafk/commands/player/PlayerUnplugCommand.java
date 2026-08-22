@@ -18,6 +18,7 @@ import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_GENERIC;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_REASON_REQUIRED;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.errUnplugCancelled;
+import static dev.detpikachu.unpluggedafk.commands.CommandGuards.ARG_DURATION_MINS;
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireCapacity;
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireDuration;
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireExecutor;
@@ -27,7 +28,6 @@ public final class PlayerUnplugCommand {
 
     private static final String CMD_UNPLUG = "unplug";
 
-    private static final String ARG_DURATION_MINS = "durationMins";
     private static final String ARG_REASON = "reason";
 
     public static LiteralCommandNode<CommandSourceStack> construct() {
@@ -43,7 +43,7 @@ public final class PlayerUnplugCommand {
 
     private static int execute(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         final var player = requireExecutor(context);
-        final var durationMins = requireDuration(context, ARG_DURATION_MINS);
+        final var durationMins = requireDuration(context);
         final var reason = context.getArgument(ARG_REASON, String.class);
 
         if (reason.isBlank()) {
@@ -57,7 +57,7 @@ public final class PlayerUnplugCommand {
         } catch (UnplugCancelledException exception) {
             throw errUnplugCancelled(exception.getCancelMessage()).create();
         } catch (UnplugFailedException exception) {
-            LOGGER.error("Failed to unplug player {} ({})", player.getName().getString(), player.getUUID(), exception);
+            LOGGER.error("Failed to unplug player {} ({})", player.getPlainTextName(), player.getUUID(), exception);
             throw ERR_GENERIC.create();
         }
 

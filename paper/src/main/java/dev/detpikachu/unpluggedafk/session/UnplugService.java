@@ -24,7 +24,7 @@ public final class UnplugService {
     public static void unplug(ServerPlayer player, Session session) throws UnplugFailedException {
         final var registry = SessionRegistry.getInstance();
         final var uuid = player.getUUID();
-        final var name = player.getName().getString();
+        final var name = player.getPlainTextName();
         final var level = player.level();
         final var server = level.getServer();
         final var playerList = server.getPlayerList();
@@ -64,7 +64,7 @@ public final class UnplugService {
                 }
             }
 
-            BotFactory.spawnWhenSettled(uuid, name, level, gameProfile, clientInformation, session, oldConnection);
+            BotFactory.spawnWhenSettled(level, gameProfile, clientInformation, session, oldConnection);
             spawnScheduled = true;
         } finally {
             if (!spawnScheduled) {
