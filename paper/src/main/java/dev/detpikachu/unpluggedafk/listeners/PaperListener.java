@@ -5,6 +5,7 @@ import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
 import dev.detpikachu.unpluggedafk.formatting.ChatMessages;
 import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
+import dev.detpikachu.unpluggedafk.session.PlayerSnapshot;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.event.EventHandler;
@@ -54,6 +55,19 @@ public final class PaperListener implements Listener {
         if (registry.isUnplugging(player.getUniqueId())) {
             event.quitMessage(ChatMessages.formatUnpluggedBroadcast(player));
         }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerQuitSnapshot(PlayerQuitEvent event) {
+        final var player = event.getPlayer();
+        final var registry = SessionRegistry.getInstance();
+
+        if (!registry.isUnplugging(player.getUniqueId()) || UnpluggedServerPlayer.from(player) != null) {
+            return;
+        }
+
+        registry.putSnapshot(player.getUniqueId(), PlayerSnapshot.capture(player));
+        logDebug("Captured a snapshot of {} ({}) for their bot.", player.getName(), player.getUniqueId());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

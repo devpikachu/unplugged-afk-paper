@@ -1,6 +1,7 @@
 package dev.detpikachu.unpluggedafk.session;
 
 import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
+import net.minecraft.nbt.CompoundTag;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
@@ -15,11 +16,13 @@ public final class SessionRegistry {
     private static final SessionRegistry INSTANCE = new SessionRegistry();
 
     private final ConcurrentHashMap.KeySetView<UUID, Boolean> unplugging;
+    private final ConcurrentHashMap<UUID, CompoundTag> snapshots;
     private final ConcurrentHashMap<UUID, UnpluggedServerPlayer> unplugged;
 
     private SessionRegistry() {
         this.unplugging = ConcurrentHashMap.newKeySet(16);
         this.unplugged = new ConcurrentHashMap<>(16, 0.9F, 1);
+        this.snapshots = new ConcurrentHashMap<>(16, 0.9F, 1);
     }
 
     public static SessionRegistry getInstance() {
@@ -40,6 +43,15 @@ public final class SessionRegistry {
 
     public void clearUnplugging(UUID uuid) {
         this.unplugging.remove(uuid);
+        this.snapshots.remove(uuid);
+    }
+
+    public void putSnapshot(UUID uuid, CompoundTag snapshot) {
+        this.snapshots.put(uuid, snapshot);
+    }
+
+    public @Nullable CompoundTag consumeSnapshot(UUID uuid) {
+        return this.snapshots.remove(uuid);
     }
 
     public boolean isUnplugged(UUID uuid) {
@@ -68,6 +80,7 @@ public final class SessionRegistry {
 
     public void removeAll() {
         this.unplugging.clear();
+        this.snapshots.clear();
         this.unplugged.clear();
     }
 }

@@ -1,7 +1,9 @@
 package dev.detpikachu.unpluggedafk.player;
 
 import com.mojang.authlib.GameProfile;
+import dev.detpikachu.unpluggedafk.Constants.KickReasons;
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
+import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerSpawnEvent;
 import dev.detpikachu.unpluggedafk.config.Options;
 import dev.detpikachu.unpluggedafk.network.GamePacketListener;
@@ -10,15 +12,24 @@ import dev.detpikachu.unpluggedafk.session.Session;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import io.papermc.paper.util.KeepAlive;
+import net.kyori.adventure.text.Component;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.TicketType;
 import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.server.players.NameAndId;
+import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.storage.TagValueInput;
+import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.UUID;
@@ -30,6 +41,7 @@ public final class BotFactory {
 
     private static final int SPAWN_SETTLE_TICKS = 1;
     private static final int SPAWN_TIMEOUT_TICKS = 100;
+    private static final int SPAWN_CHUNK_RADIUS = 3;
 
     public static void spawnWhenSettled(
             ServerLevel level,
@@ -45,7 +57,12 @@ public final class BotFactory {
     }
 
     public static void spawnFake(ServerLevel level, Vec3 position, float yRot, float xRot, Session session) {
-        final var bot = spawn(level, FakeIdentity.random().toProfile(), ClientInformation.createDefault(), session);
+        final var bot = spawn(
+                level,
+                FakeIdentity.random().toProfile(),
+                ClientInformation.createDefault(),
+                session,
+                null);
 
         bot.gameMode
                 .changeGameModeForPlayer(GameType.DEFAULT_MODE, PlayerGameModeChangeEvent.Cause.DEFAULT_GAMEMODE, null);
@@ -68,7 +85,8 @@ public final class BotFactory {
             ServerLevel level,
             GameProfile profile,
             ClientInformation clientInformation,
-            Session session) {
+            Session session,
+            @Nullable CompoundTag persistedData) {
         final var server = level.getServer();
         final var cookie = new CommonListenerCookie(
                 profile,
@@ -84,16 +102,49 @@ public final class BotFactory {
         final var registry = SessionRegistry.getInstance();
 
         registry.add(bot);
+        var placed = false;
 
-        try {
+        try (final var reporter = new ProblemReporter.ScopedCollector(bot.problemPath(), LOGGER)) {
+            final var data = toValueInput(bot, reporter, persistedData);
+
+            // Vanilla loads persisted state before placing the player (PrepareSpawnTask$Ready.spawn). Placing first
+            // fires the bot's PlayerJoinEvent with an empty inventory at the world spawn, and the chunk ticket is what
+            // stops the pearls and vehicle below from being added to a chunk that is not loaded yet.
+            if (data != null) {
+                bot.load(data);
+
+                final var chunkPos = new ChunkPos(bot.blockPosition());
+
+                level.getChunkSource().addTicketWithRadius(TicketType.PLAYER_SPAWN, chunkPos, SPAWN_CHUNK_RADIUS);
+                level.waitForEntities(chunkPos, SPAWN_CHUNK_RADIUS);
+            }
+
             server.getPlayerList().placeNewPlayer(connection, bot, cookie);
+            placed = true;
             bot.connection = new GamePacketListener(server, connection, bot, cookie);
+
+            if (data != null) {
+                bot.loadAndSpawnEnderPearls(data);
+                bot.loadAndSpawnParentVehicle(data);
+            }
         } catch (RuntimeException exception) {
+            if (placed) {
+                bot.deferredDisconnect(Component.text(KickReasons.SPAWN_FAILED), Reason.SPAWN_FAILED);
+                throw exception;
+            }
+
             registry.remove(bot);
             throw exception;
         }
 
         return bot;
+    }
+
+    private static @Nullable ValueInput toValueInput(
+            UnpluggedServerPlayer bot,
+            ProblemReporter reporter,
+            @Nullable CompoundTag persistedData) {
+        return persistedData == null ? null : TagValueInput.create(reporter, bot.registryAccess(), persistedData);
     }
 
     private static final class DeferredSpawn {
@@ -137,8 +188,9 @@ public final class BotFactory {
             }
 
             task.cancel();
+            final var persistedData = this.resolvePersistedData();
             SessionRegistry.getInstance().clearUnplugging(this.uuid);
-            this.spawnBot();
+            this.spawnBot(persistedData);
         }
 
         private boolean hasReconnected() {
@@ -162,12 +214,11 @@ public final class BotFactory {
             return true;
         }
 
-        private void spawnBot() {
+        private void spawnBot(@Nullable CompoundTag persistedData) {
             final UnpluggedServerPlayer bot;
 
             try {
-                bot = spawn(this.level, this.profile, this.clientInformation, this.session);
-                bot.loadPersistedData();
+                bot = spawn(this.level, this.profile, this.clientInformation, this.session, persistedData);
             } catch (RuntimeException exception) {
                 LOGGER.error(
                         "{} ({}) was disconnected but no bot could be created to hold their spot.",
@@ -189,6 +240,32 @@ public final class BotFactory {
                     Options.getInstance().getMaxUnpluggedPlayers());
 
             new UnpluggedPlayerSpawnEvent(bot.getBukkitEntity(), bot.toInfo()).callEvent();
+        }
+
+        private @Nullable CompoundTag resolvePersistedData() {
+            final var snapshot = SessionRegistry.getInstance().consumeSnapshot(this.uuid);
+
+            if (snapshot != null) {
+                return snapshot;
+            }
+
+            LOGGER.warn("No snapshot for {} ({}). Falling back to their playerdata file.", this.name, this.uuid);
+            return this.readPersistedData();
+        }
+
+        private @Nullable CompoundTag readPersistedData() {
+            final var playerList = this.level.getServer().getPlayerList();
+            final var persistedData = playerList.loadPlayerData(new NameAndId(this.profile));
+
+            if (persistedData.isEmpty()) {
+                LOGGER.warn(
+                        "No persisted data for {} ({}). The bot holds world spawn with an empty inventory.",
+                        this.name,
+                        this.uuid);
+                return null;
+            }
+
+            return persistedData.get();
         }
     }
 }

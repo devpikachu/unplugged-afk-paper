@@ -93,6 +93,12 @@ public final class UnpluggedPlayerRemoveEvent extends PlayerEvent {
         PLAYER_RETURNED,
 
         /**
+         * The bot was created but could not be brought up, so it never held the spot. The player is disconnected and
+         * nothing is holding their place.
+         */
+        SPAWN_FAILED,
+
+        /**
          * Something outside Unplugged AFK removed the bot, such as another plugin kicking it.
          */
         UNKNOWN

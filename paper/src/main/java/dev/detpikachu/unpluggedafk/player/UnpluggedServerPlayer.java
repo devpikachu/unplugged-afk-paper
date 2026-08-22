@@ -17,13 +17,11 @@ import net.minecraft.server.TickTask;
 import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.portal.TeleportTransition;
-import net.minecraft.world.level.storage.TagValueInput;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
@@ -164,26 +162,6 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         final var server = this.level().getServer();
         final var details = new DisconnectionDetails(PaperAdventure.asVanilla(message));
         server.schedule(new TickTask(server.getTickCount(), () -> this.connection.onDisconnect(details)));
-    }
-
-    public void loadPersistedData() {
-        try (var reporter = new ProblemReporter.ScopedCollector(this.problemPath(), LOGGER)) {
-            final var persisted = this.level().getServer().getPlayerList().loadPlayerData(this.nameAndId());
-
-            if (persisted.isEmpty()) {
-                LOGGER.warn(
-                        "No persisted data for {} ({}). The bot holds world spawn with an empty inventory.",
-                        this.getPlainTextName(),
-                        this.getUUID());
-                return;
-            }
-
-            final var data = TagValueInput.create(reporter, this.registryAccess(), persisted.get());
-
-            this.load(data);
-            this.loadAndSpawnEnderPearls(data);
-            this.loadAndSpawnParentVehicle(data);
-        }
     }
 
     private void tickPeriodic(MinecraftServer server) {
