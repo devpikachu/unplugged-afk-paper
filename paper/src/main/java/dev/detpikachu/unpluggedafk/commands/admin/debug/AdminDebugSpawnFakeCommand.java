@@ -12,7 +12,9 @@ import io.papermc.paper.command.brigadier.Commands;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
-import static dev.detpikachu.unpluggedafk.commands.CommandGuards.*;
+import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireCapacity;
+import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireDuration;
+import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireExecutor;
 
 @ApiStatus.Internal
 public final class AdminDebugSpawnFakeCommand {
@@ -28,18 +30,18 @@ public final class AdminDebugSpawnFakeCommand {
         final var durationMins = Commands.argument(ARG_DURATION_MINS, IntegerArgumentType.integer(1));
         final var reason = Commands.argument(ARG_REASON, StringArgumentType.greedyString());
 
-        return root.then(durationMins
-                .then(reason.executes(context -> execute(context, context.getArgument(ARG_REASON, String.class))))
-                .executes(context -> execute(context, null)));
+        return root.then(
+                durationMins.then(
+                        reason.executes(context -> execute(context, context.getArgument(ARG_REASON, String.class))))
+                        .executes(context -> execute(context, null)));
     }
 
-    private static int execute(CommandContext<CommandSourceStack> context, @Nullable String reason) throws CommandSyntaxException {
+    private static int execute(CommandContext<CommandSourceStack> context, @Nullable String reason)
+            throws CommandSyntaxException {
         final var executor = requireExecutor(context);
         final var durationMins = requireDuration(context, ARG_DURATION_MINS);
 
-        final var effectiveReason = (reason == null || reason.isBlank())
-                ? executor.getName().getString()
-                : reason;
+        final var effectiveReason = (reason == null || reason.isBlank()) ? executor.getName().getString() : reason;
 
         requireCapacity();
 
@@ -48,8 +50,7 @@ public final class AdminDebugSpawnFakeCommand {
                 executor.position(),
                 executor.getYRot(),
                 executor.getXRot(),
-                new Session(durationMins, effectiveReason, true)
-        );
+                new Session(durationMins, effectiveReason, true));
 
         return 1;
     }

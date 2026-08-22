@@ -20,13 +20,14 @@ import java.util.UUID;
  * @param isFake       whether this is a throwaway bot from {@code /unplugged debug spawn-fake} rather than a real
  *                     player's session
  */
-public record UnpluggedPlayerInfo(UUID uuid,
-                                  String name,
-                                  int durationMins,
-                                  String reason,
-                                  Instant startedAt,
-                                  Instant expiresAt,
-                                  boolean isFake) {
+public record UnpluggedPlayerInfo(
+        UUID uuid,
+        String name,
+        int durationMins,
+        String reason,
+        Instant startedAt,
+        Instant expiresAt,
+        boolean isFake) {
 
     /**
      * How long is left before this bot is due to be reaped, recomputed against the current clock on every call.

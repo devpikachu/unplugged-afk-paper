@@ -16,7 +16,9 @@ import org.jetbrains.annotations.ApiStatus;
 import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_GENERIC;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_REASON_REQUIRED;
-import static dev.detpikachu.unpluggedafk.commands.CommandGuards.*;
+import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireCapacity;
+import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireDuration;
+import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireExecutor;
 
 @ApiStatus.Internal
 public final class PlayerUnplugCommand {
@@ -32,8 +34,7 @@ public final class PlayerUnplugCommand {
         final var durationMins = Commands.argument(ARG_DURATION_MINS, IntegerArgumentType.integer(1));
         final var reason = Commands.argument(ARG_REASON, StringArgumentType.greedyString());
 
-        return root
-                .requires(context -> context.getSender().hasPermission(Permissions.UNPLUG))
+        return root.requires(context -> context.getSender().hasPermission(Permissions.UNPLUG))
                 .then(durationMins.then(reason.executes(PlayerUnplugCommand::execute)))
                 .build();
     }
@@ -52,8 +53,7 @@ public final class PlayerUnplugCommand {
         try {
             UnplugService.unplug(player, new Session(durationMins, reason, false));
         } catch (UnplugFailedException exception) {
-            LOGGER.error("Failed to unplug player {} ({})",
-                    player.getName().getString(), player.getUUID(), exception);
+            LOGGER.error("Failed to unplug player {} ({})", player.getName().getString(), player.getUUID(), exception);
             throw ERR_GENERIC.create();
         }
 

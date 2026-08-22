@@ -34,7 +34,11 @@ public final class PaperListener implements Listener {
 
         if (bot != null) {
             registry.remove(bot);
-            UnpluggedAfk.logDebug("Removed bot {} ({}). {} still active.", player.getName(), player.getUniqueId(), registry.count());
+            UnpluggedAfk.logDebug(
+                    "Removed bot {} ({}). {} still active.",
+                    player.getName(),
+                    player.getUniqueId(),
+                    registry.count());
             event.quitMessage(null);
             return;
         }
@@ -55,7 +59,8 @@ public final class PaperListener implements Listener {
         final var reason = PlainTextComponentSerializer.plainText().serialize(event.reason());
 
         if (!PacketEventsCompat.KICK_MESSAGE.equals(reason)) {
-            UnpluggedAfk.logDebug("Let a kick of bot {} ({}) through: {}", player.getName(), player.getUniqueId(), reason);
+            UnpluggedAfk
+                    .logDebug("Let a kick of bot {} ({}) through: {}", player.getName(), player.getUniqueId(), reason);
             return;
         }
 

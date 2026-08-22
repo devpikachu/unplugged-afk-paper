@@ -83,7 +83,10 @@ public final class UnpluggedAfk extends JavaPlugin {
             LOGGER.warn("Disabling with {} bot(s) still active. Their spots will no longer be held.", bots.size());
         }
 
-        bots.forEach(bot -> bot.deferredDisconnect(Component.text(KickReasons.DISABLED), UnpluggedPlayerRemoveEvent.Reason.PLUGIN_DISABLED));
+        bots.forEach(
+                bot -> bot.deferredDisconnect(
+                        Component.text(KickReasons.DISABLED),
+                        UnpluggedPlayerRemoveEvent.Reason.PLUGIN_DISABLED));
         registry.removeAll();
     }
 
@@ -95,15 +98,16 @@ public final class UnpluggedAfk extends JavaPlugin {
                 Bukkit.getMinecraftVersion(),
                 options.isDebug(),
                 options.getMaxUnpluggedPlayers(),
-                options.getMaxDurationMins()
-        );
+                options.getMaxDurationMins());
 
         if (GlobalConfiguration.get().proxies.velocity.enabled) {
-            LOGGER.info("Proxy mode is on. /unplug disconnects the player from the proxy, which needs bungee-plugin-message-channel = true in the Velocity config to take effect.");
+            LOGGER.info(
+                    "Proxy mode is on. /unplug disconnects the player from the proxy, which needs bungee-plugin-message-channel = true in the Velocity config to take effect.");
             return;
         }
 
-        LOGGER.info("Proxy mode is off (proxies.velocity.enabled in paper-global.yml). /unplug only kicks locally, which behind a proxy redirects the player to the try list instead of disconnecting them.");
+        LOGGER.info(
+                "Proxy mode is off (proxies.velocity.enabled in paper-global.yml). /unplug only kicks locally, which behind a proxy redirects the player to the try list instead of disconnecting them.");
     }
 
     private @Nullable String getTargetMinecraftVersion() {

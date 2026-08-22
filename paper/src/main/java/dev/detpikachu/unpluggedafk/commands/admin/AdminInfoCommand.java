@@ -23,8 +23,7 @@ public final class AdminInfoCommand {
 
         final var player = Commands.argument(ARG_PLAYER, ArgumentTypes.player());
 
-        return root
-                .requires(context -> context.getSender().hasPermission(Permissions.ADMIN_INFO))
+        return root.requires(context -> context.getSender().hasPermission(Permissions.ADMIN_INFO))
                 .then(player.executes(AdminInfoCommand::execute));
     }
 

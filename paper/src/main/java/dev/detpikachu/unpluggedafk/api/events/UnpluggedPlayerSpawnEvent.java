@@ -35,6 +35,8 @@ public final class UnpluggedPlayerSpawnEvent extends PlayerEvent {
     }
 
     /**
+     * Returns a snapshot of the bot as it stands now.
+     *
      * @return a snapshot of the bot as it stands now
      */
     public UnpluggedPlayerInfo getInfo() {

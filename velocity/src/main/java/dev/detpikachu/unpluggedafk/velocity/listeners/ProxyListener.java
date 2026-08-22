@@ -36,14 +36,21 @@ public final class ProxyListener {
         if (!(event.getSource() instanceof ServerConnection source)) {
             final var origin = event.getSource() instanceof Player player ? player.getUsername() : "an unknown source";
 
-            this.logger.warn("Ignoring a {} message from {}. Only a backend server may start a session, so this may be a client trying to pin itself to a server.", SessionsChannel.NAME, origin);
+            this.logger.warn(
+                    "Ignoring a {} message from {}. Only a backend server may start a session, so this may be a client trying to pin itself to a server.",
+                    SessionsChannel.NAME,
+                    origin);
             return;
         }
 
         try {
             this.handleSessionMessage(source, event.dataAsDataStream());
         } catch (RuntimeException exception) {
-            this.logger.warn("Could not read a {} message from {}. That backend may be running a different version of the plugin.", SessionsChannel.NAME, source.getServerInfo().getName(), exception);
+            this.logger.warn(
+                    "Could not read a {} message from {}. That backend may be running a different version of the plugin.",
+                    SessionsChannel.NAME,
+                    source.getServerInfo().getName(),
+                    exception);
         }
     }
 
@@ -60,7 +67,10 @@ public final class ProxyListener {
         final var server = this.proxyServer.getServer(serverName);
 
         if (server.isEmpty()) {
-            this.logger.warn("{} unplugged on {}, which is no longer registered, so they fall back to the try list.", player.getUsername(), serverName);
+            this.logger.warn(
+                    "{} unplugged on {}, which is no longer registered, so they fall back to the try list.",
+                    player.getUsername(),
+                    serverName);
             return;
         }
 
@@ -81,6 +91,11 @@ public final class ProxyListener {
         final var player = source.getPlayer();
 
         this.sessionStore.start(player.getUniqueId(), serverName, durationMins);
-        this.logger.info("SESSION_START: {} ({}) on {} for {} minute(s)", player.getUsername(), player.getUniqueId(), serverName, durationMins);
+        this.logger.info(
+                "SESSION_START: {} ({}) on {} for {} minute(s)",
+                player.getUsername(),
+                player.getUniqueId(),
+                serverName,
+                durationMins);
     }
 }

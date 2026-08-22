@@ -41,7 +41,6 @@ final class ApiService implements UnpluggedAfkApi {
                 bot.getReason(),
                 bot.getStartedAt(),
                 bot.getExpiresAt(),
-                bot.isFake()
-        );
+                bot.isFake());
     }
 }

@@ -16,8 +16,7 @@ public final class AdminCommands {
     public static LiteralCommandNode<CommandSourceStack> construct() {
         final var root = Commands.literal(CMD_UNPLUGGED);
 
-        return root
-                .requires(AdminCommands::isAdmin)
+        return root.requires(AdminCommands::isAdmin)
                 .then(AdminDebugCommands.construct())
                 .then(AdminInfoCommand.construct())
                 .then(AdminListCommand.construct())

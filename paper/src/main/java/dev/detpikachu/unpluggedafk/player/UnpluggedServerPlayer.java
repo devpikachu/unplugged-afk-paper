@@ -46,15 +46,18 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     private boolean isDisconnectScheduled = false;
     private @Nullable Reason removeReason = null;
 
-    public UnpluggedServerPlayer(MinecraftServer server, ServerLevel level, GameProfile gameProfile, ClientInformation clientInformation, Session session) {
+    public UnpluggedServerPlayer(
+            MinecraftServer server,
+            ServerLevel level,
+            GameProfile gameProfile,
+            ClientInformation clientInformation,
+            Session session) {
         super(server, level, gameProfile, clientInformation);
         this.session = session;
     }
 
     public static @Nullable UnpluggedServerPlayer from(org.bukkit.entity.Player player) {
-        return ((CraftPlayer) player).getHandle() instanceof UnpluggedServerPlayer bot
-                ? bot
-                : null;
+        return ((CraftPlayer) player).getHandle() instanceof UnpluggedServerPlayer bot ? bot : null;
     }
 
     public int getDurationMins() {
@@ -132,7 +135,10 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         this.dismount();
         super.die(damageSource);
 
-        LOGGER.warn("Bot {} ({}) died. Their items dropped and their spot is no longer held.", this.getName().getString(), this.getUUID());
+        LOGGER.warn(
+                "Bot {} ({}) died. Their items dropped and their spot is no longer held.",
+                this.getName().getString(),
+                this.getUUID());
         this.deferredDisconnect(PaperAdventure.asAdventure(this.getCombatTracker().getDeathMessage()), Reason.DIED);
     }
 
@@ -160,7 +166,11 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
             return;
         }
 
-        UnpluggedAfk.logDebug("Bot {} ({}) was removed from the world: {}.", this.getName().getString(), this.getUUID(), reason);
+        UnpluggedAfk.logDebug(
+                "Bot {} ({}) was removed from the world: {}.",
+                this.getName().getString(),
+                this.getUUID(),
+                reason);
         this.deferredDisconnect(Component.text(KickReasons.REMOVED), Reason.ENTITY_REMOVED);
     }
 
@@ -178,8 +188,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
                 this.getUUID(),
                 this.session.elapsed().toMinutes(),
                 this.session.durationMins(),
-                PlainTextComponentSerializer.plainText().serialize(message)
-        );
+                PlainTextComponentSerializer.plainText().serialize(message));
 
         final var server = this.level().getServer();
         final var details = new DisconnectionDetails(PaperAdventure.asVanilla(message));
@@ -188,14 +197,13 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
 
     public void loadPersistedData() {
         try (var reporter = new ProblemReporter.ScopedCollector(this.problemPath(), LOGGER)) {
-            final var persisted = this
-                    .level()
-                    .getServer()
-                    .getPlayerList()
-                    .loadPlayerData(this.nameAndId());
+            final var persisted = this.level().getServer().getPlayerList().loadPlayerData(this.nameAndId());
 
             if (persisted.isEmpty()) {
-                LOGGER.warn("No persisted data for {} ({}). The bot holds world spawn with an empty inventory.", this.getName().getString(), this.getUUID());
+                LOGGER.warn(
+                        "No persisted data for {} ({}). The bot holds world spawn with an empty inventory.",
+                        this.getName().getString(),
+                        this.getUUID());
                 return;
             }
 
@@ -210,13 +218,21 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     private void applyDeferredSpawnState(MinecraftServer server) {
         final var playerList = server.getPlayerList();
 
-        playerList.broadcastAll(new ClientboundRotateHeadPacket(this, (byte) (this.yHeadRot * 256 / 360)), this.level().dimension());
-        playerList.broadcastAll(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER, this));
-        playerList.broadcastAll(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LISTED, this));
+        playerList.broadcastAll(
+                new ClientboundRotateHeadPacket(this, (byte) (this.yHeadRot * 256 / 360)),
+                this.level().dimension());
+        playerList.broadcastAll(
+                new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER, this));
+        playerList.broadcastAll(
+                new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LISTED, this));
 
         this.isSpawnStatePending = false;
 
-        UnpluggedAfk.logDebug("Sent deferred spawn packets for {} ({}) after {}ms.", this.getName().getString(), this.getUUID(), this.session.elapsed().toMillis());
+        UnpluggedAfk.logDebug(
+                "Sent deferred spawn packets for {} ({}) after {}ms.",
+                this.getName().getString(),
+                this.getUUID(),
+                this.session.elapsed().toMillis());
     }
 
     private void dismount() {

@@ -120,52 +120,6 @@ Everything here is gated behind the `debug` configuration flag, which is off by 
 - Every time a real player unplugs, a text file is written to `plugins/unplugged-afk/dumps/` holding the Unix timestamp,
   position, dimension, inventory contents and more.
 
-## For Plugin Developers
-
-Other plugins can ask who is unplugged. This matters because an unplugged player is represented on the server by a bot
-holding their spot, and that bot is a real `Player` carrying the real player's UUID, so anything that treats join, quit
-or death as bookkeeping for an account will take that bot for the account holder. The API is how you tell the two apart.
-
-Add the plugin JAR to your compile classpath and list `unplugged-afk` under `softdepend` in your `plugin.yml`, which
-guarantees it has enabled before you first look for it. Then take the service from Bukkit:
-
-```java
-var registration = Bukkit.getServicesManager().getRegistration(UnpluggedAfkApi.class);
-if (registration != null) {
-    UnpluggedAfkApi api = registration.getProvider();
-    if (api.isUnplugged(player.getUniqueId())) {
-        // A bot is standing in for this player. Do not treat it as the player logging in.
-    }
-}
-```
-
-A null registration means the plugin is absent or disabled. Treat that as "nobody is unplugged" rather than as an error,
-so your plugin still works on servers that do not run this one.
-
-| Method               | Returns                                                                           |
-|----------------------|-----------------------------------------------------------------------------------|
-| `isUnplugged(UUID)`  | Whether a bot is currently standing in for that player                            |
-| `isUnplugging(UUID)` | Whether that player has been kicked by `/unplug` but their bot is not placed yet  |
-| `find(UUID)`         | An `Optional<UnpluggedPlayerInfo>` describing the bot standing in for that player |
-| `all()`              | An immutable snapshot of every bot currently standing in for a player             |
-
-`UnpluggedPlayerInfo` is an immutable snapshot of one unplugged player, carrying the UUID, name, requested duration,
-reason, start and expiry times, and whether it is a throwaway bot from `/unplugged debug spawn-fake` rather than a real
-player's session. Its `remaining()` recomputes against the current clock on every call, so it stays accurate for as long
-as you hold the record.
-
-Four things worth knowing:
-
-- `isUnplugged` and `isUnplugging` are disjoint, and there is a short gap between the kick and the bot appearing. If you
-  mean "leave this account alone", check both.
-- Every method is safe to call from any thread, and results are point-in-time snapshots.
-- The package is [jspecify](https://jspecify.dev) `@NullMarked`, so nothing here accepts or returns `null`. Absence is
-  expressed as an empty `Optional` or an empty `List`, never as a null.
-- Nothing in the `dev.detpikachu.unpluggedafk.api` package references server internals, so compiling against it does not
-  saddle your plugin with this one's exact-Minecraft-version requirement. It is also the only package that is fair game:
-  everything else in the JAR is marked `@ApiStatus.Internal` and may be renamed or removed in any release. Do not
-  implement `UnpluggedAfkApi` yourself either; it is marked non-extendable because methods will be added to it.
-
 ## Acknowledgements
 
 Huge thanks to Sakura Ryoko for [Unplugged-AFK](https://github.com/sakura-ryoko/unplugged-afk), the mod this ports. This

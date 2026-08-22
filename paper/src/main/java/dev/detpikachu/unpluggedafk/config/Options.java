@@ -41,12 +41,20 @@ public final class Options {
         INSTANCE.maxDurationMins = config.getInt(KEY_MAX_DURATION_MINS, Defaults.MAX_DURATION_MINS);
 
         if (INSTANCE.maxUnpluggedPlayers < 1) {
-            LOGGER.warn("{} of {} is invalid. The value must be greater than or equal to 1. Resetting to {}.", KEY_MAX_UNPLUGGED_PLAYERS, INSTANCE.maxUnpluggedPlayers, Defaults.MAX_UNPLUGGED_PLAYERS);
+            LOGGER.warn(
+                    "{} of {} is invalid. The value must be greater than or equal to 1. Resetting to {}.",
+                    KEY_MAX_UNPLUGGED_PLAYERS,
+                    INSTANCE.maxUnpluggedPlayers,
+                    Defaults.MAX_UNPLUGGED_PLAYERS);
             INSTANCE.maxUnpluggedPlayers = Defaults.MAX_UNPLUGGED_PLAYERS;
         }
 
         if (INSTANCE.maxDurationMins < 1) {
-            LOGGER.warn("{} of {} is invalid. The value must be greater than or equal to 1. Resetting to {}.", KEY_MAX_DURATION_MINS, INSTANCE.maxDurationMins, Defaults.MAX_DURATION_MINS);
+            LOGGER.warn(
+                    "{} of {} is invalid. The value must be greater than or equal to 1. Resetting to {}.",
+                    KEY_MAX_DURATION_MINS,
+                    INSTANCE.maxDurationMins,
+                    Defaults.MAX_DURATION_MINS);
             INSTANCE.maxDurationMins = Defaults.MAX_DURATION_MINS;
         }
     }

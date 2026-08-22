@@ -13,13 +13,14 @@ import net.minecraft.server.MinecraftServer;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
 @ApiStatus.Internal
 public final class UnpluggedConnection extends Connection {
 
-    private static final SocketAddress ADDRESS = new InetSocketAddress("127.0.0.1", 65535);
+    private static final SocketAddress ADDRESS = new InetSocketAddress(InetAddress.getLoopbackAddress(), 65535);
 
     public UnpluggedConnection(MinecraftServer server, PacketFlow receiving) {
         super(receiving);
@@ -29,7 +30,8 @@ public final class UnpluggedConnection extends Connection {
         this.channel = channel;
         this.configurePacketHandler(channel.pipeline());
 
-        this.setupOutboundProtocol(GameProtocols.CLIENTBOUND_TEMPLATE.bind(RegistryFriendlyByteBuf.decorator(server.registryAccess())));
+        this.setupOutboundProtocol(
+                GameProtocols.CLIENTBOUND_TEMPLATE.bind(RegistryFriendlyByteBuf.decorator(server.registryAccess())));
     }
 
     @Override
@@ -67,6 +69,7 @@ public final class UnpluggedConnection extends Connection {
         return ADDRESS;
     }
 
+    @SuppressWarnings("FutureReturnValueIgnored")
     public void closeChannel() {
         this.channel.close();
     }

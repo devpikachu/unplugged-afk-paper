@@ -11,12 +11,15 @@ import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.jetbrains.annotations.ApiStatus;
 
 import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
-import static dev.detpikachu.unpluggedafk.commands.CommandErrors.*;
+import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_NOT_A_PLAYER;
+import static dev.detpikachu.unpluggedafk.commands.CommandErrors.errCapReached;
+import static dev.detpikachu.unpluggedafk.commands.CommandErrors.errDurationTooLarge;
 
 @ApiStatus.Internal
 public final class CommandGuards {
 
-    public static ServerPlayer requireExecutor(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+    public static ServerPlayer requireExecutor(CommandContext<CommandSourceStack> context)
+            throws CommandSyntaxException {
         if (!(context.getSource().getExecutor() instanceof CraftPlayer craftPlayer)) {
             throw ERR_NOT_A_PLAYER.create();
         }
@@ -24,12 +27,17 @@ public final class CommandGuards {
         return craftPlayer.getHandle();
     }
 
-    public static int requireDuration(CommandContext<CommandSourceStack> context, String argument) throws CommandSyntaxException {
+    public static int requireDuration(CommandContext<CommandSourceStack> context, String argument)
+            throws CommandSyntaxException {
         final var durationMins = context.getArgument(argument, int.class);
         final var maxDurationMins = Options.getInstance().getMaxDurationMins();
 
         if (durationMins > maxDurationMins) {
-            UnpluggedAfk.logDebug("{} asked for {} minute(s), over the {} minute cap.", context.getSource().getSender().getName(), durationMins, maxDurationMins);
+            UnpluggedAfk.logDebug(
+                    "{} asked for {} minute(s), over the {} minute cap.",
+                    context.getSource().getSender().getName(),
+                    durationMins,
+                    maxDurationMins);
             throw errDurationTooLarge(durationMins).create();
         }
 
@@ -40,7 +48,9 @@ public final class CommandGuards {
         final var maxUnpluggedPlayers = Options.getInstance().getMaxUnpluggedPlayers();
 
         if (SessionRegistry.getInstance().count() >= maxUnpluggedPlayers) {
-            LOGGER.warn("Refused an unplug request: all {} slot(s) are in use. Raise maxUnpluggedPlayers to allow more.", maxUnpluggedPlayers);
+            LOGGER.warn(
+                    "Refused an unplug request: all {} slot(s) are in use. Raise maxUnpluggedPlayers to allow more.",
+                    maxUnpluggedPlayers);
             throw errCapReached().create();
         }
     }

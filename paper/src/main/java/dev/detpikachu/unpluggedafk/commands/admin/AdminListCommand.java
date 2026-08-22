@@ -17,8 +17,7 @@ public final class AdminListCommand {
     public static LiteralArgumentBuilder<CommandSourceStack> construct() {
         final var root = Commands.literal(CMD_LIST);
 
-        return root
-                .requires(context -> context.getSender().hasPermission(Permissions.ADMIN_LIST))
+        return root.requires(context -> context.getSender().hasPermission(Permissions.ADMIN_LIST))
                 .executes(AdminListCommand::execute);
     }
 

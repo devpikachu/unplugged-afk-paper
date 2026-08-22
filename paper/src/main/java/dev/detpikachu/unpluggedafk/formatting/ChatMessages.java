@@ -13,7 +13,12 @@ import java.util.Collection;
 import java.util.Comparator;
 
 import static net.kyori.adventure.text.Component.text;
-import static net.kyori.adventure.text.format.NamedTextColor.*;
+import static net.kyori.adventure.text.format.NamedTextColor.GOLD;
+import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
+import static net.kyori.adventure.text.format.NamedTextColor.GREEN;
+import static net.kyori.adventure.text.format.NamedTextColor.RED;
+import static net.kyori.adventure.text.format.NamedTextColor.WHITE;
+import static net.kyori.adventure.text.format.NamedTextColor.YELLOW;
 
 @ApiStatus.Internal
 public final class ChatMessages {
@@ -52,12 +57,24 @@ public final class ChatMessages {
         final var isFakeLabel = text("Is Fake: ", GRAY);
         final var isFakeValue = bot.isFake() ? text("true", GREEN) : text("false", RED);
 
-        return informationFor.append(playerName).append(colon).appendNewline()
-                .append(durationLabel).append(durationValue).appendNewline()
-                .append(reasonLabel).append(reasonValue).appendNewline()
-                .append(startAtPrefix).append(startAtValue).append(startAtSuffix).appendNewline()
-                .append(endsAtLabel).append(endsAtValue).appendNewline()
-                .append(isFakeLabel).append(isFakeValue);
+        return informationFor.append(playerName)
+                .append(colon)
+                .appendNewline()
+                .append(durationLabel)
+                .append(durationValue)
+                .appendNewline()
+                .append(reasonLabel)
+                .append(reasonValue)
+                .appendNewline()
+                .append(startAtPrefix)
+                .append(startAtValue)
+                .append(startAtSuffix)
+                .appendNewline()
+                .append(endsAtLabel)
+                .append(endsAtValue)
+                .appendNewline()
+                .append(isFakeLabel)
+                .append(isFakeValue);
     }
 
     public static Component formatUnplugged(int durationMins, String reason) {
@@ -77,8 +94,7 @@ public final class ChatMessages {
     }
 
     public static Component formatList(Collection<UnpluggedServerPlayer> bots) {
-        final var header = text("Unplugged players: ", WHITE)
-                .append(text(bots.size(), GOLD))
+        final var header = text("Unplugged players: ", WHITE).append(text(bots.size(), GOLD))
                 .append(text("/", WHITE))
                 .append(text(Options.getInstance().getMaxUnpluggedPlayers(), GOLD));
 
@@ -113,8 +129,7 @@ public final class ChatMessages {
             return text(minutes, WHITE).append(text(" minute(s)", WHITE));
         }
 
-        return text(duration.toHours(), WHITE)
-                .append(text(" hour(s) ", WHITE))
+        return text(duration.toHours(), WHITE).append(text(" hour(s) ", WHITE))
                 .append(text(duration.toMinutesPart(), WHITE))
                 .append(text(" minute(s)", WHITE));
     }

@@ -26,7 +26,10 @@ public final class ProxyManager {
         out.writeUTF(player.getName());
         out.writeUTF(GsonComponentSerializer.gson().serialize(message));
 
-        player.sendPluginMessage(JavaPlugin.getPlugin(UnpluggedAfk.class), Constants.BungeeChannel.NAME, out.toByteArray());
+        player.sendPluginMessage(
+                JavaPlugin.getPlugin(UnpluggedAfk.class),
+                Constants.BungeeChannel.NAME,
+                out.toByteArray());
     }
 
     public static void announceSessionToProxy(Player player, Session session) {
@@ -39,7 +42,14 @@ public final class ProxyManager {
         out.writeUTF(Constants.SessionsChannel.SESSION_START);
         out.writeInt(session.durationMins());
 
-        player.sendPluginMessage(JavaPlugin.getPlugin(UnpluggedAfk.class), Constants.SessionsChannel.NAME, out.toByteArray());
-        LOGGER.info("Announced SESSION_START for {} ({}) to the proxy: {} minute(s).", player.getName(), player.getUniqueId(), session.durationMins());
+        player.sendPluginMessage(
+                JavaPlugin.getPlugin(UnpluggedAfk.class),
+                Constants.SessionsChannel.NAME,
+                out.toByteArray());
+        LOGGER.info(
+                "Announced SESSION_START for {} ({}) to the proxy: {} minute(s).",
+                player.getName(),
+                player.getUniqueId(),
+                session.durationMins());
     }
 }

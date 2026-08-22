@@ -12,7 +12,11 @@ public final class GamePacketListener extends ServerGamePacketListenerImpl {
 
     private final UnpluggedConnection unpluggedConnection;
 
-    public GamePacketListener(MinecraftServer server, UnpluggedConnection connection, UnpluggedServerPlayer bot, CommonListenerCookie cookie) {
+    public GamePacketListener(
+            MinecraftServer server,
+            UnpluggedConnection connection,
+            UnpluggedServerPlayer bot,
+            CommonListenerCookie cookie) {
         super(server, connection, bot, cookie);
         this.unpluggedConnection = connection;
     }

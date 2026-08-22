@@ -3,6 +3,60 @@ root = true
 [*]
 charset = utf-8
 end_of_line = lf
+indent_style = space
 insert_final_newline = true
 max_line_length = 120
 trim_trailing_whitespace = true
+
+[*.{java,kts}]
+indent_size = 4
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[*.java]
+ij_continuation_indent_size = 8
+
+ij_java_class_count_to_use_import_on_demand = 999
+ij_java_names_count_to_use_import_on_demand = 999
+ij_java_imports_layout = *,|,javax.**,java.**,|,$*
+
+ij_java_align_multiline_annotation_parameters = false
+ij_java_align_multiline_binary_operation = false
+ij_java_align_multiline_chained_methods = false
+ij_java_align_multiline_extends_list = false
+ij_java_align_multiline_parameters = false
+ij_java_align_multiline_parameters_in_calls = false
+ij_java_align_multiline_records = false
+ij_java_align_multiline_resources = false
+ij_java_align_multiline_ternary_operation = false
+ij_java_align_multiline_throws_list = false
+ij_java_annotation_parameter_wrap = on_every_item
+ij_java_array_initializer_new_line_after_left_brace = true
+ij_java_array_initializer_right_brace_on_new_line = false
+ij_java_array_initializer_wrap = on_every_item
+ij_java_binary_operation_sign_on_next_line = true
+ij_java_binary_operation_wrap = on_every_item
+ij_java_call_parameters_new_line_after_left_paren = true
+ij_java_call_parameters_right_paren_on_new_line = false
+ij_java_call_parameters_wrap = on_every_item
+ij_java_enum_constants_wrap = on_every_item
+ij_java_method_call_chain_wrap = on_every_item
+ij_java_method_parameters_new_line_after_left_paren = true
+ij_java_method_parameters_right_paren_on_new_line = false
+ij_java_method_parameters_wrap = on_every_item
+ij_java_new_line_after_lparen_in_record_header = true
+ij_java_record_components_wrap = on_every_item
+ij_java_resource_list_new_line_after_left_paren = true
+ij_java_resource_list_right_paren_on_new_line = false
+ij_java_resource_list_wrap = on_every_item
+ij_java_rparen_on_new_line_in_record_header = false
+ij_java_space_before_array_initializer_left_brace = true
+ij_java_ternary_operation_signs_on_next_line = true
+ij_java_ternary_operation_wrap = on_every_item
+
+ij_java_assignment_wrap = off
+ij_java_blank_lines_after_class_header = 1
+ij_java_extends_list_wrap = normal
+ij_java_throws_list_wrap = normal
+ij_java_wrap_first_method_in_call_chain = false

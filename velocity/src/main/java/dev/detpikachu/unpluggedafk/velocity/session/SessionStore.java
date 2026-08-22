@@ -1,6 +1,11 @@
 package dev.detpikachu.unpluggedafk.velocity.session;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
 import dev.detpikachu.unpluggedafk.velocity.Constants.Sessions;
 import org.jetbrains.annotations.ApiStatus;
@@ -24,15 +29,16 @@ public final class SessionStore {
     private static final String TEMP_SUFFIX = ".tmp";
 
     private static final Gson GSON = new GsonBuilder()
-            .registerTypeAdapter(Instant.class,
+            .registerTypeAdapter(
+                    Instant.class,
                     (JsonSerializer<Instant>) (instant, type, context) -> new JsonPrimitive(instant.toEpochMilli()))
-            .registerTypeAdapter(Instant.class,
+            .registerTypeAdapter(
+                    Instant.class,
                     (JsonDeserializer<Instant>) (json, type, context) -> Instant.ofEpochMilli(json.getAsLong()))
             .setPrettyPrinting()
             .create();
 
-    private static final Type SESSIONS_TYPE = new TypeToken<Map<UUID, Session>>() {
-    }.getType();
+    private static final Type SESSIONS_TYPE = new TypeToken<Map<UUID, Session>>() {}.getType();
 
     private final Path file;
     private final Logger logger;
@@ -49,7 +55,11 @@ public final class SessionStore {
         final var previous = this.sessions.put(uuid, new Session(serverName, expiresAt));
 
         if (previous != null && !previous.isExpired()) {
-            this.logger.warn("{} already had a live session on {}, now replaced by {}. Both backends may be holding a bot for them.", uuid, previous.serverName(), serverName);
+            this.logger.warn(
+                    "{} already had a live session on {}, now replaced by {}. Both backends may be holding a bot for them.",
+                    uuid,
+                    previous.serverName(),
+                    serverName);
         }
 
         this.save();
@@ -65,7 +75,11 @@ public final class SessionStore {
         this.save();
 
         if (session.isExpired()) {
-            this.logger.info("The session for {} on {} expired at {}, so they fall back to the try list.", uuid, session.serverName(), session.expiresAt());
+            this.logger.info(
+                    "The session for {} on {} expired at {}, so they fall back to the try list.",
+                    uuid,
+                    session.serverName(),
+                    session.expiresAt());
             return Optional.empty();
         }
 
@@ -91,7 +105,11 @@ public final class SessionStore {
                 }
             });
 
-            this.logger.info("Loaded {} unplugged session(s) from {}, pruned {}.", this.sessions.size(), this.file, persisted.size() - this.sessions.size());
+            this.logger.info(
+                    "Loaded {} unplugged session(s) from {}, pruned {}.",
+                    this.sessions.size(),
+                    this.file,
+                    persisted.size() - this.sessions.size());
         } catch (IOException | JsonParseException exception) {
             this.logger.warn("Could not read {}, so the proxy starts with no sessions.", this.file, exception);
         }

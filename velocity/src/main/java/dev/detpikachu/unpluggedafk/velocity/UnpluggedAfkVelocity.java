@@ -20,8 +20,7 @@ import java.nio.file.Path;
         version = BuildConstants.VERSION,
         description = "Routes returning players back to the server holding their unplugged character.",
         url = "https://github.com/devpikachu/unplugged-afk-paper",
-        authors = {"Andrei \"detpikachu\" Hava"}
-)
+        authors = {"Andrei \"detpikachu\" Hava"})
 @ApiStatus.Internal
 public final class UnpluggedAfkVelocity {
 

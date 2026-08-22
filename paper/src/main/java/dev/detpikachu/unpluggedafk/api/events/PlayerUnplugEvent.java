@@ -42,6 +42,8 @@ public final class PlayerUnplugEvent extends PlayerEvent implements Cancellable 
     }
 
     /**
+     * Returns how many minutes the player asked to stay unplugged.
+     *
      * @return how many minutes the player asked to stay unplugged, already checked against the configured maximum
      */
     public int getDurationMins() {
@@ -49,6 +51,8 @@ public final class PlayerUnplugEvent extends PlayerEvent implements Cancellable 
     }
 
     /**
+     * Returns the reason the player gave for unplugging.
+     *
      * @return the reason the player gave, never blank
      */
     public String getReason() {
