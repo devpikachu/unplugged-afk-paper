@@ -5,15 +5,14 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import dev.detpikachu.unpluggedafk.UnpluggedAfk;
-import dev.detpikachu.unpluggedafk.UnpluggedPlayerManager;
-import dev.detpikachu.unpluggedafk.player.UnpluggedSession;
+import dev.detpikachu.unpluggedafk.player.BotFactory;
+import dev.detpikachu.unpluggedafk.session.Session;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
-import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandGuards.*;
+import static dev.detpikachu.unpluggedafk.commands.CommandGuards.*;
 
 @ApiStatus.Internal
 public final class AdminDebugSpawnFakeCommand {
@@ -44,19 +43,12 @@ public final class AdminDebugSpawnFakeCommand {
 
         requireCapacity();
 
-        final var unpluggedPlayer = UnpluggedPlayerManager.getInstance()
-                .createFake(executor.level(), new UnpluggedSession(durationMins, effectiveReason, true));
-        unpluggedPlayer.connection.teleport(executor.getX(), executor.getY(), executor.getZ(), executor.getYRot(), executor.getXRot());
-
-        UnpluggedAfk.LOGGER.info(
-                "{} spawned fake unplugged player {} at {}, {}, {} in {} for {} minute(s).",
-                executor.getName().getString(),
-                unpluggedPlayer.getName().getString(),
-                (int) executor.getX(),
-                (int) executor.getY(),
-                (int) executor.getZ(),
-                executor.level().dimension().identifier(),
-                durationMins
+        BotFactory.spawnFake(
+                executor.level(),
+                executor.position(),
+                executor.getYRot(),
+                executor.getXRot(),
+                new Session(durationMins, effectiveReason, true)
         );
 
         return 1;

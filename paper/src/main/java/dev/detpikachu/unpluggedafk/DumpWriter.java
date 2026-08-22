@@ -1,7 +1,7 @@
 package dev.detpikachu.unpluggedafk;
 
-import dev.detpikachu.unpluggedafk.formatting.UnpluggedDumpFormatting;
-import dev.detpikachu.unpluggedafk.player.UnpluggedSession;
+import dev.detpikachu.unpluggedafk.formatting.DumpFormatting;
+import dev.detpikachu.unpluggedafk.session.Session;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.ApiStatus;
@@ -13,8 +13,10 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
 
+import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
+
 @ApiStatus.Internal
-public final class UnpluggedDumpWriter {
+public final class DumpWriter {
 
     private static final String DUMPS_DIRECTORY = "dumps";
     private static final String DUMP_EXTENSION = ".txt";
@@ -24,7 +26,7 @@ public final class UnpluggedDumpWriter {
     private static final DateTimeFormatter FILE_NAME_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss").withZone(ZoneId.systemDefault());
 
-    public static void write(Player player, UnpluggedSession session) {
+    public static void write(Player player, Session session) {
         final var timestamp = Instant.now();
 
         try {
@@ -33,9 +35,9 @@ public final class UnpluggedDumpWriter {
             Files.createDirectories(directory);
             Files.writeString(
                     directory.resolve(fileName(player.getName(), timestamp)),
-                    UnpluggedDumpFormatting.formatDump(player, session, timestamp));
+                    DumpFormatting.formatDump(player, session, timestamp));
         } catch (Exception exception) {
-            UnpluggedAfk.LOGGER.error("Failed to write unplug dump for {} ({})", player.getName(), player.getUniqueId(), exception);
+            LOGGER.error("Failed to write unplug dump for {} ({})", player.getName(), player.getUniqueId(), exception);
         }
     }
 

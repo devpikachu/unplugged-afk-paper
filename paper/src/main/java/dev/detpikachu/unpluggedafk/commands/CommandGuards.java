@@ -3,17 +3,18 @@ package dev.detpikachu.unpluggedafk.commands;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
-import dev.detpikachu.unpluggedafk.UnpluggedPlayerManager;
-import dev.detpikachu.unpluggedafk.config.UnpluggedOptions;
+import dev.detpikachu.unpluggedafk.config.Options;
+import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.jetbrains.annotations.ApiStatus;
 
-import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandErrors.*;
+import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
+import static dev.detpikachu.unpluggedafk.commands.CommandErrors.*;
 
 @ApiStatus.Internal
-public final class UnpluggedCommandGuards {
+public final class CommandGuards {
 
     public static ServerPlayer requireExecutor(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         if (!(context.getSource().getExecutor() instanceof CraftPlayer craftPlayer)) {
@@ -25,7 +26,7 @@ public final class UnpluggedCommandGuards {
 
     public static int requireDuration(CommandContext<CommandSourceStack> context, String argument) throws CommandSyntaxException {
         final var durationMins = context.getArgument(argument, int.class);
-        final var maxDurationMins = UnpluggedOptions.getInstance().getMaxDurationMins();
+        final var maxDurationMins = Options.getInstance().getMaxDurationMins();
 
         if (durationMins > maxDurationMins) {
             UnpluggedAfk.logDebug("{} asked for {} minute(s), over the {} minute cap.", context.getSource().getSender().getName(), durationMins, maxDurationMins);
@@ -36,10 +37,10 @@ public final class UnpluggedCommandGuards {
     }
 
     public static void requireCapacity() throws CommandSyntaxException {
-        final var maxUnpluggedPlayers = UnpluggedOptions.getInstance().getMaxUnpluggedPlayers();
+        final var maxUnpluggedPlayers = Options.getInstance().getMaxUnpluggedPlayers();
 
-        if (UnpluggedPlayerManager.getInstance().count() >= maxUnpluggedPlayers) {
-            UnpluggedAfk.LOGGER.warn("Refused an unplug request: all {} slot(s) are in use. Raise maxUnpluggedPlayers to allow more.", maxUnpluggedPlayers);
+        if (SessionRegistry.getInstance().count() >= maxUnpluggedPlayers) {
+            LOGGER.warn("Refused an unplug request: all {} slot(s) are in use. Raise maxUnpluggedPlayers to allow more.", maxUnpluggedPlayers);
             throw errCapReached().create();
         }
     }

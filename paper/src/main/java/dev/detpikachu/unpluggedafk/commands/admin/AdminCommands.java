@@ -1,13 +1,12 @@
 package dev.detpikachu.unpluggedafk.commands.admin;
 
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import dev.detpikachu.unpluggedafk.Constants.Permissions;
 import dev.detpikachu.unpluggedafk.commands.admin.debug.AdminDebugCommands;
-import dev.detpikachu.unpluggedafk.config.UnpluggedOptions;
+import dev.detpikachu.unpluggedafk.config.Options;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import org.jetbrains.annotations.ApiStatus;
-
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.*;
 
 @ApiStatus.Internal
 public final class AdminCommands {
@@ -28,9 +27,9 @@ public final class AdminCommands {
     private static boolean isAdmin(CommandSourceStack stack) {
         final var sender = stack.getSender();
 
-        return sender.hasPermission(PERM_ADMIN)
-                || sender.hasPermission(PERM_ADMIN_INFO)
-                || sender.hasPermission(PERM_ADMIN_LIST)
-                || (UnpluggedOptions.getInstance().isDebug() && sender.hasPermission(PERM_ADMIN_DEBUG));
+        return sender.hasPermission(Permissions.ADMIN)
+                || sender.hasPermission(Permissions.ADMIN_INFO)
+                || sender.hasPermission(Permissions.ADMIN_LIST)
+                || (Options.getInstance().isDebug() && sender.hasPermission(Permissions.ADMIN_DEBUG));
     }
 }

@@ -5,18 +5,18 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import dev.detpikachu.unpluggedafk.UnpluggedAfk;
-import dev.detpikachu.unpluggedafk.UnpluggedPlayerManager;
+import dev.detpikachu.unpluggedafk.Constants.Permissions;
 import dev.detpikachu.unpluggedafk.exceptions.UnplugFailedException;
-import dev.detpikachu.unpluggedafk.player.UnpluggedSession;
+import dev.detpikachu.unpluggedafk.session.Session;
+import dev.detpikachu.unpluggedafk.session.UnplugService;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import org.jetbrains.annotations.ApiStatus;
 
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.PERM_UNPLUG;
-import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandErrors.ERR_GENERIC;
-import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandErrors.ERR_REASON_REQUIRED;
-import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandGuards.*;
+import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
+import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_GENERIC;
+import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_REASON_REQUIRED;
+import static dev.detpikachu.unpluggedafk.commands.CommandGuards.*;
 
 @ApiStatus.Internal
 public final class PlayerUnplugCommand {
@@ -33,7 +33,7 @@ public final class PlayerUnplugCommand {
         final var reason = Commands.argument(ARG_REASON, StringArgumentType.greedyString());
 
         return root
-                .requires(context -> context.getSender().hasPermission(PERM_UNPLUG))
+                .requires(context -> context.getSender().hasPermission(Permissions.UNPLUG))
                 .then(durationMins.then(reason.executes(PlayerUnplugCommand::execute)))
                 .build();
     }
@@ -50,9 +50,9 @@ public final class PlayerUnplugCommand {
         requireCapacity();
 
         try {
-            UnpluggedPlayerManager.getInstance().createPlayer(player, new UnpluggedSession(durationMins, reason, false));
+            UnplugService.unplug(player, new Session(durationMins, reason, false));
         } catch (UnplugFailedException exception) {
-            UnpluggedAfk.LOGGER.error("Failed to unplug player {} ({})",
+            LOGGER.error("Failed to unplug player {} ({})",
                     player.getName().getString(), player.getUUID(), exception);
             throw ERR_GENERIC.create();
         }

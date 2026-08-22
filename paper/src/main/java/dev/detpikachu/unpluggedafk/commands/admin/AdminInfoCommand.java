@@ -3,14 +3,13 @@ package dev.detpikachu.unpluggedafk.commands.admin;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import dev.detpikachu.unpluggedafk.formatting.UnpluggedChatFormatting;
+import dev.detpikachu.unpluggedafk.Constants.Permissions;
+import dev.detpikachu.unpluggedafk.formatting.ChatMessages;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import org.jetbrains.annotations.ApiStatus;
-
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.PERM_ADMIN_INFO;
 
 @ApiStatus.Internal
 public final class AdminInfoCommand {
@@ -25,7 +24,7 @@ public final class AdminInfoCommand {
         final var player = Commands.argument(ARG_PLAYER, ArgumentTypes.player());
 
         return root
-                .requires(context -> context.getSender().hasPermission(PERM_ADMIN_INFO))
+                .requires(context -> context.getSender().hasPermission(Permissions.ADMIN_INFO))
                 .then(player.executes(AdminInfoCommand::execute));
     }
 
@@ -34,7 +33,7 @@ public final class AdminInfoCommand {
         final var playerResolver = context.getArgument(ARG_PLAYER, PlayerSelectorArgumentResolver.class);
 
         final var player = playerResolver.resolve(context.getSource()).getFirst();
-        sender.sendMessage(UnpluggedChatFormatting.formatPlayer(player));
+        sender.sendMessage(ChatMessages.formatPlayer(player));
 
         return 1;
     }

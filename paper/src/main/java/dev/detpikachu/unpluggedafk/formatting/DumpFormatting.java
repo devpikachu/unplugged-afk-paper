@@ -1,6 +1,6 @@
 package dev.detpikachu.unpluggedafk.formatting;
 
-import dev.detpikachu.unpluggedafk.player.UnpluggedSession;
+import dev.detpikachu.unpluggedafk.session.Session;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.block.Container;
 import org.bukkit.enchantments.Enchantment;
@@ -10,6 +10,7 @@ import org.bukkit.inventory.meta.*;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -19,17 +20,16 @@ import java.util.Map;
 import java.util.Objects;
 
 @ApiStatus.Internal
-public final class UnpluggedDumpFormatting {
+public final class DumpFormatting {
 
     private static final String EMPTY_SECTION = "(empty)";
     private static final String INDENT = "  ";
     private static final int LABEL_WIDTH = 12;
-    private static final long MILLIS_PER_MINUTE = 60_000L;
 
     private static final DateTimeFormatter TIMESTAMP_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z").withZone(ZoneId.systemDefault());
 
-    public static String formatDump(Player player, UnpluggedSession session, Instant timestamp) {
+    public static String formatDump(Player player, Session session, Instant timestamp) {
         final var location = player.getLocation();
         final var inventory = player.getInventory();
         final var builder = new StringBuilder();
@@ -37,8 +37,8 @@ public final class UnpluggedDumpFormatting {
         appendField(builder, "Timestamp", timestamp.toEpochMilli() + " (" + TIMESTAMP_FORMAT.format(timestamp) + ")");
         appendField(builder, "Player", player.getName() + " (" + player.getUniqueId() + ")");
         appendField(builder, "Duration", session.durationMins() + " minute(s)");
-        appendField(builder, "Expires", TIMESTAMP_FORMAT.format(timestamp.plusMillis(session.durationMins() * MILLIS_PER_MINUTE)));
         appendField(builder, "Reason", session.reason());
+        appendField(builder, "Expires", TIMESTAMP_FORMAT.format(timestamp.plus(Duration.ofMinutes(session.durationMins()))));
         appendField(builder, "World", player.getWorld().getName() + " (" + player.getWorld().getKey().asString() + ")");
         appendField(builder, "Position", format("%.2f, %.2f, %.2f", location.getX(), location.getY(), location.getZ()));
         appendField(builder, "Rotation", format("yaw %.2f, pitch %.2f", location.getYaw(), location.getPitch()));

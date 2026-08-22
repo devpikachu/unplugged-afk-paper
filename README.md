@@ -122,9 +122,9 @@ Everything here is gated behind the `debug` configuration flag, which is off by 
 
 ## For Plugin Developers
 
-Other plugins can ask who is unplugged. This matters because an unplugged player is a real `Player` on the server
-carrying the real player's UUID, so anything that treats join, quit or death as bookkeeping for an account will see a
-bot and take it for the account holder. The API is how you tell the two apart.
+Other plugins can ask who is unplugged. This matters because an unplugged player is represented on the server by a bot
+holding their spot, and that bot is a real `Player` carrying the real player's UUID, so anything that treats join, quit
+or death as bookkeeping for an account will take that bot for the account holder. The API is how you tell the two apart.
 
 Add the plugin JAR to your compile classpath and list `unplugged-afk` under `softdepend` in your `plugin.yml`, which
 guarantees it has enabled before you first look for it. Then take the service from Bukkit:
@@ -134,7 +134,7 @@ var registration = Bukkit.getServicesManager().getRegistration(UnpluggedAfkApi.c
 if (registration != null) {
     UnpluggedAfkApi api = registration.getProvider();
     if (api.isUnplugged(player.getUniqueId())) {
-        // A bot is holding this player's spot. Do not treat it as the player logging in.
+        // A bot is standing in for this player. Do not treat it as the player logging in.
     }
 }
 ```
@@ -142,16 +142,17 @@ if (registration != null) {
 A null registration means the plugin is absent or disabled. Treat that as "nobody is unplugged" rather than as an error,
 so your plugin still works on servers that do not run this one.
 
-| Method               | Returns                                                           |
-|----------------------|-------------------------------------------------------------------|
-| `isUnplugged(UUID)`  | Whether a bot is holding that player's spot right now             |
-| `isUnplugging(UUID)` | Whether an unplug is in flight, kicked but the bot not yet placed |
-| `find(UUID)`         | An `Optional<UnpluggedPlayerInfo>` describing that bot            |
-| `all()`              | An immutable snapshot of every bot currently standing in          |
+| Method               | Returns                                                                           |
+|----------------------|-----------------------------------------------------------------------------------|
+| `isUnplugged(UUID)`  | Whether a bot is currently standing in for that player                            |
+| `isUnplugging(UUID)` | Whether that player has been kicked by `/unplug` but their bot is not placed yet  |
+| `find(UUID)`         | An `Optional<UnpluggedPlayerInfo>` describing the bot standing in for that player |
+| `all()`              | An immutable snapshot of every bot currently standing in for a player             |
 
-`UnpluggedPlayerInfo` is an immutable record carrying the UUID, name, requested duration, reason, start and expiry
-times, and whether it is a throwaway bot from `spawn-fake`. Its `remaining()` recomputes against the current clock on
-every call, so it stays accurate for as long as you hold the record.
+`UnpluggedPlayerInfo` is an immutable snapshot of one unplugged player, carrying the UUID, name, requested duration,
+reason, start and expiry times, and whether it is a throwaway bot from `/unplugged debug spawn-fake` rather than a real
+player's session. Its `remaining()` recomputes against the current clock on every call, so it stays accurate for as long
+as you hold the record.
 
 Four things worth knowing:
 

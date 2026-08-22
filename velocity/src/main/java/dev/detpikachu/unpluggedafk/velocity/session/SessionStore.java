@@ -1,12 +1,11 @@
-package dev.detpikachu.unpluggedafk.velocity;
+package dev.detpikachu.unpluggedafk.velocity.session;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializer;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import dev.detpikachu.unpluggedafk.velocity.Constants.Sessions;
+import org.jetbrains.annotations.ApiStatus;
+import org.slf4j.Logger;
+
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
@@ -18,14 +17,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import org.jetbrains.annotations.ApiStatus;
-import org.slf4j.Logger;
-
-import static dev.detpikachu.unpluggedafk.velocity.UnpluggedConstants.SESSIONS_FILE_NAME;
-import static dev.detpikachu.unpluggedafk.velocity.UnpluggedConstants.SESSION_GRACE_MINS;
 
 @ApiStatus.Internal
-public final class UnpluggedSessionStore {
+public final class SessionStore {
+
+    private static final String TEMP_SUFFIX = ".tmp";
 
     private static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(Instant.class,
@@ -35,22 +31,22 @@ public final class UnpluggedSessionStore {
             .setPrettyPrinting()
             .create();
 
-    private static final Type SESSIONS_TYPE = new TypeToken<Map<UUID, UnpluggedSession>>() {
+    private static final Type SESSIONS_TYPE = new TypeToken<Map<UUID, Session>>() {
     }.getType();
 
     private final Path file;
     private final Logger logger;
-    private final ConcurrentHashMap<UUID, UnpluggedSession> sessions;
+    private final ConcurrentHashMap<UUID, Session> sessions;
 
-    public UnpluggedSessionStore(Path dataDirectory, Logger logger) {
-        this.file = dataDirectory.resolve(SESSIONS_FILE_NAME);
+    public SessionStore(Path dataDirectory, Logger logger) {
+        this.file = dataDirectory.resolve(Sessions.FILE_NAME);
         this.logger = logger;
         this.sessions = new ConcurrentHashMap<>();
     }
 
     public void start(UUID uuid, String serverName, int durationMins) {
-        final var expiresAt = Instant.now().plus(Duration.ofMinutes(durationMins + SESSION_GRACE_MINS));
-        final var previous = this.sessions.put(uuid, new UnpluggedSession(serverName, expiresAt));
+        final var expiresAt = Instant.now().plus(Duration.ofMinutes(durationMins + Sessions.GRACE_MINS));
+        final var previous = this.sessions.put(uuid, new Session(serverName, expiresAt));
 
         if (previous != null && !previous.isExpired()) {
             this.logger.warn("{} already had a live session on {}, now replaced by {}. Both backends may be holding a bot for them.", uuid, previous.serverName(), serverName);
@@ -59,7 +55,7 @@ public final class UnpluggedSessionStore {
         this.save();
     }
 
-    public Optional<UnpluggedSession> consume(UUID uuid) {
+    public Optional<Session> consume(UUID uuid) {
         final var session = this.sessions.remove(uuid);
 
         if (session == null) {
@@ -83,7 +79,7 @@ public final class UnpluggedSessionStore {
         }
 
         try (final var reader = Files.newBufferedReader(this.file)) {
-            final Map<UUID, UnpluggedSession> persisted = GSON.fromJson(reader, SESSIONS_TYPE);
+            final Map<UUID, Session> persisted = GSON.fromJson(reader, SESSIONS_TYPE);
 
             if (persisted == null) {
                 return;
@@ -97,12 +93,12 @@ public final class UnpluggedSessionStore {
 
             this.logger.info("Loaded {} unplugged session(s) from {}, pruned {}.", this.sessions.size(), this.file, persisted.size() - this.sessions.size());
         } catch (IOException | JsonParseException exception) {
-            this.logger.warn("Could not read {} - starting with no sessions.", this.file, exception);
+            this.logger.warn("Could not read {}, so the proxy starts with no sessions.", this.file, exception);
         }
     }
 
     private void save() {
-        final var temp = this.file.resolveSibling(SESSIONS_FILE_NAME + ".tmp");
+        final var temp = this.file.resolveSibling(Sessions.FILE_NAME + TEMP_SUFFIX);
 
         try {
             Files.createDirectories(this.file.getParent());
@@ -113,7 +109,7 @@ public final class UnpluggedSessionStore {
 
             Files.move(temp, this.file, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         } catch (IOException exception) {
-            this.logger.warn("Could not write {} - sessions will not survive a restart.", this.file, exception);
+            this.logger.warn("Could not write {}, so sessions will not survive a restart.", this.file, exception);
         }
     }
 }

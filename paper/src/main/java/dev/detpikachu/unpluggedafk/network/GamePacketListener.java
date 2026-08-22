@@ -8,12 +8,12 @@ import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import org.jetbrains.annotations.ApiStatus;
 
 @ApiStatus.Internal
-public final class UnpluggedGamePacketListener extends ServerGamePacketListenerImpl {
+public final class GamePacketListener extends ServerGamePacketListenerImpl {
 
     private final UnpluggedConnection unpluggedConnection;
 
-    public UnpluggedGamePacketListener(MinecraftServer server, UnpluggedConnection connection, UnpluggedServerPlayer player, CommonListenerCookie cookie) {
-        super(server, connection, player, cookie);
+    public GamePacketListener(MinecraftServer server, UnpluggedConnection connection, UnpluggedServerPlayer bot, CommonListenerCookie cookie) {
+        super(server, connection, bot, cookie);
         this.unpluggedConnection = connection;
     }
 

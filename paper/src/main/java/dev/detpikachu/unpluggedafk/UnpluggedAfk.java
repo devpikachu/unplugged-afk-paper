@@ -1,24 +1,19 @@
 package dev.detpikachu.unpluggedafk;
 
+import dev.detpikachu.unpluggedafk.Constants.BungeeChannel;
+import dev.detpikachu.unpluggedafk.Constants.KickReasons;
+import dev.detpikachu.unpluggedafk.Constants.SessionsChannel;
 import dev.detpikachu.unpluggedafk.api.UnpluggedAfkApi;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent;
-import dev.detpikachu.unpluggedafk.commands.UnpluggedCommands;
-import dev.detpikachu.unpluggedafk.config.UnpluggedOptions;
-import dev.detpikachu.unpluggedafk.formatting.UnpluggedChatFormatting;
-import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
+import dev.detpikachu.unpluggedafk.commands.CommandTree;
+import dev.detpikachu.unpluggedafk.config.Options;
+import dev.detpikachu.unpluggedafk.listeners.PaperListener;
+import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.papermc.paper.configuration.GlobalConfiguration;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import net.minecraft.network.chat.Component;
 import org.bukkit.Bukkit;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerKickEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.ApiStatus;
@@ -27,10 +22,8 @@ import org.jspecify.annotations.Nullable;
 import java.io.IOException;
 import java.util.Properties;
 
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.*;
-
 @ApiStatus.Internal
-public final class UnpluggedAfk extends JavaPlugin implements Listener {
+public final class UnpluggedAfk extends JavaPlugin {
 
     private static final String PROPERTIES_RESOURCE = "unplugged-afk.properties";
     private static final String KEY_MINECRAFT_VERSION = "minecraftVersion";
@@ -38,7 +31,7 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
     public static ComponentLogger LOGGER = ComponentLogger.logger();
 
     public static void logDebug(String message, Object... arguments) {
-        if (UnpluggedOptions.getInstance().isDebug()) {
+        if (Options.getInstance().isDebug()) {
             LOGGER.info(message, arguments);
         }
     }
@@ -60,81 +53,42 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
 
         // Config
         saveDefaultConfig();
-        UnpluggedOptions.deserialize(getConfig());
+        Options.deserialize(getConfig());
 
         // API
-        server.getServicesManager().register(UnpluggedAfkApi.class, new UnpluggedApiService(), this, ServicePriority.Normal);
+        server.getServicesManager().register(UnpluggedAfkApi.class, new ApiService(), this, ServicePriority.Normal);
 
         // Events
-        Bukkit.getPluginManager().registerEvents(this, this);
+        Bukkit.getPluginManager().registerEvents(new PaperListener(), this);
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
-            UnpluggedCommands.register(commands.registrar());
+            CommandTree.register(commands.registrar());
         });
 
         // Networking
         final var messenger = server.getMessenger();
-        messenger.registerOutgoingPluginChannel(this, CHANNEL_BUNGEE);
-        messenger.registerOutgoingPluginChannel(this, CHANNEL_SESSIONS);
+        messenger.registerOutgoingPluginChannel(this, BungeeChannel.NAME);
+        messenger.registerOutgoingPluginChannel(this, SessionsChannel.NAME);
 
         logStartupSummary();
     }
 
     @Override
     public void onDisable() {
-        final var manager = UnpluggedPlayerManager.getInstance();
-        final var unpluggedPlayers = manager.all();
+        final var registry = SessionRegistry.getInstance();
+        final var bots = registry.all();
 
         getServer().getServicesManager().unregisterAll(this);
 
-        if (!unpluggedPlayers.isEmpty()) {
-            LOGGER.warn("Disabling with {} unplugged player(s) still active. Their spots will no longer be held.", unpluggedPlayers.size());
+        if (!bots.isEmpty()) {
+            LOGGER.warn("Disabling with {} bot(s) still active. Their spots will no longer be held.", bots.size());
         }
 
-        unpluggedPlayers.forEach(unpluggedPlayer -> unpluggedPlayer.deferredDisconnect(Component.literal(KICK_REASON_DISABLED), UnpluggedPlayerRemoveEvent.Reason.PLUGIN_DISABLED));
-        manager.removeAll();
-    }
-
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        if (((CraftPlayer) event.getPlayer()).getHandle() instanceof UnpluggedServerPlayer) {
-            event.joinMessage(null);
-        }
-    }
-
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        if (((CraftPlayer) event.getPlayer()).getHandle() instanceof UnpluggedServerPlayer unpluggedPlayer) {
-            UnpluggedPlayerManager.getInstance().remove(unpluggedPlayer);
-            logDebug("Removed unplugged player {} ({}). {} still active.", event.getPlayer().getName(), event.getPlayer().getUniqueId(), UnpluggedPlayerManager.getInstance().count());
-            event.quitMessage(null);
-            return;
-        }
-
-        final var player = event.getPlayer();
-        if (UnpluggedPlayerManager.getInstance().isUnplugging(player.getUniqueId())) {
-            event.quitMessage(UnpluggedChatFormatting.formatUnpluggedBroadcast(player));
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerKick(PlayerKickEvent event) {
-        if (!(((CraftPlayer) event.getPlayer()).getHandle() instanceof UnpluggedServerPlayer)) {
-            return;
-        }
-
-        final var reason = PlainTextComponentSerializer.plainText().serialize(event.reason());
-
-        if (!KICK_REASON_PACKETEVENTS.equals(reason)) {
-            logDebug("Let a kick of unplugged player {} ({}) through: {}", event.getPlayer().getName(), event.getPlayer().getUniqueId(), reason);
-            return;
-        }
-
-        event.setCancelled(true);
-        logDebug("Refused a kick of unplugged player {} ({}): {}", event.getPlayer().getName(), event.getPlayer().getUniqueId(), reason);
+        bots.forEach(bot -> bot.deferredDisconnect(Component.text(KickReasons.DISABLED), UnpluggedPlayerRemoveEvent.Reason.PLUGIN_DISABLED));
+        registry.removeAll();
     }
 
     private void logStartupSummary() {
-        final var options = UnpluggedOptions.getInstance();
+        final var options = Options.getInstance();
 
         LOGGER.info(
                 "Enabled for Minecraft {}. debug={}, maxUnpluggedPlayers={}, maxDurationMins={}",

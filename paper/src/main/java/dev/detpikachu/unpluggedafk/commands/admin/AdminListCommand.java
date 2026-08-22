@@ -2,13 +2,12 @@ package dev.detpikachu.unpluggedafk.commands.admin;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import dev.detpikachu.unpluggedafk.UnpluggedPlayerManager;
-import dev.detpikachu.unpluggedafk.formatting.UnpluggedChatFormatting;
+import dev.detpikachu.unpluggedafk.Constants.Permissions;
+import dev.detpikachu.unpluggedafk.formatting.ChatMessages;
+import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import org.jetbrains.annotations.ApiStatus;
-
-import static dev.detpikachu.unpluggedafk.UnpluggedConstants.PERM_ADMIN_LIST;
 
 @ApiStatus.Internal
 public final class AdminListCommand {
@@ -19,14 +18,14 @@ public final class AdminListCommand {
         final var root = Commands.literal(CMD_LIST);
 
         return root
-                .requires(context -> context.getSender().hasPermission(PERM_ADMIN_LIST))
+                .requires(context -> context.getSender().hasPermission(Permissions.ADMIN_LIST))
                 .executes(AdminListCommand::execute);
     }
 
     private static int execute(CommandContext<CommandSourceStack> context) {
         final var sender = context.getSource().getSender();
 
-        sender.sendMessage(UnpluggedChatFormatting.formatList(UnpluggedPlayerManager.getInstance().all()));
+        sender.sendMessage(ChatMessages.formatList(SessionRegistry.getInstance().all()));
 
         return 1;
     }

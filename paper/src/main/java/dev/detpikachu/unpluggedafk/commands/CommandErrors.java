@@ -1,7 +1,7 @@
 package dev.detpikachu.unpluggedafk.commands;
 
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
-import dev.detpikachu.unpluggedafk.config.UnpluggedOptions;
+import dev.detpikachu.unpluggedafk.config.Options;
 import io.papermc.paper.command.brigadier.MessageComponentSerializer;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.ApiStatus;
@@ -11,7 +11,7 @@ import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.RED;
 
 @ApiStatus.Internal
-public final class UnpluggedCommandErrors {
+public final class CommandErrors {
 
     public static final SimpleCommandExceptionType ERR_GENERIC = new SimpleCommandExceptionType(
             MessageComponentSerializer.message().serialize(
@@ -37,7 +37,7 @@ public final class UnpluggedCommandErrors {
                         text("The duration of ", RED)
                                 .append(text(durationMins, RED))
                                 .append(text(" minute(s) is larger than the allowed maximum of ", RED))
-                                .append(text(UnpluggedOptions.getInstance().getMaxDurationMins(), RED))
+                                .append(text(Options.getInstance().getMaxDurationMins(), RED))
                                 .append(text(" minute(s).", RED))
                 )
         );
@@ -47,7 +47,7 @@ public final class UnpluggedCommandErrors {
         return new SimpleCommandExceptionType(
                 MessageComponentSerializer.message().serialize(
                         text("The server already has ", RED)
-                                .append(text(UnpluggedOptions.getInstance().getMaxUnpluggedPlayers(), RED))
+                                .append(text(Options.getInstance().getMaxUnpluggedPlayers(), RED))
                                 .append(text(" unplugged player(s). Please try again later.", RED))
                 )
         );
