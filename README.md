@@ -13,6 +13,13 @@ the declared time is up, the unplugged player is kicked and its resources are fr
 > moment you unplugged, and anything it picks up will be there when you come back. If it dies, you will be greeted with
 > the death screen on rejoining.
 
+> [!WARNING]
+> Your unplugged player does not inherit permissions granted through a permission plugin such as LuckPerms. It
+> resolves permissions from operator status and plugin defaults alone, because it joins without going through the
+> login step those plugins hook into. So if a server relies on a permission to keep AFK players from being kicked,
+> and that permission comes from a group rather than from operator status, the unplugged player is kicked as though
+> it had no bypass at all. This may be addressed in a future release.
+
 ## Features
 
 - **Go green:** turn off your computer and leave your unplugged player to AFK for you
