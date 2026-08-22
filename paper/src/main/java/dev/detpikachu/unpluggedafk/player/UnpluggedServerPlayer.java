@@ -19,11 +19,12 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.portal.TeleportTransition;
 import net.minecraft.world.level.storage.TagValueInput;
-import org.jspecify.annotations.NonNull;
+import org.jetbrains.annotations.ApiStatus;
 
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.KICK_REASON_EXPIRED;
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.KICK_REASON_REMOVED;
 
+@ApiStatus.Internal
 public final class UnpluggedServerPlayer extends ServerPlayer {
 
     private static final long MILLIS_PER_MINUTE = 60_000L;
@@ -93,7 +94,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     }
 
     @Override
-    public void onEquipItem(final @NonNull EquipmentSlot slot, final @NonNull ItemStack previous, final @NonNull ItemStack stack) {
+    public void onEquipItem(final EquipmentSlot slot, final ItemStack previous, final ItemStack stack) {
         if (this.isUsingItem()) {
             return;
         }
@@ -102,7 +103,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     }
 
     @Override
-    public void die(@NonNull DamageSource damageSource) {
+    public void die(DamageSource damageSource) {
         this.dismount();
         super.die(damageSource);
 
@@ -111,7 +112,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     }
 
     @Override
-    public ServerPlayer teleport(@NonNull TeleportTransition transition) {
+    public ServerPlayer teleport(TeleportTransition transition) {
         super.teleport(transition);
 
         if (this.wonGame) {
@@ -127,7 +128,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     }
 
     @Override
-    public void onRemoval(@NonNull RemovalReason reason) {
+    public void onRemoval(RemovalReason reason) {
         super.onRemoval(reason);
 
         if (reason == RemovalReason.CHANGED_DIMENSION) {

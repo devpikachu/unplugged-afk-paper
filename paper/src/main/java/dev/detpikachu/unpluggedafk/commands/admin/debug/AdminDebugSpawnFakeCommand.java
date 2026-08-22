@@ -10,9 +10,12 @@ import dev.detpikachu.unpluggedafk.UnpluggedPlayerManager;
 import dev.detpikachu.unpluggedafk.player.UnpluggedSession;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.Nullable;
 
 import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandGuards.*;
 
+@ApiStatus.Internal
 public final class AdminDebugSpawnFakeCommand {
 
     private static final String CMD_SPAWN_FAKE = "spawn-fake";
@@ -31,7 +34,7 @@ public final class AdminDebugSpawnFakeCommand {
                 .executes(context -> execute(context, null)));
     }
 
-    private static int execute(CommandContext<CommandSourceStack> context, String reason) throws CommandSyntaxException {
+    private static int execute(CommandContext<CommandSourceStack> context, @Nullable String reason) throws CommandSyntaxException {
         final var executor = requireExecutor(context);
         final var durationMins = requireDuration(context, ARG_DURATION_MINS);
 

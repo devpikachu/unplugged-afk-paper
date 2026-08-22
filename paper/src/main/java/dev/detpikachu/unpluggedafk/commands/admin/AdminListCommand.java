@@ -6,9 +6,11 @@ import dev.detpikachu.unpluggedafk.UnpluggedPlayerManager;
 import dev.detpikachu.unpluggedafk.formatting.UnpluggedChatFormatting;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import org.jetbrains.annotations.ApiStatus;
 
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.PERM_ADMIN_LIST;
 
+@ApiStatus.Internal
 public final class AdminListCommand {
 
     private static final String CMD_LIST = "list";

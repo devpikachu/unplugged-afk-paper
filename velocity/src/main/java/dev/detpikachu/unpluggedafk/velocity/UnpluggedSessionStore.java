@@ -18,11 +18,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import org.jetbrains.annotations.ApiStatus;
 import org.slf4j.Logger;
 
 import static dev.detpikachu.unpluggedafk.velocity.UnpluggedConstants.SESSIONS_FILE_NAME;
 import static dev.detpikachu.unpluggedafk.velocity.UnpluggedConstants.SESSION_GRACE_MINS;
 
+@ApiStatus.Internal
 public final class UnpluggedSessionStore {
 
     private static final Gson GSON = new GsonBuilder()

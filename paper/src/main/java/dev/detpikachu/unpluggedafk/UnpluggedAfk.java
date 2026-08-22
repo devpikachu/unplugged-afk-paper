@@ -20,12 +20,15 @@ import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.Properties;
 
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.*;
 
+@ApiStatus.Internal
 public final class UnpluggedAfk extends JavaPlugin implements Listener {
 
     private static final String PROPERTIES_RESOURCE = "unplugged-afk.properties";
@@ -148,7 +151,7 @@ public final class UnpluggedAfk extends JavaPlugin implements Listener {
         LOGGER.info("Proxy mode is off (proxies.velocity.enabled in paper-global.yml). /unplug only kicks locally, which behind a proxy redirects the player to the try list instead of disconnecting them.");
     }
 
-    private String getTargetMinecraftVersion() {
+    private @Nullable String getTargetMinecraftVersion() {
         final var properties = new Properties();
 
         try (var stream = getResource(PROPERTIES_RESOURCE)) {

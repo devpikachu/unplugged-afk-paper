@@ -25,6 +25,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -35,6 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.*;
 
+@ApiStatus.Internal
 public final class UnpluggedPlayerManager {
 
     private static final UnpluggedPlayerManager INSTANCE = new UnpluggedPlayerManager();
@@ -66,7 +69,7 @@ public final class UnpluggedPlayerManager {
         return this.players.size() + this.pending.size();
     }
 
-    public UnpluggedServerPlayer find(UUID uuid) {
+    public @Nullable UnpluggedServerPlayer find(UUID uuid) {
         return this.players.get(uuid);
     }
 

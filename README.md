@@ -153,14 +153,17 @@ so your plugin still works on servers that do not run this one.
 times, and whether it is a throwaway bot from `spawn-fake`. Its `remaining()` recomputes against the current clock on
 every call, so it stays accurate for as long as you hold the record.
 
-Three things worth knowing:
+Four things worth knowing:
 
 - `isUnplugged` and `isUnplugging` are disjoint, and there is a short gap between the kick and the bot appearing. If you
   mean "leave this account alone", check both.
 - Every method is safe to call from any thread, and results are point-in-time snapshots.
+- The package is [jspecify](https://jspecify.dev) `@NullMarked`, so nothing here accepts or returns `null`. Absence is
+  expressed as an empty `Optional` or an empty `List`, never as a null.
 - Nothing in the `dev.detpikachu.unpluggedafk.api` package references server internals, so compiling against it does not
-  saddle your plugin with this one's exact-Minecraft-version requirement. Do not implement `UnpluggedAfkApi`
-  yourself; it is marked non-extendable because methods will be added to it.
+  saddle your plugin with this one's exact-Minecraft-version requirement. It is also the only package that is fair game:
+  everything else in the JAR is marked `@ApiStatus.Internal` and may be renamed or removed in any release. Do not
+  implement `UnpluggedAfkApi` yourself either; it is marked non-extendable because methods will be added to it.
 
 ## Acknowledgements
 

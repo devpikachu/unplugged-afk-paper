@@ -1,5 +1,8 @@
 package dev.detpikachu.unpluggedafk.velocity;
 
+import org.jetbrains.annotations.ApiStatus;
+
+@ApiStatus.Internal
 public final class UnpluggedConstants {
 
     public static final int SESSION_GRACE_MINS = 5;

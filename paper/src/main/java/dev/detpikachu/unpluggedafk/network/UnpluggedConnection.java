@@ -10,12 +10,13 @@ import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.game.GameProtocols;
 import net.minecraft.server.MinecraftServer;
-import org.jspecify.annotations.NonNull;
+import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
+@ApiStatus.Internal
 public final class UnpluggedConnection extends Connection {
 
     private static final SocketAddress ADDRESS = new InetSocketAddress("127.0.0.1", 65535);
@@ -32,7 +33,7 @@ public final class UnpluggedConnection extends Connection {
     }
 
     @Override
-    public void send(@NonNull Packet<?> packet, @Nullable ChannelFutureListener futureListener, boolean bl) {
+    public void send(Packet<?> packet, @Nullable ChannelFutureListener futureListener, boolean bl) {
         // No-op
     }
 
@@ -47,12 +48,12 @@ public final class UnpluggedConnection extends Connection {
     }
 
     @Override
-    public void setListenerForServerboundHandshake(@NonNull PacketListener packetListener) {
+    public void setListenerForServerboundHandshake(PacketListener packetListener) {
         // No-op
     }
 
     @Override
-    public <T extends PacketListener> void setupInboundProtocol(@NonNull ProtocolInfo<T> protocolInfo, @NonNull T packetListener) {
+    public <T extends PacketListener> void setupInboundProtocol(ProtocolInfo<T> protocolInfo, T packetListener) {
         // No-op
     }
 
@@ -62,7 +63,7 @@ public final class UnpluggedConnection extends Connection {
     }
 
     @Override
-    public @NonNull SocketAddress getRemoteAddress() {
+    public SocketAddress getRemoteAddress() {
         return ADDRESS;
     }
 

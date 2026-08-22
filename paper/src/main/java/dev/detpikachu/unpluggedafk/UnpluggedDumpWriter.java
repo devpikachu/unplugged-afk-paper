@@ -4,6 +4,7 @@ import dev.detpikachu.unpluggedafk.formatting.UnpluggedDumpFormatting;
 import dev.detpikachu.unpluggedafk.player.UnpluggedSession;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,6 +13,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
 
+@ApiStatus.Internal
 public final class UnpluggedDumpWriter {
 
     private static final String DUMPS_DIRECTORY = "dumps";

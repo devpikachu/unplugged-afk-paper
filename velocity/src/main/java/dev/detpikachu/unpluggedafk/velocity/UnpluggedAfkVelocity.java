@@ -13,6 +13,7 @@ import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import jakarta.inject.Inject;
 import java.nio.file.Path;
+import org.jetbrains.annotations.ApiStatus;
 import org.slf4j.Logger;
 
 import static dev.detpikachu.unpluggedafk.velocity.UnpluggedConstants.CHANNEL_SESSIONS;
@@ -26,6 +27,7 @@ import static dev.detpikachu.unpluggedafk.velocity.UnpluggedConstants.MESSAGE_SE
         url = "https://github.com/devpikachu/unplugged-afk-paper",
         authors = {"Andrei \"detpikachu\" Hava"}
 )
+@ApiStatus.Internal
 public final class UnpluggedAfkVelocity {
 
     private static final MinecraftChannelIdentifier SESSIONS_CHANNEL = MinecraftChannelIdentifier.from(CHANNEL_SESSIONS);

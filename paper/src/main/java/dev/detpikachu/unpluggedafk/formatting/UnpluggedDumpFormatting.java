@@ -7,6 +7,8 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.*;
+import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.Nullable;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -16,6 +18,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
+@ApiStatus.Internal
 public final class UnpluggedDumpFormatting {
 
     private static final String EMPTY_SECTION = "(empty)";
@@ -60,7 +63,7 @@ public final class UnpluggedDumpFormatting {
                 .append('\n');
     }
 
-    private static void appendSection(StringBuilder builder, String title, ItemStack[] contents) {
+    private static void appendSection(StringBuilder builder, String title, @Nullable ItemStack[] contents) {
         builder.append('\n').append(title).append('\n').repeat("-", title.length()).append('\n');
 
         var empty = true;
@@ -137,7 +140,7 @@ public final class UnpluggedDumpFormatting {
         }
     }
 
-    private static void appendNestedSection(StringBuilder builder, String title, ItemStack[] contents, String indent) {
+    private static void appendNestedSection(StringBuilder builder, String title, @Nullable ItemStack[] contents, String indent) {
         var empty = true;
 
         for (var slot = 0; slot < contents.length; slot++) {

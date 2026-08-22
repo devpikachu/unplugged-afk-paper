@@ -3,32 +3,33 @@ package dev.detpikachu.unpluggedafk;
 import dev.detpikachu.unpluggedafk.api.UnpluggedAfkApi;
 import dev.detpikachu.unpluggedafk.api.UnpluggedPlayerInfo;
 import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
-import org.jspecify.annotations.NonNull;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+@ApiStatus.Internal
 public final class UnpluggedApiService implements UnpluggedAfkApi {
 
     @Override
-    public boolean isUnplugging(@NonNull UUID uuid) {
+    public boolean isUnplugging(UUID uuid) {
         return UnpluggedPlayerManager.getInstance().isUnplugging(uuid);
     }
 
     @Override
-    public boolean isUnplugged(@NonNull UUID uuid) {
+    public boolean isUnplugged(UUID uuid) {
         return UnpluggedPlayerManager.getInstance().isUnplugged(uuid);
     }
 
     @Override
-    public @NonNull Optional<UnpluggedPlayerInfo> find(@NonNull UUID uuid) {
+    public Optional<UnpluggedPlayerInfo> find(UUID uuid) {
         return Optional.ofNullable(UnpluggedPlayerManager.getInstance().find(uuid)).map(UnpluggedApiService::map);
     }
 
     @Override
-    public @NonNull List<UnpluggedPlayerInfo> all() {
+    public List<UnpluggedPlayerInfo> all() {
         return UnpluggedPlayerManager.getInstance().all().stream().map(UnpluggedApiService::map).toList();
     }
 

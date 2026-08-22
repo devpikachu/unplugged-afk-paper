@@ -11,12 +11,14 @@ import dev.detpikachu.unpluggedafk.exceptions.UnplugFailedException;
 import dev.detpikachu.unpluggedafk.player.UnpluggedSession;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import org.jetbrains.annotations.ApiStatus;
 
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.PERM_UNPLUG;
 import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandErrors.ERR_GENERIC;
 import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandErrors.ERR_REASON_REQUIRED;
 import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandGuards.*;
 
+@ApiStatus.Internal
 public final class PlayerUnplugCommand {
 
     private static final String CMD_UNPLUG = "unplug";

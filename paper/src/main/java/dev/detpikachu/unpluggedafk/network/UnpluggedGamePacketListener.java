@@ -5,8 +5,9 @@ import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
-import org.jspecify.annotations.NonNull;
+import org.jetbrains.annotations.ApiStatus;
 
+@ApiStatus.Internal
 public final class UnpluggedGamePacketListener extends ServerGamePacketListenerImpl {
 
     private final UnpluggedConnection unpluggedConnection;
@@ -17,7 +18,7 @@ public final class UnpluggedGamePacketListener extends ServerGamePacketListenerI
     }
 
     @Override
-    public void onDisconnect(final @NonNull DisconnectionDetails details) {
+    public void onDisconnect(final DisconnectionDetails details) {
         super.onDisconnect(details);
         this.unpluggedConnection.closeChannel();
     }

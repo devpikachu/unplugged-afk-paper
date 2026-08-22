@@ -1,9 +1,12 @@
 package dev.detpikachu.unpluggedafk.player;
 
 import com.mojang.authlib.GameProfile;
+import org.jetbrains.annotations.ApiStatus;
+
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
+@ApiStatus.Internal
 public record UnpluggedFakeIdentity(UUID uuid, String name) {
 
     private static final String NAME_PREFIX = "Fakeson_";

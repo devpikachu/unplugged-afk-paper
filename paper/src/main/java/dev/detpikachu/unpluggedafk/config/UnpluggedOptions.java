@@ -2,9 +2,11 @@ package dev.detpikachu.unpluggedafk.config;
 
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.jetbrains.annotations.ApiStatus;
 
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.*;
 
+@ApiStatus.Internal
 public final class UnpluggedOptions {
 
     private static final UnpluggedOptions INSTANCE = new UnpluggedOptions();

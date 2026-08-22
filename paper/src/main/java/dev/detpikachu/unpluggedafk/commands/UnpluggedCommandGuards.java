@@ -8,9 +8,11 @@ import dev.detpikachu.unpluggedafk.config.UnpluggedOptions;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.jetbrains.annotations.ApiStatus;
 
 import static dev.detpikachu.unpluggedafk.commands.UnpluggedCommandErrors.*;
 
+@ApiStatus.Internal
 public final class UnpluggedCommandGuards {
 
     public static ServerPlayer requireExecutor(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {

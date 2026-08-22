@@ -3,10 +3,12 @@ package dev.detpikachu.unpluggedafk.commands;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import dev.detpikachu.unpluggedafk.config.UnpluggedOptions;
 import io.papermc.paper.command.brigadier.MessageComponentSerializer;
+import org.jetbrains.annotations.ApiStatus;
 
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.RED;
 
+@ApiStatus.Internal
 public final class UnpluggedCommandErrors {
 
     public static final SimpleCommandExceptionType ERR_GENERIC = new SimpleCommandExceptionType(

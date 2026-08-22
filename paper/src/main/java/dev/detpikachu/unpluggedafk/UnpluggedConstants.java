@@ -1,5 +1,8 @@
 package dev.detpikachu.unpluggedafk;
 
+import org.jetbrains.annotations.ApiStatus;
+
+@ApiStatus.Internal
 public final class UnpluggedConstants {
 
     public static final boolean DEFAULT_DEBUG = false;

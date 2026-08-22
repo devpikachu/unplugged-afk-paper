@@ -5,9 +5,11 @@ import dev.detpikachu.unpluggedafk.commands.admin.debug.AdminDebugCommands;
 import dev.detpikachu.unpluggedafk.config.UnpluggedOptions;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import org.jetbrains.annotations.ApiStatus;
 
 import static dev.detpikachu.unpluggedafk.UnpluggedConstants.*;
 
+@ApiStatus.Internal
 public final class AdminCommands {
 
     private static final String CMD_UNPLUGGED = "unplugged";
