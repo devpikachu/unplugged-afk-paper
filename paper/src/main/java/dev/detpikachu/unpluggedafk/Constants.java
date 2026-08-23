@@ -10,6 +10,10 @@ public final class Constants {
         public static final boolean DEBUG = false;
         public static final int MAX_UNPLUGGED_PLAYERS = 16;
         public static final int MAX_DURATION_MINS = 480;
+        public static final String LINK_HOST = "";
+        public static final int LINK_PORT = 25580;
+        public static final String LINK_SECRET = "";
+        public static final String LINK_SERVER_NAME = "";
     }
 
     public static final class Permissions {

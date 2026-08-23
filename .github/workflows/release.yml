@@ -32,5 +32,7 @@ jobs:
           draft: true
           generate_release_notes: true
           body_path: release-notes.md
-          files: '*/build/libs/*.jar'
+          files: |
+            paper/build/libs/*.jar
+            velocity/build/libs/*.jar
           fail_on_unmatched_files: true

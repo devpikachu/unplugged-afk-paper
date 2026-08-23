@@ -14,10 +14,20 @@ public final class Options {
     private static final String KEY_DEBUG = "debug";
     private static final String KEY_MAX_UNPLUGGED_PLAYERS = "maxUnpluggedPlayers";
     private static final String KEY_MAX_DURATION_MINS = "maxDurationMins";
+    private static final String KEY_LINK_HOST = "link.host";
+    private static final String KEY_LINK_PORT = "link.port";
+    private static final String KEY_LINK_SECRET = "link.secret";
+    private static final String KEY_LINK_SERVER_NAME = "link.serverName";
 
     private boolean isDebug = Defaults.DEBUG;
     private int maxUnpluggedPlayers = Defaults.MAX_UNPLUGGED_PLAYERS;
     private int maxDurationMins = Defaults.MAX_DURATION_MINS;
+
+    private LinkOptions link = new LinkOptions(
+            Defaults.LINK_HOST,
+            Defaults.LINK_PORT,
+            Defaults.LINK_SECRET,
+            Defaults.LINK_SERVER_NAME);
 
     public static Options getInstance() {
         return INSTANCE;
@@ -35,10 +45,19 @@ public final class Options {
         return this.maxDurationMins;
     }
 
+    public LinkOptions getLink() {
+        return this.link;
+    }
+
     public static void deserialize(FileConfiguration config) {
         INSTANCE.isDebug = config.getBoolean(KEY_DEBUG, Defaults.DEBUG);
         INSTANCE.maxUnpluggedPlayers = atLeastOne(config, KEY_MAX_UNPLUGGED_PLAYERS, Defaults.MAX_UNPLUGGED_PLAYERS);
         INSTANCE.maxDurationMins = atLeastOne(config, KEY_MAX_DURATION_MINS, Defaults.MAX_DURATION_MINS);
+        INSTANCE.link = new LinkOptions(
+                config.getString(KEY_LINK_HOST, Defaults.LINK_HOST),
+                config.getInt(KEY_LINK_PORT, Defaults.LINK_PORT),
+                config.getString(KEY_LINK_SECRET, Defaults.LINK_SECRET),
+                config.getString(KEY_LINK_SERVER_NAME, Defaults.LINK_SERVER_NAME));
     }
 
     private static int atLeastOne(FileConfiguration config, String key, int fallback) {

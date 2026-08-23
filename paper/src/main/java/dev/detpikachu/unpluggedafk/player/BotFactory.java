@@ -6,8 +6,6 @@ import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerSpawnEvent;
 import dev.detpikachu.unpluggedafk.config.Options;
-import dev.detpikachu.unpluggedafk.network.GamePacketListener;
-import dev.detpikachu.unpluggedafk.network.UnpluggedConnection;
 import dev.detpikachu.unpluggedafk.session.Session;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;

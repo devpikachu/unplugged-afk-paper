@@ -54,6 +54,11 @@ public final class UnpluggedAfk extends JavaPlugin {
         saveDefaultConfig();
         Options.deserialize(getConfig());
 
+        if (!hasRequiredLink()) {
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
         registerApi();
         registerListeners();
         registerCompat();
@@ -152,5 +157,19 @@ public final class UnpluggedAfk extends JavaPlugin {
         }
 
         return properties.getProperty(KEY_MINECRAFT_VERSION);
+    }
+
+    private boolean hasRequiredLink() {
+        if (!GlobalConfiguration.get().proxies.velocity.enabled) {
+            return true;
+        }
+
+        if (Options.getInstance().getLink().isValid()) {
+            return true;
+        }
+
+        LOGGER.error(
+                "Proxy mode is on but the proxy link is not configured. Set link.host, link.port (1-65535), link.secret and link.serverName in the plugin's config.yml. The secret and the server name come from the Unplugged AFK companion on your proxy.");
+        return false;
     }
 }

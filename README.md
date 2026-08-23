@@ -41,6 +41,7 @@ the declared time is up, the unplugged player is kicked and its resources are fr
   support requests or reports
 - **Re-spawn unplugged players on server reboot:** bring them back automatically when a backend restarts
 - **More admin commands:** unplug an online player on their behalf, unplug an offline player, and similar
+- **[MiniPlaceholders](https://modrinth.com/plugin/miniplaceholders) support:** support MiniPlaceholders like we do PAPI
 
 ## Installation
 

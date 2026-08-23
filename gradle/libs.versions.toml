@@ -1,0 +1,37 @@
+[versions]
+java = "21"
+minecraft = "1.21.11"
+
+velocity = "3.5.0-SNAPSHOT"
+husksync = "4.0.0+1.21.11"
+placeholderapi = "2.12.3"
+snakeyaml = "2.6"
+netty = "4.2.7.Final"
+
+errorprone = "2.50.0"
+nullaway = "0.14.0"
+jspecify = "1.0.1"
+jetbrains-annotations = "26.1.0"
+
+[libraries]
+velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity" }
+husksync-bukkit = { module = "net.william278.husksync:husksync-bukkit", version.ref = "husksync" }
+placeholderapi = { module = "me.clip:placeholderapi", version.ref = "placeholderapi" }
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
+netty-buffer = { module = "io.netty:netty-buffer", version.ref = "netty" }
+netty-codec-base = { module = "io.netty:netty-codec-base", version.ref = "netty" }
+netty-handler = { module = "io.netty:netty-handler", version.ref = "netty" }
+netty-transport = { module = "io.netty:netty-transport", version.ref = "netty" }
+
+errorprone-annotations = { module = "com.google.errorprone:error_prone_annotations", version.ref = "errorprone" }
+errorprone-core = { module = "com.google.errorprone:error_prone_core", version.ref = "errorprone" }
+nullaway = { module = "com.uber.nullaway:nullaway", version.ref = "nullaway" }
+jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
+jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations" }
+
+[plugins]
+spotless = { id = "com.diffplug.spotless", version = "8.10.0" }
+shadow = { id = "com.gradleup.shadow", version = "9.6.1" }
+paperweight-userdev = { id = "io.papermc.paperweight.userdev", version = "2.0.0-beta.22" }
+errorprone = { id = "net.ltgt.errorprone", version = "5.1.0" }
+run-paper = { id = "xyz.jpenilla.run-paper", version = "3.1.0" }

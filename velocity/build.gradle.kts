@@ -3,17 +3,9 @@ import net.ltgt.gradle.errorprone.errorprone
 plugins {
     id("java-library")
     id("com.diffplug.spotless")
+    id("com.gradleup.shadow")
     id("net.ltgt.errorprone")
 }
-
-val velocityVersion: String = project.property("velocityVersion") as String
-
-val javaVersion: String = project.property("javaVersion") as String
-
-val errorproneVersion: String = project.property("errorproneVersion") as String
-val nullawayVersion: String = project.property("nullawayVersion") as String
-val jspecifyVersion: String = project.property("jspecifyVersion") as String
-val jetbrainsAnnotationsVersion: String = project.property("jetbrainsAnnotationsVersion") as String
 
 base {
     archivesName = "unplugged-afk-velocity"
@@ -24,18 +16,26 @@ repositories {
 }
 
 dependencies {
-    compileOnly("com.velocitypowered:velocity-api:$velocityVersion")
-    annotationProcessor("com.velocitypowered:velocity-api:$velocityVersion")
+    compileOnly(libs.velocity.api)
+    annotationProcessor(libs.velocity.api)
 
-    compileOnly("org.jspecify:jspecify:$jspecifyVersion")
-    compileOnly("org.jetbrains:annotations:$jetbrainsAnnotationsVersion")
+    implementation(project(":common"))
+    implementation(libs.snakeyaml)
 
-    errorprone("com.google.errorprone:error_prone_core:$errorproneVersion")
-    errorprone("com.uber.nullaway:nullaway:$nullawayVersion")
+    compileOnly(libs.netty.buffer)
+    compileOnly(libs.netty.codec.base)
+    compileOnly(libs.netty.handler)
+    compileOnly(libs.netty.transport)
+
+    compileOnly(libs.jspecify)
+    compileOnly(libs.jetbrains.annotations)
+
+    errorprone(libs.errorprone.core)
+    errorprone(libs.nullaway)
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(javaVersion)
+    toolchain.languageVersion = JavaLanguageVersion.of(libs.versions.java.get())
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -52,7 +52,7 @@ spotless {
     java {
         target("src/main/java/**/*.java")
 
-        eclipse().configFile(rootProject.file("config/eclipse-formatter.properties"))
+        eclipse().configFile(rootProject.file("eclipse-formatter.properties"))
         removeUnusedImports()
         forbidWildcardImports()
         importOrder("", "javax|java", "\\#")
@@ -73,4 +73,16 @@ val generateTemplates = tasks.register<Copy>("generateTemplates") {
 
 sourceSets.main {
     java.srcDir(generateTemplates.map { it.outputs })
+}
+
+tasks {
+    jar {
+        enabled = false
+    }
+
+    shadowJar {
+        archiveClassifier = ""
+
+        relocate("org.yaml.snakeyaml", "dev.detpikachu.unpluggedafk.velocity.libs.snakeyaml")
+    }
 }

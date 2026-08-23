@@ -2,13 +2,16 @@ package dev.detpikachu.unpluggedafk.velocity;
 
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import dev.detpikachu.unpluggedafk.velocity.Constants.SessionsChannel;
 import dev.detpikachu.unpluggedafk.velocity.compat.tab.TabCompat;
+import dev.detpikachu.unpluggedafk.velocity.config.Options;
 import dev.detpikachu.unpluggedafk.velocity.listeners.ProxyListener;
+import dev.detpikachu.unpluggedafk.velocity.network.LinkServer;
 import dev.detpikachu.unpluggedafk.velocity.session.SessionStore;
 import jakarta.inject.Inject;
 import org.jetbrains.annotations.ApiStatus;
@@ -30,16 +33,24 @@ public final class UnpluggedAfkVelocity {
     private final Logger logger;
     private final ProxyServer proxyServer;
     private final SessionStore sessionStore;
+    private final Path dataDirectory;
+    private final LinkServer linkServer;
 
     @Inject
     public UnpluggedAfkVelocity(Logger logger, ProxyServer proxyServer, @DataDirectory Path dataDirectory) {
         this.logger = logger;
         this.proxyServer = proxyServer;
         this.sessionStore = new SessionStore(dataDirectory, logger);
+        this.dataDirectory = dataDirectory;
+        this.linkServer = new LinkServer(proxyServer, logger);
     }
 
     @Subscribe
     public void onProxyInitialize(ProxyInitializeEvent event) {
+        // Link
+        Options.deserialize(this.dataDirectory, this.logger);
+        this.linkServer.start();
+
         // Sessions
         this.proxyServer.getChannelRegistrar().register(SessionsChannel.IDENTIFIER);
         this.sessionStore.load();
@@ -51,6 +62,12 @@ public final class UnpluggedAfkVelocity {
         final var listener = new ProxyListener(this.logger, this.proxyServer, this.sessionStore, tabBridge);
         this.proxyServer.getEventManager().register(this, listener);
 
-        this.logger.info("Unplugged AFK has been enabled.");
+        final var link = Options.getInstance().getLink();
+        this.logger.info("Unplugged AFK has been enabled. Link configured for {}:{}.", link.host(), link.port());
+    }
+
+    @Subscribe
+    public void onProxyShutdown(ProxyShutdownEvent event) {
+        this.linkServer.stop();
     }
 }

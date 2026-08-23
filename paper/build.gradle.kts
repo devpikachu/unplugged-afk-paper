@@ -3,22 +3,13 @@ import net.ltgt.gradle.errorprone.errorprone
 plugins {
     id("java-library")
     id("com.diffplug.spotless")
+    id("com.gradleup.shadow")
     id("io.papermc.paperweight.userdev")
     id("net.ltgt.errorprone")
     id("xyz.jpenilla.run-paper")
 }
 
-val minecraftVersion: String = project.property("minecraftVersion") as String
-val huskSyncVersion: String = project.property("huskSyncVersion") as String
-val placeholderApiVersion: String = project.property("placeholderApiVersion") as String
-
-val javaVersion: String = project.property("javaVersion") as String
-
-val errorproneVersion: String = project.property("errorproneVersion") as String
-val nullawayVersion: String = project.property("nullawayVersion") as String
-val jspecifyVersion: String = project.property("jspecifyVersion") as String
-val jetbrainsAnnotationsVersion: String = project.property("jetbrainsAnnotationsVersion") as String
-
+val minecraftVersion = libs.versions.minecraft.get()
 val apiVersion = minecraftVersion.split('.').take(2).joinToString(".")
 
 paperweight.reobfArtifactConfiguration = io.papermc.paperweight.userdev.ReobfArtifactConfiguration.MOJANG_PRODUCTION
@@ -35,18 +26,20 @@ base {
 dependencies {
     paperweight.paperDevBundle("$minecraftVersion-R0.1-SNAPSHOT")
 
-    compileOnly("net.william278.husksync:husksync-bukkit:$huskSyncVersion")
-    compileOnly("me.clip:placeholderapi:$placeholderApiVersion")
-    compileOnly("com.google.errorprone:error_prone_annotations:$errorproneVersion")
-    compileOnly("org.jspecify:jspecify:$jspecifyVersion")
-    compileOnly("org.jetbrains:annotations:$jetbrainsAnnotationsVersion")
+    implementation(project(":common"))
 
-    errorprone("com.google.errorprone:error_prone_core:$errorproneVersion")
-    errorprone("com.uber.nullaway:nullaway:$nullawayVersion")
+    compileOnly(libs.husksync.bukkit)
+    compileOnly(libs.placeholderapi)
+    compileOnly(libs.errorprone.annotations)
+    compileOnly(libs.jspecify)
+    compileOnly(libs.jetbrains.annotations)
+
+    errorprone(libs.errorprone.core)
+    errorprone(libs.nullaway)
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(javaVersion)
+    toolchain.languageVersion = JavaLanguageVersion.of(libs.versions.java.get())
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -63,7 +56,7 @@ spotless {
     java {
         target("src/main/java/**/*.java")
 
-        eclipse().configFile(rootProject.file("config/eclipse-formatter.properties"))
+        eclipse().configFile(rootProject.file("eclipse-formatter.properties"))
         removeUnusedImports()
         forbidWildcardImports()
         importOrder("", "javax|java", "\\#")
@@ -74,6 +67,14 @@ spotless {
 }
 
 tasks {
+    jar {
+        enabled = false
+    }
+
+    shadowJar {
+        archiveClassifier = ""
+    }
+
     runServer {
         minecraftVersion(minecraftVersion)
         jvmArgs("-Xms2G", "-Xmx2G", "-Dcom.mojang.eula.agree=true")

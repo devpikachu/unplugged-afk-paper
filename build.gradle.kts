@@ -1,8 +1,9 @@
 plugins {
-    id("com.diffplug.spotless") version "8.10.0"
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.22" apply false
-    id("net.ltgt.errorprone") version "5.1.0" apply false
-    id("xyz.jpenilla.run-paper") version "3.1.0" apply false
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.shadow) apply false
+    alias(libs.plugins.paperweight.userdev) apply false
+    alias(libs.plugins.errorprone) apply false
+    alias(libs.plugins.run.paper) apply false
 }
 
 spotless {

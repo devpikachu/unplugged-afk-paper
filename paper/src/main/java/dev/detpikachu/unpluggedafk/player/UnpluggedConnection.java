@@ -1,4 +1,4 @@
-package dev.detpikachu.unpluggedafk.network;
+package dev.detpikachu.unpluggedafk.player;
 
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.embedded.EmbeddedChannel;
