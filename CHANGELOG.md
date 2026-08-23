@@ -12,6 +12,7 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ### Added
 
+- **PlaceholderAPI support:** the plugin now provides placeholders for unplugged player state
 - **TAB compatibility:** When using TAB to synchronize player lists behind a proxy, unplugged players now also synchronize
 
 ### Changed

@@ -114,16 +114,6 @@ public final class ChatMessages {
     }
 
     private static Component formatDuration(Duration duration) {
-        final var seconds = duration.toSeconds();
-        if (seconds < 60) {
-            return text(seconds + " second(s)", WHITE);
-        }
-
-        final var minutes = duration.toMinutes();
-        if (minutes < 60) {
-            return text(minutes + " minute(s)", WHITE);
-        }
-
-        return text(duration.toHours() + " hour(s) " + duration.toMinutesPart() + " minute(s)", WHITE);
+        return text(DurationFormatting.format(duration), WHITE);
     }
 }

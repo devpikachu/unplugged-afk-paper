@@ -10,6 +10,7 @@ plugins {
 
 val minecraftVersion: String = project.property("minecraftVersion") as String
 val huskSyncVersion: String = project.property("huskSyncVersion") as String
+val placeholderApiVersion: String = project.property("placeholderApiVersion") as String
 
 val javaVersion: String = project.property("javaVersion") as String
 
@@ -24,6 +25,7 @@ paperweight.reobfArtifactConfiguration = io.papermc.paperweight.userdev.ReobfArt
 
 repositories {
     maven("https://repo.william278.net/releases")
+    maven("https://repo.extendedclip.com/releases")
 }
 
 base {
@@ -34,6 +36,7 @@ dependencies {
     paperweight.paperDevBundle("$minecraftVersion-R0.1-SNAPSHOT")
 
     compileOnly("net.william278.husksync:husksync-bukkit:$huskSyncVersion")
+    compileOnly("me.clip:placeholderapi:$placeholderApiVersion")
     compileOnly("com.google.errorprone:error_prone_annotations:$errorproneVersion")
     compileOnly("org.jspecify:jspecify:$jspecifyVersion")
     compileOnly("org.jetbrains:annotations:$jetbrainsAnnotationsVersion")

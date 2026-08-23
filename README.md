@@ -27,6 +27,8 @@ the declared time is up, the unplugged player is kicked and its resources are fr
 - **Configurable limits:** operators set the maximum duration and a global cap on how many unplugged players can exist
   at once, so an AFK crowd cannot exhaust the server
 - **Admin control:** commands to inspect who is unplugged, and to debug the plugin's behaviour
+- **Placeholder aware:** with PlaceholderAPI installed, scoreboards, tab lists and chat plugins can show who is
+  unplugged, for how long, and why
 - **Proxy aware:** behind Velocity, unplugging disconnects you from the whole network, returning puts you back on the
   server your unplugged player is on, and the server list still counts the players you left behind
 
@@ -39,9 +41,6 @@ the declared time is up, the unplugged player is kicked and its resources are fr
   support requests or reports
 - **Re-spawn unplugged players on server reboot:** bring them back automatically when a backend restarts
 - **More admin commands:** unplug an online player on their behalf, unplug an offline player, and similar
-- **PlaceholderAPI support:** register an expansion with
-  [PlaceholderAPI](https://github.com/PlaceholderAPI/PlaceholderAPI), so scoreboards, tab lists and chat plugins can
-  show who is unplugged, for how long, and why
 
 ## Installation
 
@@ -89,6 +88,26 @@ of its own.
 | `unplugged-afk.admin.info`  | `/unplugged info`                      | Held by `unplugged-afk.admin` |
 | `unplugged-afk.admin.list`  | `/unplugged list`                      | Held by `unplugged-afk.admin` |
 | `unplugged-afk.admin.debug` | `/unplugged debug` and its subcommands | Held by `unplugged-afk.admin` |
+
+## Placeholders
+
+With [PlaceholderAPI](https://github.com/PlaceholderAPI/PlaceholderAPI) installed, the plugin registers an expansion
+under the identifier `unplugged-afk`, so scoreboards, tab lists and chat plugins can show who is unplugged, for how
+long, and why. There is nothing to configure, and nothing is registered at all when PlaceholderAPI is absent.
+
+| Placeholder                      | Gives                                                             |
+|----------------------------------|-------------------------------------------------------------------|
+| `%unplugged-afk_is_unplugged%`   | `true` or `false`                                                 |
+| `%unplugged-afk_duration_mins%`  | The window the player asked for, in minutes                       |
+| `%unplugged-afk_reason%`         | The reason given to `/unplug`                                     |
+| `%unplugged-afk_started%`        | How long ago they unplugged, such as `2 hour(s) 5 minute(s)`      |
+| `%unplugged-afk_expires%`        | How long is left, in the same form                                |
+| `%unplugged-afk_remaining_mins%` | How long is left, as a plain number of minutes                    |
+| `%unplugged-afk_is_fake%`        | `true` for an unplugged player from `/unplugged debug spawn-fake` |
+| `%unplugged-afk_count%`          | How many this server holds, matching the `/unplugged list` total  |
+
+Every placeholder except `%unplugged-afk_count%` describes one player, and renders empty for a player who is not
+unplugged. `%unplugged-afk_is_unplugged%` is the exception to that: it renders `false`.
 
 ## Proxy Support
 
