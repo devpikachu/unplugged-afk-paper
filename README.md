@@ -27,16 +27,14 @@ the declared time is up, the unplugged player is kicked and its resources are fr
 - **Configurable limits:** operators set the maximum duration and a global cap on how many unplugged players can exist
   at once, so an AFK crowd cannot exhaust the server
 - **Admin control:** commands to inspect who is unplugged, and to debug the plugin's behaviour
-- **Proxy aware:** behind Velocity, unplugging disconnects you from the whole network, and returning puts you back on
-  the server your unplugged player is on
+- **Proxy aware:** behind Velocity, unplugging disconnects you from the whole network, returning puts you back on the
+  server your unplugged player is on, and the server list still counts the players you left behind
 
 ### Planned
 
 - **Bypass max duration:** a permission letting staff or VIPs unplug for longer than the configured maximum
 - **Bypass cap:** a permission letting staff or VIPs unplug even once the cap is reached
 - **Configurable messages:** move the plugin's chat messages into the config, so operators can reword or translate them
-- **Count unplugged players in the server list:** report them in the player count and hover list on a proxy, the way a
-  single server already does, behind a config toggle
 - **Historical data:** persist records to disk so staff can review how players have used the plugin when handling
   support requests or reports
 - **Re-spawn unplugged players on server reboot:** bring them back automatically when a backend restarts
@@ -112,6 +110,24 @@ The companion JAR on the proxy is optional on top of that, and buys the return t
 - That routing survives a proxy restart or crash.
 
 Without the companion the network disconnect still works, you are just sent to the default lobby when you come back.
+
+The companion also corrects the **server list player count**. A single server counts unplugged players already, since
+they are ordinary players as far as it is concerned, but a proxy answers the ping itself and can only see the players
+connected to it, so unplugged players drop out of the number. With the companion installed the count goes back to what
+a single server would have reported. There is nothing to configure.
+
+A few things worth knowing about that number:
+
+- Only the count is adjusted, never the hover list of names. Velocity's `sample-players-in-ping` is off by default and
+  a plugin cannot read that setting, so there is no way to tell an operator who deliberately hides names from one who
+  simply has nobody online.
+- Unplugged players created by `/unplugged debug spawn-fake` are never counted, because they belong to no real account.
+- The count can exceed `show-max-players`, in the same way a single server reports players who joined over its own
+  limit.
+- Keep `ping-passthrough = "DISABLED"` in `velocity.toml`, which is the default. On any other setting the backend
+  supplies the count, it already includes that backend's unplugged players, and they are then counted twice.
+- Other network-wide player views are not covered. A tab list plugin that collects players from every backend through
+  the proxy, such as TAB, builds its list from proxy connections, so it cannot see unplugged players either.
 
 A routing record is used once, on the next login, and then discarded. It expires on the proxy's own clock, at the
 requested duration plus a five minute grace period. Overshooting is deliberate: sending a returning player to the right

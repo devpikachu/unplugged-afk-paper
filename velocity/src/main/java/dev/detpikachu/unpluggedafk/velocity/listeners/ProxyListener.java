@@ -4,6 +4,7 @@ import com.google.common.io.ByteArrayDataInput;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
+import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
@@ -76,6 +77,25 @@ public final class ProxyListener {
 
         event.setInitialServer(server.get());
         this.logger.info("Routing {} back to {}", player.getUsername(), serverName);
+    }
+
+    @Subscribe
+    public void onProxyPing(ProxyPingEvent event) {
+        final var bots = this.sessionStore.count();
+
+        if (bots == 0) {
+            return;
+        }
+
+        // A ping carrying no players section at all cannot carry a count either. asBuilder() records that as
+        // nullOutPlayers and build() then throws away whatever onlinePlayers() was told, so rebuilding here would
+        // be a silent no-op rather than an error.
+        if (event.getPing().getPlayers().isEmpty()) {
+            return;
+        }
+
+        final var builder = event.getPing().asBuilder();
+        event.setPing(builder.onlinePlayers(builder.getOnlinePlayers() + bots).build());
     }
 
     private void handleSessionMessage(ServerConnection source, ByteArrayDataInput in) {

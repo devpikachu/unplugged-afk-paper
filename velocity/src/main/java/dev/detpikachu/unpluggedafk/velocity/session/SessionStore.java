@@ -50,11 +50,15 @@ public final class SessionStore {
         this.sessions = new ConcurrentHashMap<>();
     }
 
+    public int count() {
+        return (int) this.sessions.values().stream().filter(Session::isAlive).count();
+    }
+
     public void start(UUID uuid, String serverName, int durationMins) {
-        final var expiresAt = Instant.now().plus(Duration.ofMinutes(durationMins + Sessions.GRACE_MINS));
+        final var expiresAt = Instant.now().plus(Duration.ofMinutes(durationMins));
         final var previous = this.sessions.put(uuid, new Session(serverName, expiresAt));
 
-        if (previous != null && !previous.isExpired()) {
+        if (previous != null && previous.isAlive()) {
             this.logger.warn(
                     "{} already had a live session on {}, now replaced by {}. Both backends may be holding a bot for them.",
                     uuid,
@@ -74,7 +78,7 @@ public final class SessionStore {
 
         this.save();
 
-        if (session.isExpired()) {
+        if (!session.canRoute()) {
             this.logger.info(
                     "The session for {} on {} expired at {}, so they fall back to the try list.",
                     uuid,
@@ -100,7 +104,7 @@ public final class SessionStore {
             }
 
             persisted.forEach((uuid, session) -> {
-                if (!session.isExpired()) {
+                if (session.canRoute()) {
                     this.sessions.put(uuid, session);
                 }
             });

@@ -10,6 +10,10 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ## [Unreleased]
 
+### Fixed
+
+- **Proxy player count:** when behind a proxy, the server list now correctly includes unplugged players in the player count
+
 ## [0.4.0] - 2026-08-22
 
 ### Added
