@@ -67,10 +67,6 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         return this.removeReason;
     }
 
-    public void setRemoveReason(@Nullable Reason reason) {
-        this.removeReason = reason;
-    }
-
     public UnpluggedPlayerInfo toInfo() {
         return new UnpluggedPlayerInfo(
                 this.getUUID(),
@@ -149,7 +145,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         }
 
         this.isDisconnectScheduled = true;
-        this.setRemoveReason(reason);
+        this.removeReason = reason;
 
         LOGGER.info(
                 "Killing bot {} ({}) after {} of {} minute(s): {}",

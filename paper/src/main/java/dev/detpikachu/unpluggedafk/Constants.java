@@ -27,6 +27,7 @@ public final class Constants {
         public static final String EXPIRED = "Expired";
         public static final String REMOVED = "Entity removed";
         public static final String SPAWN_FAILED = "Spawn failed";
+        public static final String RETURNED = "Player returned";
     }
 
     public static final class BungeeChannel {

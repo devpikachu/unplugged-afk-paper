@@ -6,12 +6,10 @@ import dev.detpikachu.unpluggedafk.formatting.ChatMessages;
 import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
 import dev.detpikachu.unpluggedafk.session.PlayerSnapshot;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -67,22 +65,5 @@ public final class PaperListener implements Listener {
 
         registry.putSnapshot(player.getUniqueId(), PlayerSnapshot.capture(player));
         logDebug("Captured a snapshot of {} ({}) for their bot.", player.getName(), player.getUniqueId());
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onPlayerKick(PlayerKickEvent event) {
-        final var player = event.getPlayer();
-        final var bot = UnpluggedServerPlayer.from(player);
-
-        if (bot == null) {
-            return;
-        }
-
-        if (event.getCause() == PlayerKickEvent.Cause.DUPLICATE_LOGIN) {
-            bot.setRemoveReason(Reason.PLAYER_RETURNED);
-        }
-
-        final var reason = PlainTextComponentSerializer.plainText().serialize(event.reason());
-        logDebug("Let a kick of bot {} ({}) through: {}", player.getName(), player.getUniqueId(), reason);
     }
 }
