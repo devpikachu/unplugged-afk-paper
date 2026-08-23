@@ -6,7 +6,10 @@ import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import net.william278.husksync.api.BukkitHuskSyncAPI;
 import net.william278.husksync.data.DataSnapshot;
 import net.william278.husksync.event.BukkitPreSyncEvent;
+import net.william278.husksync.event.BukkitSyncCompleteEvent;
+import net.william278.husksync.user.BukkitUser;
 import net.william278.husksync.user.OnlineUser;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -34,6 +37,11 @@ import static dev.detpikachu.unpluggedafk.UnpluggedAfk.logDebug;
  * its teardown, kept only for a {@link Reason#PLAYER_RETURNED} removal because that is the one teardown the
  * returning login itself caused.
  *
+ * <p>Zero health is withheld and re-applied rather than passed through. HuskSync applies health through the Bukkit
+ * API, and {@code CraftLivingEntity.setHealth} turns a zero into a full {@code die()} with a generic damage source,
+ * so a player returning to a snapshot taken from a dead bot is killed a second time. The clamp keeps that branch
+ * unreached and {@link #onSyncComplete} then writes the zero through NMS, which never calls {@code die()}.
+ *
  * <p>Cancelling the event is NOT the fix. The callback that runs on a non-cancelled event is what reaches
  * {@code completeSync}, and that is what unlocks the player, so a cancel strands the bot in HuskSync's locked set and
  * its teardown then refuses to save with {@code disconnected while locked - data will NOT be saved!}.
@@ -42,8 +50,10 @@ import static dev.detpikachu.unpluggedafk.UnpluggedAfk.logDebug;
 public final class HuskSyncListener implements Listener {
 
     private static final Duration HANDOFF_TTL = Duration.ofSeconds(30);
+    private static final double WITHHELD_HEALTH = 1.0;
 
     private final ConcurrentHashMap<UUID, Handoff> handoffs = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, Instant> withheldDeaths = new ConcurrentHashMap<>();
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerQuit(PlayerQuitEvent event) {
@@ -66,28 +76,74 @@ public final class HuskSyncListener implements Listener {
         final var bot = SessionRegistry.getInstance().find(user.getUuid());
 
         if (bot != null) {
-            overwrite(event, snapshotOf(user));
+            final var repaired = snapshotOf(user);
+
+            event.editData(stale -> overwrite(stale, repaired));
             logDebug("Repaired HuskSync's snapshot for bot {} ({}).", bot.getPlainTextName(), bot.getUUID());
 
             return;
         }
 
         final var handoff = handoffs.remove(user.getUuid());
+        final var repair = handoff == null || handoff.isExpired() ? null : handoff.data();
+        final var incoming = repair == null ? unpack(event.getData()) : repair;
+        final var withhold = incoming.getHealth().filter(health -> health.getHealth() <= 0.0).isPresent();
 
-        if (handoff == null || handoff.isExpired()) {
+        if (repair == null && !withhold) {
             return;
         }
 
-        overwrite(event, handoff.data());
-        logDebug("Repaired HuskSync's snapshot for {} ({}) with their bot's.", user.getName(), user.getUuid());
+        event.editData(stale -> {
+            if (repair != null) {
+                overwrite(stale, repair);
+            }
+
+            if (withhold) {
+                stale.getHealth().ifPresent(health -> health.setHealth(WITHHELD_HEALTH));
+            }
+        });
+
+        if (repair != null) {
+            logDebug("Repaired HuskSync's snapshot for {} ({}) with their bot's.", user.getName(), user.getUuid());
+        }
+
+        if (!withhold) {
+            return;
+        }
+
+        withheldDeaths.values().removeIf(HuskSyncListener::isExpired);
+        withheldDeaths.put(user.getUuid(), Instant.now());
+
+        logDebug("Held back the death of {} ({}) until their sync completes.", user.getName(), user.getUuid());
     }
 
-    private static void overwrite(BukkitPreSyncEvent event, DataSnapshot.Unpacked source) {
-        event.editData(stale -> source.getData().forEach(stale::setData));
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onSyncComplete(BukkitSyncCompleteEvent event) {
+        final var user = (BukkitUser) event.getUser();
+        final var withheldAt = withheldDeaths.remove(user.getUuid());
+
+        if (withheldAt == null || isExpired(withheldAt) || user.hasDisconnected()) {
+            return;
+        }
+
+        ((CraftPlayer) user.getPlayer()).getHandle().setHealth(0.0F);
+        logDebug("Restored the death of {} ({}) now that their sync has completed.", user.getName(), user.getUuid());
+    }
+
+    private static void overwrite(DataSnapshot.Unpacked destination, DataSnapshot.Unpacked source) {
+        source.getData().forEach(destination::setData);
+    }
+
+    private static DataSnapshot.Unpacked unpack(DataSnapshot.Packed packed) {
+        return BukkitHuskSyncAPI.getInstance().unpackSnapshot(packed);
     }
 
     private static DataSnapshot.Unpacked snapshotOf(OnlineUser user) {
-        return BukkitHuskSyncAPI.getInstance().unpackSnapshot(user.createSnapshot(DataSnapshot.SaveCause.API));
+        return unpack(user.createSnapshot(DataSnapshot.SaveCause.API));
+    }
+
+    private static boolean isExpired(Instant capturedAt) {
+        return Instant.now().isAfter(capturedAt.plus(HANDOFF_TTL));
     }
 
     /**
@@ -104,7 +160,7 @@ public final class HuskSyncListener implements Listener {
         }
 
         boolean isExpired() {
-            return Instant.now().isAfter(capturedAt.plus(HANDOFF_TTL));
+            return HuskSyncListener.isExpired(capturedAt);
         }
     }
 }
