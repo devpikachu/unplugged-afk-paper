@@ -38,12 +38,14 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     // Delay sending the ADD_PLAYER packets... because Mojang.
     private static final Duration SPAWN_PACKET_DELAY = Duration.ofMillis(200);
     private static final int PERIODIC_TICK_INTERVAL = 10;
+    private static final int DEATH_LINGER_TICKS = 20;
 
     private final Session session;
 
     private boolean isSpawnStatePending = true;
     private boolean isDisconnectScheduled = false;
     private @Nullable Reason removeReason = null;
+    private @Nullable Component deathMessage = null;
 
     public UnpluggedServerPlayer(
             MinecraftServer server,
@@ -104,11 +106,26 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         this.dismount();
         super.die(damageSource);
 
+        this.deathMessage = PaperAdventure.asAdventure(this.getCombatTracker().getDeathMessage());
+
         LOGGER.warn(
-                "Bot {} ({}) died. Their items dropped and their spot is no longer held.",
+                "Bot {} ({}) died. Their items dropped and their spot is held for another {} tick(s).",
                 this.getPlainTextName(),
-                this.getUUID());
-        this.deferredDisconnect(PaperAdventure.asAdventure(this.getCombatTracker().getDeathMessage()), Reason.DIED);
+                this.getUUID(),
+                DEATH_LINGER_TICKS);
+    }
+
+    @Override
+    protected void tickDeath() {
+        if (this.deathMessage == null) {
+            super.tickDeath();
+            return;
+        }
+
+        this.deathTime++;
+        if (this.deathTime >= DEATH_LINGER_TICKS) {
+            this.deferredDisconnect(this.deathMessage, Reason.DIED);
+        }
     }
 
     @Override
@@ -165,7 +182,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
             this.applyDeferredSpawnState(server);
         }
 
-        if (this.session.isExpired()) {
+        if (this.deathMessage == null && this.session.isExpired()) {
             this.deferredDisconnect(Component.text(KickReasons.EXPIRED), Reason.EXPIRED);
         }
 
