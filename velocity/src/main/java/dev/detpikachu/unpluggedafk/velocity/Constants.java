@@ -9,6 +9,8 @@ public final class Constants {
     public static final class Sessions {
 
         public static final int GRACE_MINS = 5;
+        public static final int RESYNC_SECS = 2;
+        public static final int SWEEP_SECS = 30;
         public static final String FILE_NAME = "sessions.json";
     }
 

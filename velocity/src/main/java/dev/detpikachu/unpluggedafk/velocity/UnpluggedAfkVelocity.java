@@ -2,10 +2,12 @@ package dev.detpikachu.unpluggedafk.velocity;
 
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import dev.detpikachu.unpluggedafk.velocity.Constants.SessionsChannel;
+import dev.detpikachu.unpluggedafk.velocity.compat.tab.TabCompat;
 import dev.detpikachu.unpluggedafk.velocity.listeners.ProxyListener;
 import dev.detpikachu.unpluggedafk.velocity.session.SessionStore;
 import jakarta.inject.Inject;
@@ -20,7 +22,8 @@ import java.nio.file.Path;
         version = BuildConstants.VERSION,
         description = "Routes returning players back to the server holding their unplugged character.",
         url = "https://github.com/devpikachu/unplugged-afk-paper",
-        authors = {"Andrei \"detpikachu\" Hava"})
+        authors = {"Andrei \"detpikachu\" Hava"},
+        dependencies = {@Dependency(id = "tab", optional = true)})
 @ApiStatus.Internal
 public final class UnpluggedAfkVelocity {
 
@@ -41,8 +44,11 @@ public final class UnpluggedAfkVelocity {
         this.proxyServer.getChannelRegistrar().register(SessionsChannel.IDENTIFIER);
         this.sessionStore.load();
 
+        // Compatibility
+        final var tabBridge = TabCompat.register(this, this.proxyServer, this.sessionStore, this.logger);
+
         // Events
-        final var listener = new ProxyListener(this.logger, this.proxyServer, this.sessionStore);
+        final var listener = new ProxyListener(this.logger, this.proxyServer, this.sessionStore, tabBridge);
         this.proxyServer.getEventManager().register(this, listener);
 
         this.logger.info("Unplugged AFK has been enabled.");

@@ -10,12 +10,19 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ## [Unreleased]
 
+### Added
+
+- **TAB compatibility:** When using TAB to synchronize player lists behind a proxy, unplugged players now also synchronize
+
+### Changed
+
+- **Defer bot cleanup in death:** the server defers the cleanup of a dead bot for 20 ticks, simulating vanilla behavior
+
 ### Fixed
 
 - **Proxy player count:** when behind a proxy, the server list now correctly includes unplugged players in the player count
 - **Unnecessary kick message:** the server no longer sends a kick message for a bot replaced by a returning player
 - **Doubled death message:** when using HuskSync, the death message is no longer broadcast twice
-- **Defer bot cleanup in death:** the server defers the cleanup of a dead bot for 20 ticks, simulating vanilla behavior
 
 ## [0.4.0] - 2026-08-22
 

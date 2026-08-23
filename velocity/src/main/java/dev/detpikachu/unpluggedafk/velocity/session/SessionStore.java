@@ -9,6 +9,7 @@ import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
 import dev.detpikachu.unpluggedafk.velocity.Constants.Sessions;
 import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 import java.io.IOException;
@@ -54,9 +55,14 @@ public final class SessionStore {
         return (int) this.sessions.values().stream().filter(Session::isAlive).count();
     }
 
-    public void start(UUID uuid, String serverName, int durationMins) {
+    public boolean isAlive(UUID uuid) {
+        final var session = this.sessions.get(uuid);
+        return session != null && session.isAlive();
+    }
+
+    public void start(String serverName, UUID uuid, String username, Session.@Nullable Skin skin, int durationMins) {
         final var expiresAt = Instant.now().plus(Duration.ofMinutes(durationMins));
-        final var previous = this.sessions.put(uuid, new Session(serverName, expiresAt));
+        final var previous = this.sessions.put(uuid, new Session(serverName, username, skin, expiresAt));
 
         if (previous != null && previous.isAlive()) {
             this.logger.warn(

@@ -9,21 +9,32 @@ import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
 import dev.detpikachu.unpluggedafk.velocity.Constants.SessionsChannel;
+import dev.detpikachu.unpluggedafk.velocity.compat.tab.TabBridge;
+import dev.detpikachu.unpluggedafk.velocity.session.Session;
 import dev.detpikachu.unpluggedafk.velocity.session.SessionStore;
 import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 @ApiStatus.Internal
 public final class ProxyListener {
 
+    private static final String TEXTURES_PROPERTY = "textures";
+
     private final Logger logger;
     private final ProxyServer proxyServer;
     private final SessionStore sessionStore;
+    private final @Nullable TabBridge tabBridge;
 
-    public ProxyListener(Logger logger, ProxyServer proxyServer, SessionStore sessionStore) {
+    public ProxyListener(
+            Logger logger,
+            ProxyServer proxyServer,
+            SessionStore sessionStore,
+            @Nullable TabBridge tabBridge) {
         this.logger = logger;
         this.proxyServer = proxyServer;
         this.sessionStore = sessionStore;
+        this.tabBridge = tabBridge;
     }
 
     @Subscribe
@@ -58,6 +69,11 @@ public final class ProxyListener {
     @Subscribe
     public void onPlayerChooseInitialServer(PlayerChooseInitialServerEvent event) {
         final var player = event.getPlayer();
+
+        if (this.tabBridge != null) {
+            this.tabBridge.removeBot(player.getUniqueId());
+        }
+
         final var session = this.sessionStore.consume(player.getUniqueId());
 
         if (session.isEmpty()) {
@@ -109,13 +125,31 @@ public final class ProxyListener {
 
         final var durationMins = in.readInt();
         final var player = source.getPlayer();
+        final var uuid = player.getUniqueId();
+        final var username = player.getUsername();
+        final var skin = skinOf(player);
 
-        this.sessionStore.start(player.getUniqueId(), serverName, durationMins);
+        this.sessionStore.start(serverName, uuid, username, skin, durationMins);
+
+        if (this.tabBridge != null) {
+            this.tabBridge.addBot(serverName, uuid, username, skin);
+        }
+
         this.logger.info(
                 "SESSION_START: {} ({}) on {} for {} minute(s)",
                 player.getUsername(),
                 player.getUniqueId(),
                 serverName,
                 durationMins);
+    }
+
+    private static Session.@Nullable Skin skinOf(Player player) {
+        for (final var property : player.getGameProfile().getProperties()) {
+            if (TEXTURES_PROPERTY.equals(property.getName())) {
+                return new Session.Skin(property.getValue(), property.getSignature());
+            }
+        }
+
+        return null;
     }
 }
