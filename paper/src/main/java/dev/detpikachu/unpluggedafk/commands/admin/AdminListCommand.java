@@ -2,7 +2,7 @@ package dev.detpikachu.unpluggedafk.commands.admin;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import dev.detpikachu.unpluggedafk.Constants.Permissions;
+import dev.detpikachu.unpluggedafk.Permissions;
 import dev.detpikachu.unpluggedafk.formatting.ChatMessages;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -15,10 +15,11 @@ public final class AdminListCommand {
     private static final String CMD_LIST = "list";
 
     public static LiteralArgumentBuilder<CommandSourceStack> construct() {
-        final var root = Commands.literal(CMD_LIST);
+        return Commands.literal(CMD_LIST).requires(AdminListCommand::isAllowed).executes(AdminListCommand::execute);
+    }
 
-        return root.requires(context -> context.getSender().hasPermission(Permissions.ADMIN_LIST))
-                .executes(AdminListCommand::execute);
+    private static boolean isAllowed(CommandSourceStack stack) {
+        return stack.getSender().hasPermission(Permissions.ADMIN_LIST);
     }
 
     private static int execute(CommandContext<CommandSourceStack> context) {

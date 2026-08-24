@@ -1,7 +1,7 @@
 package dev.detpikachu.unpluggedafk.player;
 
 import com.mojang.authlib.GameProfile;
-import dev.detpikachu.unpluggedafk.Constants.KickReasons;
+import dev.detpikachu.unpluggedafk.KickReasons;
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerSpawnEvent;

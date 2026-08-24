@@ -42,6 +42,6 @@ public final class HuskSyncCompat {
 
         pluginManager.registerEvents(new HuskSyncListener(), plugin);
         LOGGER.info(
-                "HuskSync detected. Injecting data sync fixing mechanism so a bot keeps the inventory it inherits.");
+                "HuskSync detected. Snapshots will be patched so that the inventory gets correctly transferred between player and bot, and vice-versa.");
     }
 }

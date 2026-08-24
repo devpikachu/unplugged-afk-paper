@@ -25,15 +25,13 @@ public final class AdminDebugSpawnFakeCommand {
     private static final String ARG_REASON = "reason";
 
     public static LiteralArgumentBuilder<CommandSourceStack> construct() {
-        final var root = Commands.literal(CMD_SPAWN_FAKE);
-
         final var reason = Commands.argument(ARG_REASON, StringArgumentType.greedyString())
                 .executes(context -> execute(context, context.getArgument(ARG_REASON, String.class)));
         final var durationMins = Commands.argument(ARG_DURATION_MINS, IntegerArgumentType.integer(1))
                 .then(reason)
                 .executes(context -> execute(context, null));
 
-        return root.then(durationMins);
+        return Commands.literal(CMD_SPAWN_FAKE).then(durationMins);
     }
 
     private static int execute(CommandContext<CommandSourceStack> context, @Nullable String reason)
@@ -41,9 +39,9 @@ public final class AdminDebugSpawnFakeCommand {
         final var executor = requireExecutor(context);
         final var durationMins = requireDuration(context);
 
-        final var effectiveReason = (reason == null || reason.isBlank()) ? executor.getPlainTextName() : reason;
-
         requireCapacity();
+
+        final var effectiveReason = (reason == null || reason.isBlank()) ? executor.getPlainTextName() : reason;
 
         BotFactory.spawnFake(
                 executor.level(),

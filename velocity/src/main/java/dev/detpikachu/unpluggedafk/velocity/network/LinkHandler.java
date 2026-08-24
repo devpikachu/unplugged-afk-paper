@@ -35,13 +35,13 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     }
 
     @Override
-    public void channelActive(ChannelHandlerContext ctx) {
+    public void channelActive(ChannelHandlerContext context) {
         this.nonce = Handshake.newNonce();
-        send(ctx, new Challenge(Protocol.VERSION, this.nonce));
+        send(context, new Challenge(Protocol.VERSION, this.nonce));
     }
 
     @Override
-    public void channelInactive(ChannelHandlerContext ctx) {
+    public void channelInactive(ChannelHandlerContext context) {
         if (this.serverName == null) {
             return;
         }
@@ -51,26 +51,26 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     }
 
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        this.logger.warn("Link error from {}. Closing.", ctx.channel().remoteAddress(), cause);
-        close(ctx);
+    public void exceptionCaught(ChannelHandlerContext context, Throwable cause) {
+        this.logger.warn("Link error from {}. Closing.", context.channel().remoteAddress(), cause);
+        close(context);
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Message message) {
+    protected void channelRead0(ChannelHandlerContext context, Message message) {
         if (message instanceof Auth auth) {
-            onAuth(ctx, auth);
+            onAuth(context, auth);
             return;
         }
 
         if (this.serverName == null) {
-            refuse(ctx, "Expected AUTH first but got " + message.getType() + ".");
+            refuse(context, "Expected AUTH first but got " + message.getType() + ".");
             return;
         }
 
         if (message instanceof Goodbye(String reason)) {
             this.logger.info("Backend {} said goodbye: {}", this.serverName, reason);
-            close(ctx);
+            close(context);
             return;
         }
 
@@ -78,25 +78,25 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
                 "Ignoring {} from backend {}, not carried by this build yet.", message.getType(), this.serverName);
     }
 
-    private void onAuth(ChannelHandlerContext ctx, Auth auth) {
+    private void onAuth(ChannelHandlerContext context, Auth auth) {
         if (this.serverName != null) {
-            refuse(ctx, "Backend " + this.serverName + " is already authenticated on this connection.");
+            refuse(context, "Backend " + this.serverName + " is already authenticated on this connection.");
             return;
         }
 
         if (auth.protocolVersion() != Protocol.VERSION) {
-            refuse(ctx, "Protocol version mismatch. Ensure both plugins are the same version.");
+            refuse(context, "Protocol version mismatch. Ensure both plugins are the same version.");
             return;
         }
 
         if (this.nonce == null || !Handshake.verify(this.secret, this.nonce, auth.signature())) {
-            refuse(ctx, "The backend's link.secret does not match this proxy's.");
+            refuse(context, "The backend's link.secret does not match this proxy's.");
             return;
         }
 
         if (this.proxyServer.getServer(auth.serverName()).isEmpty()) {
             refuse(
-                    ctx,
+                    context,
                     "No server named "
                             + auth.serverName()
                             + " is registered on this proxy. Registered: "
@@ -107,15 +107,17 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
 
         this.nonce = null;
         this.serverName = auth.serverName();
-        ctx.pipeline().remove(ReadTimeoutHandler.class);
-        send(ctx, new Ready(true, ""));
+        context.pipeline().remove(ReadTimeoutHandler.class);
+        send(context, new Ready(true, ""));
         this.logger.info(
-                "Backend {} linked from {}.", auth.serverName(), ctx.channel().remoteAddress());
+                "Backend {} linked from {}.",
+                auth.serverName(),
+                context.channel().remoteAddress());
     }
 
-    private void refuse(ChannelHandlerContext ctx, String reason) {
-        this.logger.warn("Refusing a link from {}. {}", ctx.channel().remoteAddress(), reason);
-        sendAndClose(ctx, new Ready(false, reason));
+    private void refuse(ChannelHandlerContext context, String reason) {
+        this.logger.warn("Refusing a link from {}. {}", context.channel().remoteAddress(), reason);
+        sendAndClose(context, new Ready(false, reason));
     }
 
     private String registeredNames() {
@@ -125,17 +127,17 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")
-    private static void send(ChannelHandlerContext ctx, Message message) {
-        ctx.writeAndFlush(message);
+    private static void send(ChannelHandlerContext context, Message message) {
+        context.writeAndFlush(message);
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")
-    private static void sendAndClose(ChannelHandlerContext ctx, Message message) {
-        ctx.writeAndFlush(message).addListener(ChannelFutureListener.CLOSE);
+    private static void sendAndClose(ChannelHandlerContext context, Message message) {
+        context.writeAndFlush(message).addListener(ChannelFutureListener.CLOSE);
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")
-    private static void close(ChannelHandlerContext ctx) {
-        ctx.close();
+    private static void close(ChannelHandlerContext context) {
+        context.close();
     }
 }

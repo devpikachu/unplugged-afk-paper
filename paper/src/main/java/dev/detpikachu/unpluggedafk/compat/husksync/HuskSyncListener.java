@@ -126,13 +126,6 @@ public final class HuskSyncListener implements Listener {
         return Instant.now().isAfter(capturedAt.plus(HANDOFF_TTL));
     }
 
-    /**
-     * A bot's data, held from its teardown until the returning player's sync reads it.
-     *
-     * <p>A handoff is normally consumed a few hundred milliseconds after it is captured. {@link #HANDOFF_TTL} only
-     * backstops a login that fails before HuskSync gets to sync it, and comfortably exceeds HuskSync's own listen
-     * timeout of sixteen attempts at ten ticks.
-     */
     private record Handoff(DataSnapshot.Unpacked data, Instant capturedAt) {
 
         Handoff(DataSnapshot.Unpacked data) {

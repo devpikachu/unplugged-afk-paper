@@ -71,8 +71,8 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
             return;
         }
 
-        final var signature = Handshake.sign(this.options.secret(), challenge.nonce());
-        send(context, new Auth(Protocol.VERSION, this.options.serverName(), signature));
+        final var signature = Handshake.sign(this.options.getSecret(), challenge.nonce());
+        send(context, new Auth(Protocol.VERSION, this.options.getServerName(), signature));
     }
 
     private void onReady(ChannelHandlerContext context, boolean accepted, String reason) {
@@ -84,7 +84,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
 
         context.pipeline().remove(ReadTimeoutHandler.class);
         this.ready = true;
-        this.client.established(context.channel(), this.options.serverName());
+        this.client.established(context.channel(), this.options.getServerName());
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")

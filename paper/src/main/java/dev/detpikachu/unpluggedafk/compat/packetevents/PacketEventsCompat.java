@@ -30,6 +30,6 @@ public final class PacketEventsCompat {
         }
 
         pluginManager.registerEvents(new PacketEventsListener(), plugin);
-        LOGGER.info("PacketEvents detected. Injecting kick prevention so a bot remains online.");
+        LOGGER.info("PacketEvents detected. Preventing bot kicks due to injection errors thrown by PacketEvents.");
     }
 }

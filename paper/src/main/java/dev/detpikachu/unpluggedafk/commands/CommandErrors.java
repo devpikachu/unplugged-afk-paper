@@ -30,18 +30,20 @@ public final class CommandErrors {
 
     public static SimpleCommandExceptionType errDurationTooLarge(int durationMins) {
         return new SimpleCommandExceptionType(MessageComponentSerializer.message()
-                .serialize(text("The duration of ", RED)
-                        .append(text(durationMins, RED))
-                        .append(text(" minute(s) is larger than the allowed maximum of ", RED))
-                        .append(text(Options.getInstance().getMaxDurationMins(), RED))
-                        .append(text(" minute(s).", RED))));
+                .serialize(text("The duration of ")
+                        .append(text(durationMins))
+                        .append(text(" minute(s) is larger than the allowed maximum of "))
+                        .append(text(Options.getInstance().getMaxDurationMins()))
+                        .append(text(" minute(s)."))
+                        .color(RED)));
     }
 
     public static SimpleCommandExceptionType errCapReached() {
         return new SimpleCommandExceptionType(MessageComponentSerializer.message()
-                .serialize(text("The server already has ", RED)
-                        .append(text(Options.getInstance().getMaxUnpluggedPlayers(), RED))
-                        .append(text(" unplugged player(s). Please try again later.", RED))));
+                .serialize(text("The server already has ")
+                        .append(text(Options.getInstance().getMaxUnpluggedPlayers()))
+                        .append(text(" unplugged player(s). Please try again later."))
+                        .color(RED)));
     }
 
     public static SimpleCommandExceptionType errUnplugCancelled(@Nullable Component cancelMessage) {

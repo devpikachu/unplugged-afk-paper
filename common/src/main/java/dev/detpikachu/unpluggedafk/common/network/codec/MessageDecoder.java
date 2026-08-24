@@ -13,7 +13,7 @@ import java.util.List;
 public final class MessageDecoder extends MessageToMessageDecoder<ByteBuf> {
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws IOException {
+    protected void decode(ChannelHandlerContext context, ByteBuf in, List<Object> out) throws IOException {
         try (var stream = new ByteBufInputStream(in)) {
             out.add(MessageCodec.read(stream));
         }

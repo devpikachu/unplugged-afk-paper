@@ -1,6 +1,6 @@
 package dev.detpikachu.unpluggedafk.player;
 
-import dev.detpikachu.unpluggedafk.Constants.KickReasons;
+import dev.detpikachu.unpluggedafk.KickReasons;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
 import io.papermc.paper.connection.DisconnectionReason;
 import net.kyori.adventure.text.Component;

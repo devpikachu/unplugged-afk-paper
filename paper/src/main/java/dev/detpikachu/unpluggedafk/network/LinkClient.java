@@ -1,6 +1,5 @@
 package dev.detpikachu.unpluggedafk.network;
 
-import dev.detpikachu.unpluggedafk.Constants.Link;
 import dev.detpikachu.unpluggedafk.common.network.Protocol;
 import dev.detpikachu.unpluggedafk.common.network.codec.MessageDecoder;
 import dev.detpikachu.unpluggedafk.common.network.codec.MessageEncoder;
@@ -28,6 +27,14 @@ import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
 @ApiStatus.Internal
 public final class LinkClient {
 
+    private static final int CONNECT_TIMEOUT_MS = 5000;
+    private static final int HANDSHAKE_TIMEOUT_SECS = 10;
+    private static final int WORKER_THREADS = 1;
+    private static final int BACKOFF_MIN_SECS = 1;
+    private static final int BACKOFF_MAX_SECS = 60;
+    private static final int SHUTDOWN_WAIT_SECS = 1;
+    private static final String GOODBYE_DISABLED = "Plugin disabled";
+
     private volatile boolean running;
     private volatile @Nullable Channel channel;
 
@@ -43,23 +50,23 @@ public final class LinkClient {
         }
 
         final var options = Options.getInstance().getLink();
-        final var group = new MultiThreadIoEventLoopGroup(Link.WORKER_THREADS, NioIoHandler.newFactory());
+        final var group = new MultiThreadIoEventLoopGroup(WORKER_THREADS, NioIoHandler.newFactory());
 
         this.quiet = false;
-        this.backoffSecs = Link.BACKOFF_MIN_SECS;
+        this.backoffSecs = BACKOFF_MIN_SECS;
         this.workers = group;
         this.bootstrap = new Bootstrap()
                 .group(group)
                 .channel(NioSocketChannel.class)
                 .option(ChannelOption.TCP_NODELAY, true)
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Link.CONNECT_TIMEOUT_MS)
-                .remoteAddress(options.host(), options.port())
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONNECT_TIMEOUT_MS)
+                .remoteAddress(options.getHost(), options.getPort())
                 .handler(new ChannelInitializer<SocketChannel>() {
 
                     @Override
                     protected void initChannel(SocketChannel socket) {
                         socket.pipeline()
-                                .addLast("timeout", new ReadTimeoutHandler(Link.HANDSHAKE_TIMEOUT_SECS))
+                                .addLast("timeout", new ReadTimeoutHandler(HANDSHAKE_TIMEOUT_SECS))
                                 .addLast(
                                         "splitter",
                                         new LengthFieldBasedFrameDecoder(
@@ -86,18 +93,19 @@ public final class LinkClient {
         }
         this.running = false;
 
-        if (this.channel != null && this.channel.isActive()) {
-            final var channel = this.channel.writeAndFlush(new Goodbye(Link.GOODBYE_DISABLED));
+        final var channel = this.channel;
+        if (channel != null && channel.isActive()) {
+            final var future = channel.writeAndFlush(new Goodbye(GOODBYE_DISABLED));
 
             try {
-                channel.await(Link.SHUTDOWN_WAIT_SECS, TimeUnit.SECONDS);
+                future.await(SHUTDOWN_WAIT_SECS, TimeUnit.SECONDS);
             } catch (InterruptedException exception) {
                 Thread.currentThread().interrupt();
             }
         }
 
         if (this.workers != null) {
-            this.workers.shutdownGracefully(0, Link.SHUTDOWN_WAIT_SECS, TimeUnit.SECONDS);
+            this.workers.shutdownGracefully(0, SHUTDOWN_WAIT_SECS, TimeUnit.SECONDS);
         }
 
         this.channel = null;
@@ -108,7 +116,7 @@ public final class LinkClient {
     void established(Channel channel, String serverName) {
         this.channel = channel;
         this.quiet = false;
-        this.backoffSecs = Link.BACKOFF_MIN_SECS;
+        this.backoffSecs = BACKOFF_MIN_SECS;
         LOGGER.info("Linked to the proxy at {} as {}.", channel.remoteAddress(), serverName);
     }
 
@@ -162,7 +170,7 @@ public final class LinkClient {
         }
 
         final var delay = this.backoffSecs;
-        this.backoffSecs = Math.max(this.backoffSecs * 2, Link.BACKOFF_MAX_SECS);
+        this.backoffSecs = Math.max(this.backoffSecs * 2, BACKOFF_MAX_SECS);
         this.workers.schedule(this::connect, delay, TimeUnit.SECONDS);
     }
 }

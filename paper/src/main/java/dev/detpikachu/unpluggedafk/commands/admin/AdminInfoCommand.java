@@ -3,7 +3,7 @@ package dev.detpikachu.unpluggedafk.commands.admin;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import dev.detpikachu.unpluggedafk.Constants.Permissions;
+import dev.detpikachu.unpluggedafk.Permissions;
 import dev.detpikachu.unpluggedafk.formatting.ChatMessages;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -19,12 +19,13 @@ public final class AdminInfoCommand {
     private static final String ARG_PLAYER = "player";
 
     public static LiteralArgumentBuilder<CommandSourceStack> construct() {
-        final var root = Commands.literal(CMD_INFO);
+        final var player = Commands.argument(ARG_PLAYER, ArgumentTypes.player()).executes(AdminInfoCommand::execute);
 
-        final var player = Commands.argument(ARG_PLAYER, ArgumentTypes.player());
+        return Commands.literal(CMD_INFO).requires(AdminInfoCommand::isAllowed).then(player);
+    }
 
-        return root.requires(context -> context.getSender().hasPermission(Permissions.ADMIN_INFO))
-                .then(player.executes(AdminInfoCommand::execute));
+    private static boolean isAllowed(CommandSourceStack stack) {
+        return stack.getSender().hasPermission(Permissions.ADMIN_INFO);
     }
 
     private static int execute(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {

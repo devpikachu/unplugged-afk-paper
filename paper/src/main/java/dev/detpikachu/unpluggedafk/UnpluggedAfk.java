@@ -1,8 +1,5 @@
 package dev.detpikachu.unpluggedafk;
 
-import dev.detpikachu.unpluggedafk.Constants.BungeeChannel;
-import dev.detpikachu.unpluggedafk.Constants.KickReasons;
-import dev.detpikachu.unpluggedafk.Constants.SessionsChannel;
 import dev.detpikachu.unpluggedafk.api.UnpluggedAfkApi;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent;
 import dev.detpikachu.unpluggedafk.commands.CommandTree;
@@ -12,6 +9,7 @@ import dev.detpikachu.unpluggedafk.compat.placeholderapi.PlaceholderApiCompat;
 import dev.detpikachu.unpluggedafk.config.Options;
 import dev.detpikachu.unpluggedafk.listeners.PaperListener;
 import dev.detpikachu.unpluggedafk.network.LinkClient;
+import dev.detpikachu.unpluggedafk.network.ProxyManager;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.papermc.paper.configuration.GlobalConfiguration;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -122,8 +120,8 @@ public final class UnpluggedAfk extends JavaPlugin {
     private void registerPluginChannels() {
         final var messenger = getServer().getMessenger();
 
-        messenger.registerOutgoingPluginChannel(this, BungeeChannel.NAME);
-        messenger.registerOutgoingPluginChannel(this, SessionsChannel.NAME);
+        messenger.registerOutgoingPluginChannel(this, ProxyManager.BUNGEE_CHANNEL_NAME);
+        messenger.registerOutgoingPluginChannel(this, ProxyManager.SESSIONS_CHANNEL_NAME);
     }
 
     private void logStartupSummary() {

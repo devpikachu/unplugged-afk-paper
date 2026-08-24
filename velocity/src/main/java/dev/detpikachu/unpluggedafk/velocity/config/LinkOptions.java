@@ -1,6 +1,5 @@
 package dev.detpikachu.unpluggedafk.velocity.config;
 
-import dev.detpikachu.unpluggedafk.common.config.OptionsBase;
 import dev.detpikachu.unpluggedafk.common.network.Handshake;
 import org.jetbrains.annotations.ApiStatus;
 import org.slf4j.Logger;
@@ -11,9 +10,9 @@ import java.util.Map;
 @ApiStatus.Internal
 public final class LinkOptions extends OptionsBase {
 
-    public static final String DEFAULT_HOST = "0.0.0.0";
-    public static final int DEFAULT_PORT = 25580;
-    public static final String DEFAULT_SECRET = "";
+    private static final String DEFAULT_HOST = "0.0.0.0";
+    private static final int DEFAULT_PORT = 25580;
+    private static final String DEFAULT_SECRET = "";
 
     private static final String KEY_SECTION = "link";
     private static final String KEY_HOST = "host";

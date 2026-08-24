@@ -12,7 +12,7 @@ import java.nio.file.Path;
 import java.util.Map;
 
 @ApiStatus.Internal
-public final class Options {
+public final class Options extends OptionsBase {
 
     private static final Options INSTANCE = new Options();
 

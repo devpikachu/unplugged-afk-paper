@@ -37,7 +37,7 @@ public final class TabCompat {
 
     private static final String PLUGIN_NAME = "tab";
 
-    public static final int SWEEP_FREQUENCY_SECS = 30;
+    private static final int SWEEP_FREQUENCY_SECS = 30;
 
     public static @Nullable TabBridge register(UnpluggedAfkVelocity plugin) {
         final var proxyServer = plugin.getProxyServer();

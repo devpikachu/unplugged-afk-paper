@@ -5,7 +5,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import dev.detpikachu.unpluggedafk.Constants.Permissions;
+import dev.detpikachu.unpluggedafk.Permissions;
 import dev.detpikachu.unpluggedafk.exceptions.UnplugCancelledException;
 import dev.detpikachu.unpluggedafk.exceptions.UnplugFailedException;
 import dev.detpikachu.unpluggedafk.session.Session;
@@ -31,14 +31,17 @@ public final class PlayerUnplugCommand {
     private static final String ARG_REASON = "reason";
 
     public static LiteralCommandNode<CommandSourceStack> construct() {
-        final var root = Commands.literal(CMD_UNPLUG);
-
         final var durationMins = Commands.argument(ARG_DURATION_MINS, IntegerArgumentType.integer(1));
         final var reason = Commands.argument(ARG_REASON, StringArgumentType.greedyString());
 
-        return root.requires(context -> context.getSender().hasPermission(Permissions.UNPLUG))
+        return Commands.literal(CMD_UNPLUG)
+                .requires(PlayerUnplugCommand::isAllowed)
                 .then(durationMins.then(reason.executes(PlayerUnplugCommand::execute)))
                 .build();
+    }
+
+    private static boolean isAllowed(CommandSourceStack stack) {
+        return stack.getSender().hasPermission(Permissions.UNPLUG);
     }
 
     private static int execute(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {

@@ -1,4 +1,4 @@
-package dev.detpikachu.unpluggedafk.common.config;
+package dev.detpikachu.unpluggedafk.velocity.config;
 
 import org.jetbrains.annotations.ApiStatus;
 

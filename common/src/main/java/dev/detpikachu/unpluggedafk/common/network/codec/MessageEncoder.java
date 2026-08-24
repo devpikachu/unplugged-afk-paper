@@ -13,7 +13,7 @@ import java.io.IOException;
 public final class MessageEncoder extends MessageToByteEncoder<Message> {
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, Message message, ByteBuf out) throws IOException {
+    protected void encode(ChannelHandlerContext context, Message message, ByteBuf out) throws IOException {
         try (var stream = new ByteBufOutputStream(out)) {
             MessageCodec.write(message, stream);
         }
