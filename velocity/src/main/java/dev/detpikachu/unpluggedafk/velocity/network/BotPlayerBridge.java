@@ -25,7 +25,9 @@ import org.slf4j.Logger;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -37,6 +39,8 @@ import static dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity.logDebug
 public final class BotPlayerBridge {
 
     private static final String TEXTURES_PROPERTY = "textures";
+
+    private static final InetSocketAddress BOT_ADDRESS = new InetSocketAddress(InetAddress.getLoopbackAddress(), 0);
 
     private static final String LOCATOR_VELOCITY_SERVER = "com.velocitypowered.proxy.VelocityServer";
     private static final String LOCATOR_MINECRAFT_CONNECTION =
@@ -226,7 +230,7 @@ public final class BotPlayerBridge {
     }
 
     private Object newConnection(ChannelOutboundHandlerAdapter drain) throws ReflectiveOperationException {
-        final var connection = this.minecraftConnection.newInstance(new EmbeddedChannel(drain), this.proxyServer);
+        final var connection = this.minecraftConnection.newInstance(new BotChannel(drain), this.proxyServer);
         this.protocolVersion.set(connection, ProtocolVersion.MAXIMUM_VERSION);
 
         return connection;
@@ -261,6 +265,23 @@ public final class BotPlayerBridge {
     private record Pending(String serverName, String username, Session.@Nullable Skin skin) {}
 
     private record Bot(Player player, ServerConnection connection, RegisteredServer server) {}
+
+    private static final class BotChannel extends EmbeddedChannel {
+
+        private BotChannel(ChannelOutboundHandlerAdapter drain) {
+            super(drain);
+        }
+
+        @Override
+        protected SocketAddress remoteAddress0() {
+            return BOT_ADDRESS;
+        }
+
+        @Override
+        protected SocketAddress localAddress0() {
+            return BOT_ADDRESS;
+        }
+    }
 
     private static class DiscardHandler extends ChannelOutboundHandlerAdapter {
 
