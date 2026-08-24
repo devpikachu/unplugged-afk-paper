@@ -1,13 +1,13 @@
 package dev.detpikachu.unpluggedafk.velocity.network;
 
 import com.velocitypowered.api.proxy.ProxyServer;
-import dev.detpikachu.unpluggedafk.common.Handshake;
-import dev.detpikachu.unpluggedafk.common.Message;
-import dev.detpikachu.unpluggedafk.common.Protocol;
-import dev.detpikachu.unpluggedafk.common.messages.Auth;
-import dev.detpikachu.unpluggedafk.common.messages.Challenge;
-import dev.detpikachu.unpluggedafk.common.messages.Goodbye;
-import dev.detpikachu.unpluggedafk.common.messages.Ready;
+import dev.detpikachu.unpluggedafk.common.network.Handshake;
+import dev.detpikachu.unpluggedafk.common.network.Message;
+import dev.detpikachu.unpluggedafk.common.network.Protocol;
+import dev.detpikachu.unpluggedafk.common.network.messages.Auth;
+import dev.detpikachu.unpluggedafk.common.network.messages.Challenge;
+import dev.detpikachu.unpluggedafk.common.network.messages.Goodbye;
+import dev.detpikachu.unpluggedafk.common.network.messages.Ready;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -36,10 +36,8 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        final var challenge = Handshake.newNonce();
-
-        this.nonce = challenge;
-        send(ctx, new Challenge(Protocol.VERSION, challenge));
+        this.nonce = Handshake.newNonce();
+        send(ctx, new Challenge(Protocol.VERSION, this.nonce));
     }
 
     @Override
@@ -77,9 +75,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
         }
 
         this.logger.debug(
-                "Ignoring {} from backend {}, not carried by this build yet.",
-                message.getType(),
-                this.serverName);
+                "Ignoring {} from backend {}, not carried by this build yet.", message.getType(), this.serverName);
     }
 
     private void onAuth(ChannelHandlerContext ctx, Auth auth) {
@@ -89,36 +85,32 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
         }
 
         if (auth.protocolVersion() != Protocol.VERSION) {
-            refuse(
-                    ctx,
-                    "Protocol version mismatch. This proxy speaks "
-                            + Protocol.VERSION
-                            + ", the backend speaks "
-                            + auth.protocolVersion()
-                            + ". Update whichever side is older.");
+            refuse(ctx, "Protocol version mismatch. Ensure both plugins are the same version.");
             return;
         }
 
-        final var challenge = this.nonce;
-        final var name = auth.serverName();
-
-        if (challenge == null || !Handshake.verify(this.secret, challenge, auth.signature())) {
+        if (this.nonce == null || !Handshake.verify(this.secret, this.nonce, auth.signature())) {
             refuse(ctx, "The backend's link.secret does not match this proxy's.");
             return;
         }
 
-        if (this.proxyServer.getServer(name).isEmpty()) {
+        if (this.proxyServer.getServer(auth.serverName()).isEmpty()) {
             refuse(
                     ctx,
-                    "No server named " + name + " is registered on this proxy. Registered: " + registeredNames() + ".");
+                    "No server named "
+                            + auth.serverName()
+                            + " is registered on this proxy. Registered: "
+                            + registeredNames()
+                            + ".");
             return;
         }
 
         this.nonce = null;
-        this.serverName = name;
+        this.serverName = auth.serverName();
         ctx.pipeline().remove(ReadTimeoutHandler.class);
         send(ctx, new Ready(true, ""));
-        this.logger.info("Backend {} linked from {}.", name, ctx.channel().remoteAddress());
+        this.logger.info(
+                "Backend {} linked from {}.", auth.serverName(), ctx.channel().remoteAddress());
     }
 
     private void refuse(ChannelHandlerContext ctx, String reason) {
@@ -127,8 +119,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     }
 
     private String registeredNames() {
-        return this.proxyServer.getAllServers()
-                .stream()
+        return this.proxyServer.getAllServers().stream()
                 .map(server -> server.getServerInfo().getName())
                 .collect(Collectors.joining(", "));
     }

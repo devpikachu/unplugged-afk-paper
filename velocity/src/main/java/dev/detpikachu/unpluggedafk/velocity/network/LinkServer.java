@@ -1,8 +1,9 @@
 package dev.detpikachu.unpluggedafk.velocity.network;
 
 import com.velocitypowered.api.proxy.ProxyServer;
-import dev.detpikachu.unpluggedafk.common.Protocol;
-import dev.detpikachu.unpluggedafk.velocity.Constants.Link;
+import dev.detpikachu.unpluggedafk.common.network.Protocol;
+import dev.detpikachu.unpluggedafk.common.network.codec.MessageDecoder;
+import dev.detpikachu.unpluggedafk.common.network.codec.MessageEncoder;
 import dev.detpikachu.unpluggedafk.velocity.config.Options;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -23,6 +24,10 @@ import org.slf4j.Logger;
 @ApiStatus.Internal
 public final class LinkServer {
 
+    private static final int HANDSHAKE_TIMEOUT_SECS = 10;
+    private static final int ACCEPTOR_THREADS = 1;
+    private static final int WORKER_THREADS = 2;
+
     private final ProxyServer proxyServer;
     private final Logger logger;
 
@@ -37,14 +42,15 @@ public final class LinkServer {
 
     @SuppressWarnings("FutureReturnValueIgnored")
     public void start() {
-        final var link = Options.getInstance().getLink();
-        final var acceptorGroup = new MultiThreadIoEventLoopGroup(Link.ACCEPTOR_THREADS, NioIoHandler.newFactory());
-        final var workerGroup = new MultiThreadIoEventLoopGroup(Link.WORKER_THREADS, NioIoHandler.newFactory());
+        final var options = Options.getInstance().getLink();
+        final var acceptorGroup = new MultiThreadIoEventLoopGroup(ACCEPTOR_THREADS, NioIoHandler.newFactory());
+        final var workerGroup = new MultiThreadIoEventLoopGroup(WORKER_THREADS, NioIoHandler.newFactory());
 
         this.acceptors = acceptorGroup;
         this.workers = workerGroup;
 
-        final var future = new ServerBootstrap().group(acceptorGroup, workerGroup)
+        final var future = new ServerBootstrap()
+                .group(acceptorGroup, workerGroup)
                 .channel(NioServerSocketChannel.class)
                 .childOption(ChannelOption.TCP_NODELAY, true)
                 .childHandler(new ChannelInitializer<SocketChannel>() {
@@ -52,7 +58,7 @@ public final class LinkServer {
                     @Override
                     protected void initChannel(SocketChannel socket) {
                         socket.pipeline()
-                                .addLast("timeout", new ReadTimeoutHandler(Link.HANDSHAKE_TIMEOUT_SECS))
+                                .addLast("timeout", new ReadTimeoutHandler(HANDSHAKE_TIMEOUT_SECS))
                                 .addLast(
                                         "splitter",
                                         new LengthFieldBasedFrameDecoder(
@@ -64,19 +70,19 @@ public final class LinkServer {
                                 .addLast("decoder", new MessageDecoder())
                                 .addLast("prepender", new LengthFieldPrepender(Protocol.LENGTH_FIELD_BYTES))
                                 .addLast("encoder", new MessageEncoder())
-                                .addLast("handler", new LinkHandler(proxyServer, logger, link.secret()));
+                                .addLast("handler", new LinkHandler(proxyServer, logger, options.getSecret()));
                     }
                 })
-                .bind(link.host(), link.port());
+                .bind(options.getHost(), options.getPort());
 
         this.channel = future.channel();
         future.addListener(result -> {
             if (result.isSuccess()) {
-                this.logger.info("Link listening on {}:{}.", link.host(), link.port());
+                this.logger.info("Link listening on {}:{}.", options.getHost(), options.getPort());
                 return;
             }
 
-            this.logger.error("Link could not bind {}:{}.", link.host(), link.port(), result.cause());
+            this.logger.error("Link could not bind {}:{}.", options.getHost(), options.getPort(), result.cause());
         });
     }
 

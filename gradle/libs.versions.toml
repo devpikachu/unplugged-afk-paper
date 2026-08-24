@@ -2,11 +2,11 @@
 java = "21"
 minecraft = "1.21.11"
 
+netty = "4.2.7.Final"
+snakeyaml = "2.6"
 velocity = "3.5.0-SNAPSHOT"
 husksync = "4.0.0+1.21.11"
 placeholderapi = "2.12.3"
-snakeyaml = "2.6"
-netty = "4.2.7.Final"
 
 errorprone = "2.50.0"
 nullaway = "0.14.0"
@@ -14,14 +14,14 @@ jspecify = "1.0.1"
 jetbrains-annotations = "26.1.0"
 
 [libraries]
-velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity" }
-husksync-bukkit = { module = "net.william278.husksync:husksync-bukkit", version.ref = "husksync" }
-placeholderapi = { module = "me.clip:placeholderapi", version.ref = "placeholderapi" }
-snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
 netty-buffer = { module = "io.netty:netty-buffer", version.ref = "netty" }
 netty-codec-base = { module = "io.netty:netty-codec-base", version.ref = "netty" }
 netty-handler = { module = "io.netty:netty-handler", version.ref = "netty" }
 netty-transport = { module = "io.netty:netty-transport", version.ref = "netty" }
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
+velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity" }
+husksync-bukkit = { module = "net.william278.husksync:husksync-bukkit", version.ref = "husksync" }
+placeholderapi = { module = "me.clip:placeholderapi", version.ref = "placeholderapi" }
 
 errorprone-annotations = { module = "com.google.errorprone:error_prone_annotations", version.ref = "errorprone" }
 errorprone-core = { module = "com.google.errorprone:error_prone_core", version.ref = "errorprone" }

@@ -10,8 +10,8 @@
  *
  * <p>All three are fired on the main server thread and are never asynchronous.
  *
- * <p>Nothing in this package references server internals, so a plugin compiling against it does not inherit
- * Unplugged AFK's exact-Minecraft-version requirement.
+ * <p>Nothing in this package references server internals, so a plugin compiling against it does not inherit Unplugged
+ * AFK's exact-Minecraft-version requirement.
  */
 @NullMarked
 package dev.detpikachu.unpluggedafk.api.events;

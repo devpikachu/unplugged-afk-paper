@@ -1,6 +1,5 @@
 package dev.detpikachu.unpluggedafk.velocity.config;
 
-import dev.detpikachu.unpluggedafk.velocity.Constants.Defaults;
 import org.jetbrains.annotations.ApiStatus;
 import org.slf4j.Logger;
 import org.yaml.snakeyaml.DumperOptions;
@@ -19,7 +18,7 @@ public final class Options {
 
     private static final String FILE_NAME = "config.yml";
 
-    private LinkOptions link = new LinkOptions(Defaults.LINK_HOST, Defaults.LINK_PORT, Defaults.LINK_SECRET);
+    private LinkOptions link = new LinkOptions();
 
     public static Options getInstance() {
         return INSTANCE;
@@ -33,7 +32,7 @@ public final class Options {
         final var file = dataDirectory.resolve(FILE_NAME);
         final var link = LinkOptions.deserialize(read(file, logger), logger);
 
-        if (!link.secret().isBlank()) {
+        if (!link.getSecret().isBlank()) {
             INSTANCE.link = link;
             return;
         }
@@ -63,7 +62,6 @@ public final class Options {
 
         try {
             Files.createDirectories(file.getParent());
-
             try (var writer = Files.newBufferedWriter(file)) {
                 new Yaml(dumperOptions).dump(link.serialize(), writer);
             }

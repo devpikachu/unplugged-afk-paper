@@ -7,7 +7,6 @@ import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
-import dev.detpikachu.unpluggedafk.velocity.Constants.SessionsChannel;
 import dev.detpikachu.unpluggedafk.velocity.compat.tab.TabCompat;
 import dev.detpikachu.unpluggedafk.velocity.config.Options;
 import dev.detpikachu.unpluggedafk.velocity.listeners.ProxyListener;
@@ -45,6 +44,22 @@ public final class UnpluggedAfkVelocity {
         this.linkServer = new LinkServer(proxyServer, logger);
     }
 
+    public Logger getLogger() {
+        return this.logger;
+    }
+
+    public ProxyServer getProxyServer() {
+        return this.proxyServer;
+    }
+
+    public SessionStore getSessionStore() {
+        return this.sessionStore;
+    }
+
+    public Path getDataDirectory() {
+        return this.dataDirectory;
+    }
+
     @Subscribe
     public void onProxyInitialize(ProxyInitializeEvent event) {
         // Link
@@ -52,18 +67,21 @@ public final class UnpluggedAfkVelocity {
         this.linkServer.start();
 
         // Sessions
-        this.proxyServer.getChannelRegistrar().register(SessionsChannel.IDENTIFIER);
+        ProxyListener.register(this);
         this.sessionStore.load();
 
         // Compatibility
-        final var tabBridge = TabCompat.register(this, this.proxyServer, this.sessionStore, this.logger);
+        final var tabBridge = TabCompat.register(this);
 
         // Events
-        final var listener = new ProxyListener(this.logger, this.proxyServer, this.sessionStore, tabBridge);
+        final var listener = new ProxyListener(this, tabBridge);
         this.proxyServer.getEventManager().register(this, listener);
 
-        final var link = Options.getInstance().getLink();
-        this.logger.info("Unplugged AFK has been enabled. Link configured for {}:{}.", link.host(), link.port());
+        final var linkOptions = Options.getInstance().getLink();
+        this.logger.info(
+                "Unplugged AFK has been enabled. Link configured for {}:{}.",
+                linkOptions.getHost(),
+                linkOptions.getPort());
     }
 
     @Subscribe

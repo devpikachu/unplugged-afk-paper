@@ -7,58 +7,51 @@ plugins {
     id("net.ltgt.errorprone")
 }
 
-base {
-    archivesName = "unplugged-afk-velocity"
-}
-
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
 }
 
-dependencies {
-    compileOnly(libs.velocity.api)
-    annotationProcessor(libs.velocity.api)
-
-    implementation(project(":common"))
-    implementation(libs.snakeyaml)
-
-    compileOnly(libs.netty.buffer)
-    compileOnly(libs.netty.codec.base)
-    compileOnly(libs.netty.handler)
-    compileOnly(libs.netty.transport)
-
-    compileOnly(libs.jspecify)
-    compileOnly(libs.jetbrains.annotations)
-
-    errorprone(libs.errorprone.core)
-    errorprone(libs.nullaway)
+base {
+    archivesName = "unplugged-afk-velocity"
 }
 
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(libs.versions.java.get())
 }
 
-tasks.withType<JavaCompile>().configureEach {
-    options.compilerArgs.add("-Werror")
-    options.errorprone {
-        disableWarningsInGeneratedCode = true
+dependencies {
+    // Velocity
+    compileOnly(libs.velocity.api)
+    annotationProcessor(libs.velocity.api)
 
-        error("NullAway")
-        option("NullAway:OnlyNullMarked", "true")
-    }
+    // Common
+    implementation(project(":common"))
+
+    // Dependencies
+    compileOnly(libs.netty.buffer)
+    compileOnly(libs.netty.codec.base)
+    compileOnly(libs.netty.handler)
+    compileOnly(libs.netty.transport)
+    implementation(libs.snakeyaml)
+
+    // Annotations
+    compileOnly(libs.jspecify)
+    compileOnly(libs.jetbrains.annotations)
+
+    // Linting
+    errorprone(libs.errorprone.core)
+    errorprone(libs.nullaway)
 }
 
-spotless {
-    java {
-        target("src/main/java/**/*.java")
+tasks {
+    jar {
+        enabled = false
+    }
 
-        eclipse().configFile(rootProject.file("eclipse-formatter.properties"))
-        removeUnusedImports()
-        forbidWildcardImports()
-        importOrder("", "javax|java", "\\#")
-        formatAnnotations()
-        trimTrailingWhitespace()
-        endWithNewline()
+    shadowJar {
+        archiveClassifier = ""
+
+        relocate("org.yaml.snakeyaml", "dev.detpikachu.unpluggedafk.velocity.libs.snakeyaml")
     }
 }
 
@@ -75,14 +68,26 @@ sourceSets.main {
     java.srcDir(generateTemplates.map { it.outputs })
 }
 
-tasks {
-    jar {
-        enabled = false
+spotless {
+    java {
+        target("src/main/java/**/*.java")
+
+        palantirJavaFormat().formatJavadoc(true)
+        removeUnusedImports()
+        forbidWildcardImports()
+        importOrder("", "javax|java", "\\#")
+        formatAnnotations()
+        trimTrailingWhitespace()
+        endWithNewline()
     }
+}
 
-    shadowJar {
-        archiveClassifier = ""
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.add("-Werror")
+    options.errorprone {
+        disableWarningsInGeneratedCode = true
 
-        relocate("org.yaml.snakeyaml", "dev.detpikachu.unpluggedafk.velocity.libs.snakeyaml")
+        error("NullAway")
+        option("NullAway:OnlyNullMarked", "true")
     }
 }

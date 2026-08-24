@@ -59,19 +59,13 @@ public final class UnpluggedPlayerRemoveEvent extends PlayerEvent {
         return HANDLERS;
     }
 
-    /**
-     * Why a bot stopped holding a player's spot.
-     */
+    /** Why a bot stopped holding a player's spot. */
     public enum Reason {
 
-        /**
-         * The declared window ran out. The ordinary end of a session.
-         */
+        /** The declared window ran out. The ordinary end of a session. */
         EXPIRED,
 
-        /**
-         * The bot was killed. Its items dropped where it stood, and the player meets the death screen on returning.
-         */
+        /** The bot was killed. Its items dropped where it stood, and the player meets the death screen on returning. */
         DIED,
 
         /**
@@ -98,9 +92,7 @@ public final class UnpluggedPlayerRemoveEvent extends PlayerEvent {
          */
         SPAWN_FAILED,
 
-        /**
-         * Something outside Unplugged AFK removed the bot, such as another plugin kicking it.
-         */
+        /** Something outside Unplugged AFK removed the bot, such as another plugin kicking it. */
         UNKNOWN
     }
 }

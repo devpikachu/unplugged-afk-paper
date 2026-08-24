@@ -16,9 +16,9 @@ import org.jspecify.annotations.Nullable;
  *
  * <p>The plugin's own checks have already passed by this point, so a cancellation is the last word.
  *
- * <p>{@link #getPlayer()} is the real player, still online. The bot does not exist yet, which is why this event
- * carries the requested duration and reason rather than an
- * {@link dev.detpikachu.unpluggedafk.api.UnpluggedPlayerInfo}: that record describes a bot that exists.
+ * <p>{@link #getPlayer()} is the real player, still online. The bot does not exist yet, which is why this event carries
+ * the requested duration and reason rather than an {@link dev.detpikachu.unpluggedafk.api.UnpluggedPlayerInfo}: that
+ * record describes a bot that exists.
  *
  * <p>Not fired for {@code /unplugged debug spawn-fake}, which spawns a throwaway bot rather than unplugging anyone.
  */

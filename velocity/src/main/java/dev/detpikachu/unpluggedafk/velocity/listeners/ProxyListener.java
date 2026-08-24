@@ -8,7 +8,8 @@ import com.velocitypowered.api.event.proxy.ProxyPingEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.ServerConnection;
-import dev.detpikachu.unpluggedafk.velocity.Constants.SessionsChannel;
+import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
+import dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity;
 import dev.detpikachu.unpluggedafk.velocity.compat.tab.TabBridge;
 import dev.detpikachu.unpluggedafk.velocity.session.Session;
 import dev.detpikachu.unpluggedafk.velocity.session.SessionStore;
@@ -20,26 +21,29 @@ import org.slf4j.Logger;
 public final class ProxyListener {
 
     private static final String TEXTURES_PROPERTY = "textures";
+    private static final String CHANNEL_NAME = "unplugged-afk:sessions";
+    private static final MinecraftChannelIdentifier CHANNEL_IDENTIFIER = MinecraftChannelIdentifier.from(CHANNEL_NAME);
+    private static final String EVENT_SESSION_START = "SESSION_START";
 
     private final Logger logger;
     private final ProxyServer proxyServer;
     private final SessionStore sessionStore;
     private final @Nullable TabBridge tabBridge;
 
-    public ProxyListener(
-            Logger logger,
-            ProxyServer proxyServer,
-            SessionStore sessionStore,
-            @Nullable TabBridge tabBridge) {
-        this.logger = logger;
-        this.proxyServer = proxyServer;
-        this.sessionStore = sessionStore;
+    public ProxyListener(UnpluggedAfkVelocity plugin, @Nullable TabBridge tabBridge) {
+        this.logger = plugin.getLogger();
+        this.proxyServer = plugin.getProxyServer();
+        this.sessionStore = plugin.getSessionStore();
         this.tabBridge = tabBridge;
+    }
+
+    public static void register(UnpluggedAfkVelocity plugin) {
+        plugin.getProxyServer().getChannelRegistrar().register(CHANNEL_IDENTIFIER);
     }
 
     @Subscribe
     public void onPluginMessage(PluginMessageEvent event) {
-        if (!SessionsChannel.IDENTIFIER.equals(event.getIdentifier())) {
+        if (!CHANNEL_IDENTIFIER.equals(event.getIdentifier())) {
             return;
         }
 
@@ -50,7 +54,7 @@ public final class ProxyListener {
 
             this.logger.warn(
                     "Ignoring a {} message from {}. Only a backend server may start a session, so this may be a client trying to pin itself to a server.",
-                    SessionsChannel.NAME,
+                    CHANNEL_NAME,
                     origin);
             return;
         }
@@ -60,7 +64,7 @@ public final class ProxyListener {
         } catch (RuntimeException exception) {
             this.logger.warn(
                     "Could not read a {} message from {}. That backend may be running a different version of the plugin.",
-                    SessionsChannel.NAME,
+                    CHANNEL_NAME,
                     source.getServerInfo().getName(),
                     exception);
         }
@@ -69,13 +73,11 @@ public final class ProxyListener {
     @Subscribe
     public void onPlayerChooseInitialServer(PlayerChooseInitialServerEvent event) {
         final var player = event.getPlayer();
-
         if (this.tabBridge != null) {
             this.tabBridge.removeBot(player.getUniqueId());
         }
 
         final var session = this.sessionStore.consume(player.getUniqueId());
-
         if (session.isEmpty()) {
             return;
         }
@@ -98,7 +100,6 @@ public final class ProxyListener {
     @Subscribe
     public void onProxyPing(ProxyPingEvent event) {
         final var bots = this.sessionStore.count();
-
         if (bots == 0) {
             return;
         }
@@ -118,7 +119,7 @@ public final class ProxyListener {
         final var serverName = source.getServerInfo().getName();
         final var message = in.readUTF();
 
-        if (!SessionsChannel.SESSION_START.equals(message)) {
+        if (!EVENT_SESSION_START.equals(message)) {
             this.logger.warn("Received unexpected message {} from {}.", message, serverName);
             return;
         }

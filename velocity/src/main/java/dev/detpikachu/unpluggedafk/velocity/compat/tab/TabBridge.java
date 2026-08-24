@@ -1,7 +1,6 @@
 package dev.detpikachu.unpluggedafk.velocity.compat.tab;
 
 import com.velocitypowered.api.proxy.ProxyServer;
-import dev.detpikachu.unpluggedafk.velocity.Constants.Sessions;
 import dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity;
 import dev.detpikachu.unpluggedafk.velocity.session.Session;
 import org.jetbrains.annotations.ApiStatus;
@@ -20,13 +19,16 @@ public final class TabBridge {
 
     private static final String FEATURE_NAME = "GlobalPlayerList";
 
-    private static final String TAB = "me.neznamy.tab.shared.TAB";
-    private static final String FEATURE_MANAGER = "me.neznamy.tab.shared.FeatureManager";
-    private static final String GLOBAL_PLAYER_LIST = "me.neznamy.tab.shared.features.globalplayerlist.GlobalPlayerList";
-    private static final String PROXY_PLAYER = "me.neznamy.tab.shared.features.proxy.ProxyPlayer";
-    private static final String SERVER = "me.neznamy.tab.shared.data.Server";
-    private static final String SKIN = "me.neznamy.tab.shared.platform.TabList$Skin";
-    private static final String THREAD_EXECUTOR = "me.neznamy.tab.shared.cpu.ThreadExecutor";
+    private static final int RESYNC_DELAY_SECS = 2;
+
+    private static final String LOCATOR_TAB = "me.neznamy.tab.shared.TAB";
+    private static final String LOCATOR_FEATURE_MANAGER = "me.neznamy.tab.shared.FeatureManager";
+    private static final String LOCATOR_GLOBAL_PLAYER_LIST =
+            "me.neznamy.tab.shared.features.globalplayerlist.GlobalPlayerList";
+    private static final String LOCATOR_PROXY_PLAYER = "me.neznamy.tab.shared.features.proxy.ProxyPlayer";
+    private static final String LOCATOR_SERVER = "me.neznamy.tab.shared.data.Server";
+    private static final String LOCATOR_SKIN = "me.neznamy.tab.shared.platform.TabList$Skin";
+    private static final String LOCATOR_THREAD_EXECUTOR = "me.neznamy.tab.shared.cpu.ThreadExecutor";
 
     private final UnpluggedAfkVelocity plugin;
     private final ProxyServer proxyServer;
@@ -45,19 +47,18 @@ public final class TabBridge {
 
     private final ConcurrentHashMap<UUID, Object> bots = new ConcurrentHashMap<>();
 
-    private TabBridge(UnpluggedAfkVelocity plugin, ProxyServer proxyServer, Logger logger)
-            throws ReflectiveOperationException {
-        final var tabClass = Class.forName(TAB);
-        final var featureManagerClass = Class.forName(FEATURE_MANAGER);
-        final var globalPlayerListClass = Class.forName(GLOBAL_PLAYER_LIST);
-        final var proxyPlayerClass = Class.forName(PROXY_PLAYER);
-        final var serverClass = Class.forName(SERVER);
-        final var skinClass = Class.forName(SKIN);
-        final var threadExecutorClass = Class.forName(THREAD_EXECUTOR);
+    private TabBridge(UnpluggedAfkVelocity plugin) throws ReflectiveOperationException {
+        final var tabClass = Class.forName(LOCATOR_TAB);
+        final var featureManagerClass = Class.forName(LOCATOR_FEATURE_MANAGER);
+        final var globalPlayerListClass = Class.forName(LOCATOR_GLOBAL_PLAYER_LIST);
+        final var proxyPlayerClass = Class.forName(LOCATOR_PROXY_PLAYER);
+        final var serverClass = Class.forName(LOCATOR_SERVER);
+        final var skinClass = Class.forName(LOCATOR_SKIN);
+        final var threadExecutorClass = Class.forName(LOCATOR_THREAD_EXECUTOR);
 
         this.plugin = plugin;
-        this.proxyServer = proxyServer;
-        this.logger = logger;
+        this.proxyServer = plugin.getProxyServer();
+        this.logger = plugin.getLogger();
 
         this.getInstance = tabClass.getMethod("getInstance");
         this.getFeatureManager = tabClass.getMethod("getFeatureManager");
@@ -68,21 +69,15 @@ public final class TabBridge {
         this.serverByName = serverClass.getMethod("byName", String.class);
         this.skin = skinClass.getConstructor(String.class, String.class);
         this.proxyPlayer = proxyPlayerClass.getConstructor(
-                UUID.class,
-                UUID.class,
-                String.class,
-                serverClass,
-                boolean.class,
-                boolean.class,
-                skinClass);
+                UUID.class, UUID.class, String.class, serverClass, boolean.class, boolean.class, skinClass);
         this.onQuit = globalPlayerListClass.getMethod("onQuit", proxyPlayerClass);
     }
 
-    static @Nullable TabBridge resolve(UnpluggedAfkVelocity plugin, ProxyServer proxyServer, Logger logger) {
+    static @Nullable TabBridge resolve(UnpluggedAfkVelocity plugin) {
         try {
-            return new TabBridge(plugin, proxyServer, logger);
+            return new TabBridge(plugin);
         } catch (ReflectiveOperationException | RuntimeException exception) {
-            logger.warn("Could not resolve TAB's internals.", exception);
+            plugin.getLogger().warn("Could not resolve TAB's internals.", exception);
             return null;
         }
     }
@@ -92,16 +87,11 @@ public final class TabBridge {
     }
 
     public void addBot(String serverName, UUID uuid, String username, Session.@Nullable Skin skin) {
-        this.dispatch(feature -> {
-            final var bot = this.newProxyPlayer(uuid, username, serverName, skin);
-
-            this.bots.put(uuid, bot);
-            this.onJoin.invoke(feature, bot);
-        });
-
-        this.proxyServer.getScheduler()
+        this.dispatch(feature -> this.bots.put(uuid, this.newProxyPlayer(uuid, username, serverName, skin)));
+        this.proxyServer
+                .getScheduler()
                 .buildTask(this.plugin, this::refresh)
-                .delay(Duration.ofSeconds(Sessions.RESYNC_SECS))
+                .delay(Duration.ofSeconds(RESYNC_DELAY_SECS))
                 .schedule();
     }
 

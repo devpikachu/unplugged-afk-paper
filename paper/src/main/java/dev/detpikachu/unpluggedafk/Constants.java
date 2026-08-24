@@ -16,6 +16,17 @@ public final class Constants {
         public static final String LINK_SERVER_NAME = "";
     }
 
+    public static final class Link {
+
+        public static final int CONNECT_TIMEOUT_MS = 5000;
+        public static final int HANDSHAKE_TIMEOUT_SECS = 10;
+        public static final int WORKER_THREADS = 1;
+        public static final int BACKOFF_MIN_SECS = 1;
+        public static final int BACKOFF_MAX_SECS = 60;
+        public static final int SHUTDOWN_WAIT_SECS = 1;
+        public static final String GOODBYE_DISABLED = "Plugin disabled";
+    }
+
     public static final class Permissions {
 
         public static final String UNPLUG = "unplugged-afk.unplug";

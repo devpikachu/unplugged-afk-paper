@@ -1,22 +1,20 @@
-package dev.detpikachu.unpluggedafk.common;
+package dev.detpikachu.unpluggedafk.common.network;
 
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
 @ApiStatus.Internal
 public enum MessageType {
-
-    CHALLENGE(0),
-    AUTH(1),
-    READY(2),
-    SYNC(3),
-    SESSION_START(4),
-    SESSION_ACK(5),
-    SESSION_END(6),
-    GOODBYE(7),
-    RELAY(8),
-    PING(9),
-    PONG(10);
+    HEARTBEAT(0),
+    CHALLENGE(1),
+    AUTH(2),
+    READY(3),
+    GOODBYE(4),
+    RELAY(5),
+    SYNC(6),
+    SESSION_START(7),
+    SESSION_ACK(8),
+    SESSION_END(9);
 
     private static final MessageType[] VALUES = values();
 

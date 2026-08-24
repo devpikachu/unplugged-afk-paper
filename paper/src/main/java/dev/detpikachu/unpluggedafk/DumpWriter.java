@@ -22,8 +22,8 @@ public final class DumpWriter {
     private static final String NAME_SEPARATOR = "_";
     private static final Pattern UNSAFE_NAME_PATTERN = Pattern.compile("[^A-Za-z0-9_.-]");
 
-    private static final DateTimeFormatter FILE_NAME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss")
-            .withZone(ZoneId.systemDefault());
+    private static final DateTimeFormatter FILE_NAME_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss").withZone(ZoneId.systemDefault());
 
     public static void write(Player player, Session session) {
         final var timestamp = Instant.now();

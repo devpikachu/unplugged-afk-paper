@@ -1,7 +1,7 @@
 package dev.detpikachu.unpluggedafk.velocity.config;
 
-import dev.detpikachu.unpluggedafk.common.Handshake;
-import dev.detpikachu.unpluggedafk.velocity.Constants.Defaults;
+import dev.detpikachu.unpluggedafk.common.config.OptionsBase;
+import dev.detpikachu.unpluggedafk.common.network.Handshake;
 import org.jetbrains.annotations.ApiStatus;
 import org.slf4j.Logger;
 
@@ -9,7 +9,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @ApiStatus.Internal
-public record LinkOptions(String host, int port, String secret) {
+public final class LinkOptions extends OptionsBase {
+
+    public static final String DEFAULT_HOST = "0.0.0.0";
+    public static final int DEFAULT_PORT = 25580;
+    public static final String DEFAULT_SECRET = "";
 
     private static final String KEY_SECTION = "link";
     private static final String KEY_HOST = "host";
@@ -18,18 +22,45 @@ public record LinkOptions(String host, int port, String secret) {
 
     private static final int MIN_PORT = 1;
     private static final int MAX_PORT = 65535;
+    private static final int SECRET_BYTES = 32;
+
+    private final String host;
+    private final int port;
+    private final String secret;
+
+    public LinkOptions() {
+        this(DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SECRET);
+    }
+
+    private LinkOptions(String host, int port, String secret) {
+        this.host = host;
+        this.port = port;
+        this.secret = secret;
+    }
 
     public static LinkOptions deserialize(Map<?, ?> values, Logger logger) {
         final var section = values.get(KEY_SECTION) instanceof Map<?, ?> nested ? nested : Map.of();
 
         return new LinkOptions(
-                string(section, KEY_HOST, Defaults.LINK_HOST),
+                string(section, KEY_HOST, DEFAULT_HOST),
                 port(section, logger),
-                string(section, KEY_SECRET, Defaults.LINK_SECRET));
+                string(section, KEY_SECRET, DEFAULT_SECRET));
+    }
+
+    public String getHost() {
+        return this.host;
+    }
+
+    public int getPort() {
+        return this.port;
+    }
+
+    public String getSecret() {
+        return this.secret;
     }
 
     public LinkOptions withGeneratedSecret() {
-        return new LinkOptions(this.host, this.port, Handshake.newToken(Defaults.LINK_SECRET_BYTES));
+        return new LinkOptions(this.host, this.port, Handshake.newToken(SECRET_BYTES));
     }
 
     public Map<String, Object> serialize() {
@@ -41,20 +72,14 @@ public record LinkOptions(String host, int port, String secret) {
         return Map.of(KEY_SECTION, section);
     }
 
-    private static String string(Map<?, ?> section, String key, String fallback) {
-        final var value = section.get(key);
-        return value instanceof String text && !text.isBlank() ? text : fallback;
-    }
-
     private static int port(Map<?, ?> section, Logger logger) {
-        final var value = section.get(KEY_PORT);
-        final var port = value instanceof Number number ? number.intValue() : Defaults.LINK_PORT;
+        final var port = integer(section, KEY_PORT, DEFAULT_PORT);
 
         if (port >= MIN_PORT && port <= MAX_PORT) {
             return port;
         }
 
-        logger.warn("link.port of {} is outside 1-65535. Resetting to {}.", port, Defaults.LINK_PORT);
-        return Defaults.LINK_PORT;
+        logger.warn("link.port of {} is outside 1-65535. Resetting to {}.", port, DEFAULT_HOST);
+        return DEFAULT_PORT;
     }
 }

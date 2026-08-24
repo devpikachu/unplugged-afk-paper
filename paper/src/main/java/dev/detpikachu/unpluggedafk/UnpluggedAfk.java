@@ -11,6 +11,7 @@ import dev.detpikachu.unpluggedafk.compat.packetevents.PacketEventsCompat;
 import dev.detpikachu.unpluggedafk.compat.placeholderapi.PlaceholderApiCompat;
 import dev.detpikachu.unpluggedafk.config.Options;
 import dev.detpikachu.unpluggedafk.listeners.PaperListener;
+import dev.detpikachu.unpluggedafk.network.LinkClient;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.papermc.paper.configuration.GlobalConfiguration;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -31,6 +32,8 @@ public final class UnpluggedAfk extends JavaPlugin {
     private static final String KEY_MINECRAFT_VERSION = "minecraftVersion";
 
     public static ComponentLogger LOGGER = ComponentLogger.logger();
+
+    private final LinkClient linkClient = new LinkClient();
 
     public static UnpluggedAfk getInstance() {
         return JavaPlugin.getPlugin(UnpluggedAfk.class);
@@ -63,6 +66,7 @@ public final class UnpluggedAfk extends JavaPlugin {
         registerListeners();
         registerCompat();
         registerPluginChannels();
+        startLink();
 
         logStartupSummary();
     }
@@ -78,11 +82,11 @@ public final class UnpluggedAfk extends JavaPlugin {
             LOGGER.warn("Disabling with {} bot(s) still active. Their spots will no longer be held.", bots.size());
         }
 
-        bots.forEach(
-                bot -> bot.deferredDisconnect(
-                        Component.text(KickReasons.DISABLED),
-                        UnpluggedPlayerRemoveEvent.Reason.PLUGIN_DISABLED));
+        bots.forEach(bot -> bot.deferredDisconnect(
+                Component.text(KickReasons.DISABLED), UnpluggedPlayerRemoveEvent.Reason.PLUGIN_DISABLED));
         registry.removeAll();
+
+        this.linkClient.stop();
     }
 
     private boolean isTargetMinecraftVersion() {
@@ -98,7 +102,8 @@ public final class UnpluggedAfk extends JavaPlugin {
     }
 
     private void registerApi() {
-        getServer().getServicesManager()
+        getServer()
+                .getServicesManager()
                 .register(UnpluggedAfkApi.class, new ApiService(), this, ServicePriority.Normal);
     }
 
@@ -139,6 +144,14 @@ public final class UnpluggedAfk extends JavaPlugin {
 
         LOGGER.info(
                 "Proxy mode is off (proxies.velocity.enabled in paper-global.yml). /unplug only kicks locally, which behind a proxy redirects the player to the try list instead of disconnecting them.");
+    }
+
+    private void startLink() {
+        if (!GlobalConfiguration.get().proxies.velocity.enabled) {
+            return;
+        }
+
+        this.linkClient.start();
     }
 
     private @Nullable String getTargetMinecraftVersion() {

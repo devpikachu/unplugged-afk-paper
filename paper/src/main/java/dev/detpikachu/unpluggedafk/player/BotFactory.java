@@ -55,15 +55,11 @@ public final class BotFactory {
     }
 
     public static void spawnFake(ServerLevel level, Vec3 position, float yRot, float xRot, Session session) {
-        final var bot = spawn(
-                level,
-                FakeIdentity.random().toProfile(),
-                ClientInformation.createDefault(),
-                session,
-                null);
+        final var bot =
+                spawn(level, FakeIdentity.random().toProfile(), ClientInformation.createDefault(), session, null);
 
-        bot.gameMode
-                .changeGameModeForPlayer(GameType.DEFAULT_MODE, PlayerGameModeChangeEvent.Cause.DEFAULT_GAMEMODE, null);
+        bot.gameMode.changeGameModeForPlayer(
+                GameType.DEFAULT_MODE, PlayerGameModeChangeEvent.Cause.DEFAULT_GAMEMODE, null);
         bot.getBukkitEntity().setPersistent(false);
         bot.connection.teleport(position.x, position.y, position.z, yRot, xRot);
 
@@ -86,14 +82,8 @@ public final class BotFactory {
             Session session,
             @Nullable CompoundTag persistedData) {
         final var server = level.getServer();
-        final var cookie = new CommonListenerCookie(
-                profile,
-                0,
-                clientInformation,
-                true,
-                null,
-                new HashSet<>(),
-                new KeepAlive());
+        final var cookie =
+                new CommonListenerCookie(profile, 0, clientInformation, true, null, new HashSet<>(), new KeepAlive());
         final var connection = new UnpluggedConnection(server, PacketFlow.SERVERBOUND);
 
         final var bot = new UnpluggedServerPlayer(server, level, profile, clientInformation, session);
@@ -139,9 +129,7 @@ public final class BotFactory {
     }
 
     private static @Nullable ValueInput toValueInput(
-            UnpluggedServerPlayer bot,
-            ProblemReporter reporter,
-            @Nullable CompoundTag persistedData) {
+            UnpluggedServerPlayer bot, ProblemReporter reporter, @Nullable CompoundTag persistedData) {
         return persistedData == null ? null : TagValueInput.create(reporter, bot.registryAccess(), persistedData);
     }
 

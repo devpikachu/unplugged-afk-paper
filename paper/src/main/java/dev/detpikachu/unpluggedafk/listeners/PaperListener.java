@@ -42,9 +42,8 @@ public final class PaperListener implements Listener {
             logDebug("Removed bot {} ({}). {} still active.", player.getName(), player.getUniqueId(), registry.count());
 
             new UnpluggedPlayerRemoveEvent(
-                    bot.getBukkitEntity(),
-                    bot.toInfo(),
-                    reason != null ? reason : Reason.UNKNOWN).callEvent();
+                            bot.getBukkitEntity(), bot.toInfo(), reason != null ? reason : Reason.UNKNOWN)
+                    .callEvent();
 
             return;
         }

@@ -23,11 +23,8 @@ public final class Options {
     private int maxUnpluggedPlayers = Defaults.MAX_UNPLUGGED_PLAYERS;
     private int maxDurationMins = Defaults.MAX_DURATION_MINS;
 
-    private LinkOptions link = new LinkOptions(
-            Defaults.LINK_HOST,
-            Defaults.LINK_PORT,
-            Defaults.LINK_SECRET,
-            Defaults.LINK_SERVER_NAME);
+    private LinkOptions link =
+            new LinkOptions(Defaults.LINK_HOST, Defaults.LINK_PORT, Defaults.LINK_SECRET, Defaults.LINK_SERVER_NAME);
 
     public static Options getInstance() {
         return INSTANCE;

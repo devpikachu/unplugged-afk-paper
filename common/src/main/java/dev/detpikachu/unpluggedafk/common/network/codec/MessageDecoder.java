@@ -1,6 +1,5 @@
-package dev.detpikachu.unpluggedafk.velocity.network;
+package dev.detpikachu.unpluggedafk.common.network.codec;
 
-import dev.detpikachu.unpluggedafk.common.MessageCodec;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.channel.ChannelHandlerContext;

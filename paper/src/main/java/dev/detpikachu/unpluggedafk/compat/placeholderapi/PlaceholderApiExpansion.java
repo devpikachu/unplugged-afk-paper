@@ -62,7 +62,8 @@ public final class PlaceholderApiExpansion extends PlaceholderExpansion {
             case REASON -> session == null ? "" : session.reason();
             case STARTED -> session == null ? "" : DurationFormatting.format(session.elapsed());
             case EXPIRES -> session == null ? "" : DurationFormatting.format(session.remaining());
-            case REMAINING_MINS -> session == null ? "" : String.valueOf(session.remaining().toMinutes());
+            case REMAINING_MINS ->
+                session == null ? "" : String.valueOf(session.remaining().toMinutes());
             case IS_FAKE -> session == null ? "" : String.valueOf(session.isFake());
             case COUNT -> String.valueOf(registry.count());
             default -> null;

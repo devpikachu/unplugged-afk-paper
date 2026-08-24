@@ -8,9 +8,9 @@ import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
 /**
  * Cancels the kick PacketEvents issues when it fails to inject into a bot's fake channel.
  *
- * <p>A bot is a full {@code PlayerList} member, so PacketEvents tries to inject into it on join. It normally skips
- * fake players by matching the channel class name, but ProtocolLib replaces {@code Connection.channel} with its own
- * proxy first, so that check misses and PacketEvents concludes it never injected and kicks the bot a tick later.
+ * <p>A bot is a full {@code PlayerList} member, so PacketEvents tries to inject into it on join. It normally skips fake
+ * players by matching the channel class name, but ProtocolLib replaces {@code Connection.channel} with its own proxy
+ * first, so that check misses and PacketEvents concludes it never injected and kicks the bot a tick later.
  *
  * <p>The match has to stay exactly this narrow. Cancelling {@code PlayerKickEvent} any wider breaks reconnection,
  * because {@code PlayerList} evicts a stale bot with {@code DUPLICATE_LOGIN_MESSAGE}, which is also a kick. Filtering

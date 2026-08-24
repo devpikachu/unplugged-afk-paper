@@ -42,7 +42,9 @@ public final class HuskSyncListener implements Listener {
         }
 
         handoffs.values().removeIf(Handoff::isExpired);
-        handoffs.put(bot.getUUID(), new Handoff(snapshotOf(BukkitHuskSyncAPI.getInstance().getUser(player))));
+        handoffs.put(
+                bot.getUUID(),
+                new Handoff(snapshotOf(BukkitHuskSyncAPI.getInstance().getUser(player))));
 
         logDebug("Held the data of bot {} ({}) for the returning player.", bot.getPlainTextName(), bot.getUUID());
     }
@@ -64,7 +66,8 @@ public final class HuskSyncListener implements Listener {
         final var handoff = handoffs.remove(user.getUuid());
         final var repair = handoff == null || handoff.isExpired() ? null : handoff.data();
         final var incoming = repair == null ? unpack(event.getData()) : repair;
-        final var withhold = incoming.getHealth().filter(health -> health.getHealth() <= 0.0).isPresent();
+        final var withhold =
+                incoming.getHealth().filter(health -> health.getHealth() <= 0.0).isPresent();
 
         if (repair == null && !withhold) {
             return;

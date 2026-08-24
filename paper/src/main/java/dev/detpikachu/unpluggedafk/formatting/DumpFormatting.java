@@ -31,8 +31,8 @@ public final class DumpFormatting {
     private static final String INDENT = "  ";
     private static final int LABEL_WIDTH = 12;
 
-    private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z")
-            .withZone(ZoneId.systemDefault());
+    private static final DateTimeFormatter TIMESTAMP_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss z").withZone(ZoneId.systemDefault());
 
     public static String formatDump(Player player, Session session, Instant timestamp) {
         final var location = Objects.requireNonNull(player.getLocation());
@@ -40,9 +40,7 @@ public final class DumpFormatting {
         final var builder = new StringBuilder();
 
         appendField(
-                builder,
-                "Timestamp",
-                format("%d (%s)", timestamp.toEpochMilli(), TIMESTAMP_FORMAT.format(timestamp)));
+                builder, "Timestamp", format("%d (%s)", timestamp.toEpochMilli(), TIMESTAMP_FORMAT.format(timestamp)));
         appendField(builder, "Player", format("%s (%s)", player.getName(), player.getUniqueId()));
         appendField(builder, "Duration", session.durationMins() + " minute(s)");
         appendField(builder, "Reason", session.reason());
@@ -53,16 +51,16 @@ public final class DumpFormatting {
         appendField(
                 builder,
                 "World",
-                format("%s (%s)", player.getWorld().getName(), player.getWorld().getKey().asString()));
+                format(
+                        "%s (%s)",
+                        player.getWorld().getName(), player.getWorld().getKey().asString()));
         appendField(builder, "Position", format("%.2f, %.2f, %.2f", location.getX(), location.getY(), location.getZ()));
         appendField(builder, "Rotation", format("yaw %.2f, pitch %.2f", location.getYaw(), location.getPitch()));
         appendField(builder, "Game mode", player.getGameMode().name());
         appendField(builder, "Health", format("%.1f", player.getHealth()));
         appendField(builder, "Food", format("%d (saturation %.1f)", player.getFoodLevel(), player.getSaturation()));
         appendField(
-                builder,
-                "Experience",
-                format("level %d (%d total)", player.getLevel(), player.getTotalExperience()));
+                builder, "Experience", format("level %d (%d total)", player.getLevel(), player.getTotalExperience()));
 
         appendSection(builder, "Inventory", inventory.getStorageContents());
         appendSection(builder, "Armor", inventory.getArmorContents());
@@ -81,7 +79,11 @@ public final class DumpFormatting {
     }
 
     private static void appendSection(StringBuilder builder, String title, @Nullable ItemStack[] contents) {
-        builder.append('\n').append(title).append('\n').repeat("-", title.length()).append('\n');
+        builder.append('\n')
+                .append(title)
+                .append('\n')
+                .repeat("-", title.length())
+                .append('\n');
 
         var empty = true;
 
@@ -119,9 +121,8 @@ public final class DumpFormatting {
 
         if (meta.hasDisplayName()) {
             builder.append(" \"")
-                    .append(
-                            PlainTextComponentSerializer.plainText()
-                                    .serialize(Objects.requireNonNull(meta.displayName())))
+                    .append(PlainTextComponentSerializer.plainText()
+                            .serialize(Objects.requireNonNull(meta.displayName())))
                     .append('"');
         }
 
@@ -145,26 +146,21 @@ public final class DumpFormatting {
     }
 
     private static void appendEnchantments(
-            StringBuilder builder,
-            String title,
-            Map<Enchantment, Integer> enchantments,
-            String indent) {
+            StringBuilder builder, String title, Map<Enchantment, Integer> enchantments, String indent) {
         if (enchantments.isEmpty()) {
             return;
         }
 
         builder.append(indent).append(title).append(':').append('\n');
 
-        enchantments.entrySet()
-                .stream()
+        enchantments.entrySet().stream()
                 .sorted(Comparator.comparing(entry -> entry.getKey().getKey().asString()))
-                .forEach(
-                        entry -> builder.append(indent)
-                                .append(INDENT)
-                                .append(entry.getKey().getKey().asString())
-                                .append(' ')
-                                .append(entry.getValue())
-                                .append('\n'));
+                .forEach(entry -> builder.append(indent)
+                        .append(INDENT)
+                        .append(entry.getKey().getKey().asString())
+                        .append(' ')
+                        .append(entry.getValue())
+                        .append('\n'));
     }
 
     private static void appendNestedItems(StringBuilder builder, ItemMeta meta, String indent) {
@@ -181,10 +177,7 @@ public final class DumpFormatting {
     }
 
     private static void appendNestedSection(
-            StringBuilder builder,
-            String title,
-            @Nullable ItemStack[] contents,
-            String indent) {
+            StringBuilder builder, String title, @Nullable ItemStack[] contents, String indent) {
         var empty = true;
 
         for (var slot = 0; slot < contents.length; slot++) {

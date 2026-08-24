@@ -1,4 +1,4 @@
-package dev.detpikachu.unpluggedafk.common;
+package dev.detpikachu.unpluggedafk.common.network;
 
 import org.jetbrains.annotations.ApiStatus;
 

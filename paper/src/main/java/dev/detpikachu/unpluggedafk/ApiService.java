@@ -30,6 +30,8 @@ final class ApiService implements UnpluggedAfkApi {
 
     @Override
     public List<UnpluggedPlayerInfo> all() {
-        return SessionRegistry.getInstance().all().stream().map(UnpluggedServerPlayer::toInfo).toList();
+        return SessionRegistry.getInstance().all().stream()
+                .map(UnpluggedServerPlayer::toInfo)
+                .toList();
     }
 }

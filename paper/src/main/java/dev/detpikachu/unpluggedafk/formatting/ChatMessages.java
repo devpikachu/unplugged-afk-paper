@@ -68,7 +68,8 @@ public final class ChatMessages {
     private static Component formatBot(UnpluggedServerPlayer bot) {
         final var session = bot.getSession();
         final var name = text(bot.getPlainTextName(), GOLD);
-        final var header = text("Unplugged information for ", WHITE).append(name).append(text(":", WHITE));
+        final var header =
+                text("Unplugged information for ", WHITE).append(name).append(text(":", WHITE));
 
         return Component.join(
                 JoinConfiguration.newlines(),
@@ -91,7 +92,10 @@ public final class ChatMessages {
         final var separator = text("/", WHITE);
         final var capValue = text(Options.getInstance().getMaxUnpluggedPlayers(), GOLD);
 
-        return label.append(unpluggedValue).append(pendingMarker).append(separator).append(capValue);
+        return label.append(unpluggedValue)
+                .append(pendingMarker)
+                .append(separator)
+                .append(capValue);
     }
 
     private static Component formatPendingMarker(int unplugging) {

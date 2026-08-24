@@ -7,7 +7,6 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializer;
 import com.google.gson.reflect.TypeToken;
-import dev.detpikachu.unpluggedafk.velocity.Constants.Sessions;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -27,15 +26,14 @@ import java.util.concurrent.ConcurrentHashMap;
 @ApiStatus.Internal
 public final class SessionStore {
 
+    private static final String FILE_NAME = "sessions.json";
     private static final String TEMP_SUFFIX = ".tmp";
 
     private static final Gson GSON = new GsonBuilder()
-            .registerTypeAdapter(
-                    Instant.class,
-                    (JsonSerializer<Instant>) (instant, type, context) -> new JsonPrimitive(instant.toEpochMilli()))
-            .registerTypeAdapter(
-                    Instant.class,
-                    (JsonDeserializer<Instant>) (json, type, context) -> Instant.ofEpochMilli(json.getAsLong()))
+            .registerTypeAdapter(Instant.class, (JsonSerializer<Instant>)
+                    (instant, type, context) -> new JsonPrimitive(instant.toEpochMilli()))
+            .registerTypeAdapter(Instant.class, (JsonDeserializer<Instant>)
+                    (json, type, context) -> Instant.ofEpochMilli(json.getAsLong()))
             .setPrettyPrinting()
             .create();
 
@@ -46,7 +44,7 @@ public final class SessionStore {
     private final ConcurrentHashMap<UUID, Session> sessions;
 
     public SessionStore(Path dataDirectory, Logger logger) {
-        this.file = dataDirectory.resolve(Sessions.FILE_NAME);
+        this.file = dataDirectory.resolve(FILE_NAME);
         this.logger = logger;
         this.sessions = new ConcurrentHashMap<>();
     }
@@ -126,7 +124,7 @@ public final class SessionStore {
     }
 
     private synchronized void save() {
-        final var temp = this.file.resolveSibling(Sessions.FILE_NAME + TEMP_SUFFIX);
+        final var temp = this.file.resolveSibling(FILE_NAME + TEMP_SUFFIX);
 
         try {
             Files.createDirectories(this.file.getParent());
