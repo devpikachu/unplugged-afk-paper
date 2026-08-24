@@ -1,5 +1,6 @@
 package dev.detpikachu.unpluggedafk.listeners;
 
+import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
 import dev.detpikachu.unpluggedafk.formatting.ChatMessages;
@@ -38,6 +39,9 @@ public final class PaperListener implements Listener {
 
             registry.remove(bot);
             event.quitMessage(null);
+            UnpluggedAfk.getInstance()
+                    .getLinkClient()
+                    .endSession(bot, reason != null ? reason.name() : Reason.UNKNOWN.name());
 
             logDebug("Removed bot {} ({}). {} still active.", player.getName(), player.getUniqueId(), registry.count());
 

@@ -10,7 +10,7 @@ import java.util.Map;
 @ApiStatus.Internal
 public final class LinkOptions extends OptionsBase {
 
-    private static final String DEFAULT_HOST = "0.0.0.0";
+    private static final String DEFAULT_HOST = "127.0.0.1";
     private static final int DEFAULT_PORT = 25580;
     private static final String DEFAULT_SECRET = "";
 
@@ -78,7 +78,7 @@ public final class LinkOptions extends OptionsBase {
             return port;
         }
 
-        logger.warn("link.port of {} is outside 1-65535. Resetting to {}.", port, DEFAULT_HOST);
+        logger.warn("link.port of {} is outside 1-65535. Resetting to {}.", port, DEFAULT_PORT);
         return DEFAULT_PORT;
     }
 }

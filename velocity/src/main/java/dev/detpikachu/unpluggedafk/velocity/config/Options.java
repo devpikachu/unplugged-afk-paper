@@ -9,6 +9,7 @@ import org.yaml.snakeyaml.error.YAMLException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @ApiStatus.Internal
@@ -17,11 +18,18 @@ public final class Options extends OptionsBase {
     private static final Options INSTANCE = new Options();
 
     private static final String FILE_NAME = "config.yml";
+    private static final String KEY_DEBUG = "debug";
+    private static final boolean DEFAULT_DEBUG = false;
 
+    private boolean debug = DEFAULT_DEBUG;
     private LinkOptions link = new LinkOptions();
 
     public static Options getInstance() {
         return INSTANCE;
+    }
+
+    public boolean isDebug() {
+        return this.debug;
     }
 
     public LinkOptions getLink() {
@@ -30,7 +38,10 @@ public final class Options extends OptionsBase {
 
     public static void deserialize(Path dataDirectory, Logger logger) {
         final var file = dataDirectory.resolve(FILE_NAME);
-        final var link = LinkOptions.deserialize(read(file, logger), logger);
+        final var values = read(file, logger);
+        final var link = LinkOptions.deserialize(values, logger);
+
+        INSTANCE.debug = flag(values, KEY_DEBUG, DEFAULT_DEBUG);
 
         if (!link.getSecret().isBlank()) {
             INSTANCE.link = link;
@@ -60,10 +71,14 @@ public final class Options extends OptionsBase {
         final var dumperOptions = new DumperOptions();
         dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
 
+        final var document = new LinkedHashMap<String, Object>();
+        document.put(KEY_DEBUG, INSTANCE.debug);
+        document.putAll(link.serialize());
+
         try {
             Files.createDirectories(file.getParent());
             try (var writer = Files.newBufferedWriter(file)) {
-                new Yaml(dumperOptions).dump(link.serialize(), writer);
+                new Yaml(dumperOptions).dump(document, writer);
             }
         } catch (IOException exception) {
             logger.error("Could not write {}, so the generated secret will not survive a restart.", file, exception);

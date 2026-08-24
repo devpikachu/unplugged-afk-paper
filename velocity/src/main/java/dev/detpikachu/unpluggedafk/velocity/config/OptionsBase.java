@@ -7,6 +7,11 @@ import java.util.Map;
 @ApiStatus.Internal
 public abstract class OptionsBase {
 
+    protected static boolean flag(Map<?, ?> section, String key, boolean defaultValue) {
+        final var value = section.get(key);
+        return value instanceof Boolean parsed ? parsed : defaultValue;
+    }
+
     protected static int integer(Map<?, ?> section, String key, int defaultValue) {
         final var value = section.get(key);
         return value instanceof Integer integer ? integer : defaultValue;

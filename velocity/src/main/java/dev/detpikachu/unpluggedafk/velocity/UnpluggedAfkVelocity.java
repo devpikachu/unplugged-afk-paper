@@ -10,11 +10,13 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import dev.detpikachu.unpluggedafk.velocity.compat.tab.TabCompat;
 import dev.detpikachu.unpluggedafk.velocity.config.Options;
 import dev.detpikachu.unpluggedafk.velocity.listeners.ProxyListener;
+import dev.detpikachu.unpluggedafk.velocity.network.BotPlayerBridge;
 import dev.detpikachu.unpluggedafk.velocity.network.LinkServer;
 import dev.detpikachu.unpluggedafk.velocity.session.SessionStore;
 import jakarta.inject.Inject;
 import org.jetbrains.annotations.ApiStatus;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 
@@ -29,6 +31,8 @@ import java.nio.file.Path;
 @ApiStatus.Internal
 public final class UnpluggedAfkVelocity {
 
+    public static Logger LOGGER = LoggerFactory.getLogger("unplugged-afk");
+
     private final Logger logger;
     private final ProxyServer proxyServer;
     private final SessionStore sessionStore;
@@ -39,9 +43,15 @@ public final class UnpluggedAfkVelocity {
     public UnpluggedAfkVelocity(Logger logger, ProxyServer proxyServer, @DataDirectory Path dataDirectory) {
         this.logger = logger;
         this.proxyServer = proxyServer;
-        this.sessionStore = new SessionStore(dataDirectory, logger);
+        this.sessionStore = new SessionStore(logger);
         this.dataDirectory = dataDirectory;
-        this.linkServer = new LinkServer(proxyServer, logger);
+        this.linkServer = new LinkServer(logger);
+    }
+
+    public static void logDebug(String message, Object... arguments) {
+        if (Options.getInstance().isDebug()) {
+            LOGGER.info(message, arguments);
+        }
     }
 
     public Logger getLogger() {
@@ -60,26 +70,37 @@ public final class UnpluggedAfkVelocity {
         return this.dataDirectory;
     }
 
+    public LinkServer getLinkServer() {
+        return this.linkServer;
+    }
+
     @Subscribe
     public void onProxyInitialize(ProxyInitializeEvent event) {
-        // Link
-        Options.deserialize(this.dataDirectory, this.logger);
-        this.linkServer.start();
+        LOGGER = this.logger;
 
-        // Sessions
-        ProxyListener.register(this);
-        this.sessionStore.load();
+        final BotPlayerBridge botPlayerBridge;
 
-        // Compatibility
+        try {
+            botPlayerBridge = new BotPlayerBridge(this);
+        } catch (ReflectiveOperationException | RuntimeException exception) {
+            LOGGER.error(
+                    "Unplugged AFK could not resolve Velocity's internals, which it needs to give an unplugged player a proxy connection. Ensure you are using a version of Velocity that is supported by this version of the plugin.",
+                    exception);
+            return;
+        }
+
+        Options.deserialize(this.dataDirectory, LOGGER);
+
         final var tabBridge = TabCompat.register(this);
 
-        // Events
-        final var listener = new ProxyListener(this, tabBridge);
+        this.linkServer.start(this, botPlayerBridge, tabBridge);
+
+        final var listener = new ProxyListener(this, botPlayerBridge, tabBridge);
         this.proxyServer.getEventManager().register(this, listener);
 
         final var linkOptions = Options.getInstance().getLink();
-        this.logger.info(
-                "Unplugged AFK has been enabled. Link configured for {}:{}.",
+        LOGGER.info(
+                "Unplugged AFK has been enabled. Link listening on {}:{}.",
                 linkOptions.getHost(),
                 linkOptions.getPort());
     }

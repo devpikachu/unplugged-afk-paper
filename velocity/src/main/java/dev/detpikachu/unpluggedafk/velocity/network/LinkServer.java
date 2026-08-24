@@ -1,9 +1,11 @@
 package dev.detpikachu.unpluggedafk.velocity.network;
 
-import com.velocitypowered.api.proxy.ProxyServer;
 import dev.detpikachu.unpluggedafk.common.network.Protocol;
 import dev.detpikachu.unpluggedafk.common.network.codec.MessageDecoder;
 import dev.detpikachu.unpluggedafk.common.network.codec.MessageEncoder;
+import dev.detpikachu.unpluggedafk.common.network.messages.Relay;
+import dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity;
+import dev.detpikachu.unpluggedafk.velocity.compat.tab.TabBridge;
 import dev.detpikachu.unpluggedafk.velocity.config.Options;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
@@ -21,31 +23,41 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 @ApiStatus.Internal
 public final class LinkServer {
 
     private static final int HANDSHAKE_TIMEOUT_SECS = 10;
     private static final int ACCEPTOR_THREADS = 1;
     private static final int WORKER_THREADS = 2;
+    private static final long BOOT_QUIET_MILLIS = 500;
+    private static final long BOOT_CAP_MILLIS = 2000;
+    private static final long BOOT_POLL_MILLIS = 50;
 
-    private final ProxyServer proxyServer;
     private final Logger logger;
+    private final ConcurrentHashMap<String, Channel> links = new ConcurrentHashMap<>();
+
+    private volatile long startedAt;
+    private volatile long lastLinkAt;
 
     private @Nullable EventLoopGroup acceptors;
     private @Nullable EventLoopGroup workers;
     private @Nullable Channel channel;
 
-    public LinkServer(ProxyServer proxyServer, Logger logger) {
-        this.proxyServer = proxyServer;
+    public LinkServer(Logger logger) {
         this.logger = logger;
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")
-    public void start() {
+    public void start(UnpluggedAfkVelocity plugin, BotPlayerBridge botPlayerBridge, @Nullable TabBridge tabBridge) {
         final var options = Options.getInstance().getLink();
         final var acceptorGroup = new MultiThreadIoEventLoopGroup(ACCEPTOR_THREADS, NioIoHandler.newFactory());
         final var workerGroup = new MultiThreadIoEventLoopGroup(WORKER_THREADS, NioIoHandler.newFactory());
 
+        this.startedAt = System.currentTimeMillis();
+        this.lastLinkAt = this.startedAt;
         this.acceptors = acceptorGroup;
         this.workers = workerGroup;
 
@@ -70,7 +82,9 @@ public final class LinkServer {
                                 .addLast("decoder", new MessageDecoder())
                                 .addLast("prepender", new LengthFieldPrepender(Protocol.LENGTH_FIELD_BYTES))
                                 .addLast("encoder", new MessageEncoder())
-                                .addLast("handler", new LinkHandler(proxyServer, logger, options.getSecret()));
+                                .addLast(
+                                        "handler",
+                                        new LinkHandler(LinkServer.this, plugin, botPlayerBridge, tabBridge));
                     }
                 })
                 .bind(options.getHost(), options.getPort());
@@ -88,6 +102,8 @@ public final class LinkServer {
 
     @SuppressWarnings("FutureReturnValueIgnored")
     public void stop() {
+        this.links.clear();
+
         if (this.channel != null) {
             this.channel.close();
             this.channel = null;
@@ -102,5 +118,56 @@ public final class LinkServer {
             this.workers.shutdownGracefully();
             this.workers = null;
         }
+    }
+
+    public void awaitSettled() {
+        final var deadline = this.startedAt + BOOT_CAP_MILLIS;
+
+        while (System.currentTimeMillis() < deadline
+                && System.currentTimeMillis() - this.lastLinkAt < BOOT_QUIET_MILLIS) {
+            try {
+                Thread.sleep(BOOT_POLL_MILLIS);
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+    }
+
+    @SuppressWarnings("FutureReturnValueIgnored")
+    void linked(String serverName, Channel link) {
+        this.lastLinkAt = System.currentTimeMillis();
+
+        final var previous = this.links.put(serverName, link);
+
+        if (previous != null) {
+            this.logger.warn("Backend {} linked twice. Closing the older link.", serverName);
+            previous.close();
+        }
+    }
+
+    void unlinked(String serverName, Channel link) {
+        this.links.remove(serverName, link);
+    }
+
+    @SuppressWarnings("FutureReturnValueIgnored")
+    public void relay(String serverName, UUID uuid, String channelName, byte[] payload) {
+        final var link = this.links.get(serverName);
+
+        if (link == null || !link.isActive()) {
+            return;
+        }
+
+        if (payload.length > Protocol.MAX_PAYLOAD_BYTES) {
+            this.logger.warn(
+                    "Dropped a {} byte(s) plugin message on {} for bot {}. The link carries at most {}.",
+                    payload.length,
+                    channelName,
+                    uuid,
+                    Protocol.MAX_PAYLOAD_BYTES);
+            return;
+        }
+
+        link.writeAndFlush(new Relay(uuid, channelName, payload));
     }
 }

@@ -6,7 +6,7 @@ import org.jetbrains.annotations.ApiStatus;
 @ApiStatus.Internal
 public final class LinkOptions extends OptionsBase {
 
-    public static final String DEFAULT_HOST = "";
+    public static final String DEFAULT_HOST = "127.0.0.1";
     public static final int DEFAULT_PORT = 25580;
     public static final String DEFAULT_SECRET = "";
     public static final String DEFAULT_SERVER_NAME = "";
@@ -49,16 +49,12 @@ public final class LinkOptions extends OptionsBase {
 
     public void deserialize(FileConfiguration config) {
         this.host = config.getString(KEY_HOST, DEFAULT_HOST);
-        this.port = config.getInt(KEY_PORT, DEFAULT_PORT);
+        this.port = inRange(config, KEY_PORT, DEFAULT_PORT, MIN_PORT, MAX_PORT);
         this.secret = config.getString(KEY_SECRET, DEFAULT_SECRET);
         this.serverName = config.getString(KEY_SERVER_NAME, DEFAULT_SERVER_NAME);
     }
 
     public boolean isValid() {
-        return !this.host.isBlank()
-                && !this.secret.isBlank()
-                && !this.serverName.isBlank()
-                && this.port >= MIN_PORT
-                && this.port <= MAX_PORT;
+        return !this.host.isBlank() && !this.secret.isBlank() && !this.serverName.isBlank();
     }
 }

@@ -30,6 +30,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
 import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
@@ -45,18 +46,19 @@ public final class BotFactory {
             ServerLevel level,
             GameProfile profile,
             ClientInformation clientInformation,
+            Set<String> channels,
             Session session,
             Connection oldConnection) {
         final var plugin = UnpluggedAfk.getInstance();
         final var scheduler = plugin.getServer().getGlobalRegionScheduler();
-        final var deferred = new DeferredSpawn(level, profile, clientInformation, session, oldConnection);
+        final var deferred = new DeferredSpawn(level, profile, clientInformation, channels, session, oldConnection);
 
         scheduler.runAtFixedRate(plugin, deferred::tick, 1L, 1L);
     }
 
     public static void spawnFake(ServerLevel level, Vec3 position, float yRot, float xRot, Session session) {
-        final var bot =
-                spawn(level, FakeIdentity.random().toProfile(), ClientInformation.createDefault(), session, null);
+        final var bot = spawn(
+                level, FakeIdentity.random().toProfile(), ClientInformation.createDefault(), Set.of(), session, null);
 
         bot.gameMode.changeGameModeForPlayer(
                 GameType.DEFAULT_MODE, PlayerGameModeChangeEvent.Cause.DEFAULT_GAMEMODE, null);
@@ -79,12 +81,13 @@ public final class BotFactory {
             ServerLevel level,
             GameProfile profile,
             ClientInformation clientInformation,
+            Set<String> channels,
             Session session,
             @Nullable CompoundTag persistedData) {
         final var server = level.getServer();
-        final var cookie =
-                new CommonListenerCookie(profile, 0, clientInformation, true, null, new HashSet<>(), new KeepAlive());
-        final var connection = new UnpluggedConnection(server, PacketFlow.SERVERBOUND);
+        final var cookie = new CommonListenerCookie(
+                profile, 0, clientInformation, true, null, new HashSet<>(channels), new KeepAlive());
+        final var connection = new UnpluggedConnection(server, PacketFlow.SERVERBOUND, profile.id());
 
         final var bot = new UnpluggedServerPlayer(server, level, profile, clientInformation, session);
         final var registry = SessionRegistry.getInstance();
@@ -140,6 +143,7 @@ public final class BotFactory {
         private final ServerLevel level;
         private final GameProfile profile;
         private final ClientInformation clientInformation;
+        private final Set<String> channels;
         private final Session session;
         private final Connection oldConnection;
 
@@ -150,6 +154,7 @@ public final class BotFactory {
                 ServerLevel level,
                 GameProfile profile,
                 ClientInformation clientInformation,
+                Set<String> channels,
                 Session session,
                 Connection oldConnection) {
             this.uuid = profile.id();
@@ -157,6 +162,7 @@ public final class BotFactory {
             this.level = level;
             this.profile = profile;
             this.clientInformation = clientInformation;
+            this.channels = channels;
             this.session = session;
             this.oldConnection = oldConnection;
         }
@@ -204,7 +210,8 @@ public final class BotFactory {
             final UnpluggedServerPlayer bot;
 
             try {
-                bot = spawn(this.level, this.profile, this.clientInformation, this.session, persistedData);
+                bot = spawn(
+                        this.level, this.profile, this.clientInformation, this.channels, this.session, persistedData);
             } catch (RuntimeException exception) {
                 LOGGER.error(
                         "{} ({}) was disconnected but no bot could be created to hold their spot.",

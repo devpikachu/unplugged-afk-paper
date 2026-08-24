@@ -9,7 +9,6 @@ import dev.detpikachu.unpluggedafk.compat.placeholderapi.PlaceholderApiCompat;
 import dev.detpikachu.unpluggedafk.config.Options;
 import dev.detpikachu.unpluggedafk.listeners.PaperListener;
 import dev.detpikachu.unpluggedafk.network.LinkClient;
-import dev.detpikachu.unpluggedafk.network.ProxyManager;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.papermc.paper.configuration.GlobalConfiguration;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -43,30 +42,29 @@ public final class UnpluggedAfk extends JavaPlugin {
         }
     }
 
+    public LinkClient getLinkClient() {
+        return this.linkClient;
+    }
+
     @Override
     public void onEnable() {
         LOGGER = getComponentLogger();
+        this.warnOnVersionMismatch();
 
-        if (!isTargetMinecraftVersion()) {
-            getServer().getPluginManager().disablePlugin(this);
+        this.saveDefaultConfig();
+        Options.deserialize(this.getConfig());
+
+        if (!this.hasRequiredLink()) {
+            this.getServer().getPluginManager().disablePlugin(this);
             return;
         }
 
-        saveDefaultConfig();
-        Options.deserialize(getConfig());
+        this.registerApi();
+        this.registerListeners();
+        this.registerCompat();
+        this.startLink();
 
-        if (!hasRequiredLink()) {
-            getServer().getPluginManager().disablePlugin(this);
-            return;
-        }
-
-        registerApi();
-        registerListeners();
-        registerCompat();
-        registerPluginChannels();
-        startLink();
-
-        logStartupSummary();
+        this.logStartupSummary();
     }
 
     @Override
@@ -74,7 +72,7 @@ public final class UnpluggedAfk extends JavaPlugin {
         final var registry = SessionRegistry.getInstance();
         final var bots = registry.all();
 
-        getServer().getServicesManager().unregisterAll(this);
+        this.getServer().getServicesManager().unregisterAll(this);
 
         if (!bots.isEmpty()) {
             LOGGER.warn("Disabling with {} bot(s) still active. Their spots will no longer be held.", bots.size());
@@ -87,27 +85,15 @@ public final class UnpluggedAfk extends JavaPlugin {
         this.linkClient.stop();
     }
 
-    private boolean isTargetMinecraftVersion() {
-        final var targetVersion = getTargetMinecraftVersion();
-        final var runningVersion = getServer().getMinecraftVersion();
-
-        if (runningVersion.equals(targetVersion)) {
-            return true;
-        }
-
-        LOGGER.error("Unplugged AFK targets Minecraft {} but this server runs {}", targetVersion, runningVersion);
-        return false;
-    }
-
     private void registerApi() {
-        getServer()
+        this.getServer()
                 .getServicesManager()
                 .register(UnpluggedAfkApi.class, new ApiService(), this, ServicePriority.Normal);
     }
 
     private void registerListeners() {
-        getServer().getPluginManager().registerEvents(new PaperListener(), this);
-        getLifecycleManager()
+        this.getServer().getPluginManager().registerEvents(new PaperListener(), this);
+        this.getLifecycleManager()
                 .registerEventHandler(LifecycleEvents.COMMANDS, commands -> CommandTree.register(commands.registrar()));
     }
 
@@ -117,26 +103,23 @@ public final class UnpluggedAfk extends JavaPlugin {
         PlaceholderApiCompat.register(this);
     }
 
-    private void registerPluginChannels() {
-        final var messenger = getServer().getMessenger();
-
-        messenger.registerOutgoingPluginChannel(this, ProxyManager.BUNGEE_CHANNEL_NAME);
-        messenger.registerOutgoingPluginChannel(this, ProxyManager.SESSIONS_CHANNEL_NAME);
-    }
-
     private void logStartupSummary() {
         final var options = Options.getInstance();
 
         LOGGER.info(
-                "Enabled for Minecraft {}. debug={}, maxUnpluggedPlayers={}, maxDurationMins={}",
+                "Enabled for Minecraft {}. maxUnpluggedPlayers={}, maxDurationMins={}",
                 getServer().getMinecraftVersion(),
-                options.isDebug(),
                 options.getMaxUnpluggedPlayers(),
                 options.getMaxDurationMins());
 
         if (GlobalConfiguration.get().proxies.velocity.enabled) {
+            final var link = options.getLink();
+
             LOGGER.info(
-                    "Proxy mode is on. /unplug disconnects the player from the proxy, which needs bungee-plugin-message-channel = true in the Velocity config to take effect.");
+                    "Proxy mode is on. Sessions ride the link to {}:{} as {}.",
+                    link.getHost(),
+                    link.getPort(),
+                    link.getServerName());
             return;
         }
 
@@ -150,6 +133,34 @@ public final class UnpluggedAfk extends JavaPlugin {
         }
 
         this.linkClient.start();
+    }
+
+    private boolean hasRequiredLink() {
+        if (!GlobalConfiguration.get().proxies.velocity.enabled) {
+            return true;
+        }
+
+        if (Options.getInstance().getLink().isValid()) {
+            return true;
+        }
+
+        LOGGER.error(
+                "Proxy mode is on but the proxy link is not configured. Set link.secret and link.serverName in the plugin's config.yml, plus link.host if the proxy is not on this machine. The secret comes from the Unplugged AFK companion on your proxy, and the server name is this server's name in the proxy's own configuration.");
+        return false;
+    }
+
+    private void warnOnVersionMismatch() {
+        final var targetVersion = getTargetMinecraftVersion();
+        final var runningVersion = getServer().getMinecraftVersion();
+
+        if (runningVersion.equals(targetVersion)) {
+            return;
+        }
+
+        LOGGER.warn(
+                "Unplugged AFK targets Minecraft {} but this server runs {}. It relies on server internals, so features may misbehave or fail outright on another version.",
+                targetVersion,
+                runningVersion);
     }
 
     private @Nullable String getTargetMinecraftVersion() {
@@ -168,19 +179,5 @@ public final class UnpluggedAfk extends JavaPlugin {
         }
 
         return properties.getProperty(KEY_MINECRAFT_VERSION);
-    }
-
-    private boolean hasRequiredLink() {
-        if (!GlobalConfiguration.get().proxies.velocity.enabled) {
-            return true;
-        }
-
-        if (Options.getInstance().getLink().isValid()) {
-            return true;
-        }
-
-        LOGGER.error(
-                "Proxy mode is on but the proxy link is not configured. Set link.host, link.port (1-65535), link.secret and link.serverName in the plugin's config.yml. The secret and the server name come from the Unplugged AFK companion on your proxy.");
-        return false;
     }
 }

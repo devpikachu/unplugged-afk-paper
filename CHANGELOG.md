@@ -12,12 +12,17 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ### Added
 
+- **Backend-Proxy transport:** a plugin-owned TCP socket transport for communication between the server and the proxy, bypassing the need for real players' connections
 - **PlaceholderAPI support:** the plugin now provides placeholders for unplugged player state
 - **TAB compatibility:** When using TAB to synchronize player lists behind a proxy, unplugged players now also synchronize
 
 ### Changed
 
 - **Defer bot cleanup in death:** the server defers the cleanup of a dead bot for 20 ticks, simulating vanilla behavior
+
+### Removed
+
+- **Hard Minecraft version requirement:** the plugin no longer refuses to load on servers running unsupported versions of Minecraft, instead being best-effort and logging a warning
 
 ### Fixed
 

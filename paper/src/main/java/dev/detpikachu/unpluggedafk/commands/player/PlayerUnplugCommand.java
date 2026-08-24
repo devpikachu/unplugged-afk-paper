@@ -6,6 +6,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.detpikachu.unpluggedafk.Permissions;
+import dev.detpikachu.unpluggedafk.exceptions.ProxyUnavailableException;
 import dev.detpikachu.unpluggedafk.exceptions.UnplugCancelledException;
 import dev.detpikachu.unpluggedafk.exceptions.UnplugFailedException;
 import dev.detpikachu.unpluggedafk.session.Session;
@@ -16,6 +17,7 @@ import org.jetbrains.annotations.ApiStatus;
 
 import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_GENERIC;
+import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_PROXY_UNAVAILABLE;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_REASON_REQUIRED;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.errUnplugCancelled;
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.ARG_DURATION_MINS;
@@ -59,6 +61,9 @@ public final class PlayerUnplugCommand {
             UnplugService.unplug(player, new Session(durationMins, reason, false));
         } catch (UnplugCancelledException exception) {
             throw errUnplugCancelled(exception.getCancelMessage()).create();
+        } catch (ProxyUnavailableException exception) {
+            LOGGER.warn(exception.getMessage());
+            throw ERR_PROXY_UNAVAILABLE.create();
         } catch (UnplugFailedException exception) {
             LOGGER.error("Failed to unplug player {} ({})", player.getPlainTextName(), player.getUUID(), exception);
             throw ERR_GENERIC.create();

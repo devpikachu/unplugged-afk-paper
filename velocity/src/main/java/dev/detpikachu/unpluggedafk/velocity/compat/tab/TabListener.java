@@ -15,6 +15,6 @@ public final class TabListener {
 
     @Subscribe
     public void onServerPostConnect(ServerPostConnectEvent event) {
-        this.bridge.refresh();
+        this.bridge.refreshLater();
     }
 }

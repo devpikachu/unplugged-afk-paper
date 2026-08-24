@@ -7,6 +7,11 @@ import dev.detpikachu.unpluggedafk.common.network.messages.Challenge;
 import dev.detpikachu.unpluggedafk.common.network.messages.Goodbye;
 import dev.detpikachu.unpluggedafk.common.network.messages.Heartbeat;
 import dev.detpikachu.unpluggedafk.common.network.messages.Ready;
+import dev.detpikachu.unpluggedafk.common.network.messages.Relay;
+import dev.detpikachu.unpluggedafk.common.network.messages.SessionAck;
+import dev.detpikachu.unpluggedafk.common.network.messages.SessionEnd;
+import dev.detpikachu.unpluggedafk.common.network.messages.SessionStart;
+import dev.detpikachu.unpluggedafk.common.network.messages.Sync;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.io.DataInput;
@@ -30,8 +35,11 @@ public final class MessageCodec {
             case AUTH -> Auth.read(in);
             case READY -> Ready.read(in);
             case GOODBYE -> Goodbye.read(in);
-            case RELAY, SYNC, SESSION_START, SESSION_ACK, SESSION_END ->
-                throw new IOException("Message type " + type + " is not supported by this version.");
+            case RELAY -> Relay.read(in);
+            case SYNC -> Sync.read(in);
+            case SESSION_START -> SessionStart.read(in);
+            case SESSION_ACK -> SessionAck.read(in);
+            case SESSION_END -> SessionEnd.read(in);
         };
     }
 

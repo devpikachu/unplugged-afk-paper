@@ -1,17 +1,23 @@
 package dev.detpikachu.unpluggedafk.network;
 
+import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import dev.detpikachu.unpluggedafk.common.network.Handshake;
 import dev.detpikachu.unpluggedafk.common.network.Message;
 import dev.detpikachu.unpluggedafk.common.network.Protocol;
 import dev.detpikachu.unpluggedafk.common.network.messages.Auth;
 import dev.detpikachu.unpluggedafk.common.network.messages.Challenge;
+import dev.detpikachu.unpluggedafk.common.network.messages.Heartbeat;
 import dev.detpikachu.unpluggedafk.common.network.messages.Ready;
+import dev.detpikachu.unpluggedafk.common.network.messages.Relay;
+import dev.detpikachu.unpluggedafk.common.network.messages.SessionAck;
 import dev.detpikachu.unpluggedafk.config.LinkOptions;
+import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.jetbrains.annotations.ApiStatus;
 
+import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
 import static dev.detpikachu.unpluggedafk.UnpluggedAfk.logDebug;
 
 @ApiStatus.Internal
@@ -58,6 +64,20 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
             return;
         }
 
+        if (message instanceof Relay relay) {
+            onRelay(relay);
+            return;
+        }
+
+        if (message instanceof SessionAck ack) {
+            this.client.acknowledged(ack);
+            return;
+        }
+
+        if (message instanceof Heartbeat) {
+            return;
+        }
+
         logDebug("Ignoring {} from the proxy. Unknown message type.", message.getType());
     }
 
@@ -82,9 +102,43 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
             return;
         }
 
-        context.pipeline().remove(ReadTimeoutHandler.class);
+        context.pipeline()
+                .replace(ReadTimeoutHandler.class, "timeout", new ReadTimeoutHandler(Protocol.IDLE_TIMEOUT_SECS));
         this.ready = true;
         this.client.established(context.channel(), this.options.getServerName());
+    }
+
+    private static void onRelay(Relay relay) {
+        final var plugin = UnpluggedAfk.getInstance();
+        plugin.getServer().getGlobalRegionScheduler().run(plugin, task -> deliver(relay));
+    }
+
+    private static void deliver(Relay relay) {
+        final var bot = SessionRegistry.getInstance().find(relay.getUuid());
+
+        if (bot == null) {
+            logDebug("Dropped a relayed message on {}. Bot {} is gone.", relay.getChannel(), relay.getUuid());
+            return;
+        }
+
+        try {
+            logDebug(
+                    "Delivering {} byte(s) from the proxy to bot {} on channel {}.",
+                    relay.getPayload().length,
+                    relay.getUuid(),
+                    relay.getChannel());
+            UnpluggedAfk.getInstance()
+                    .getServer()
+                    .getMessenger()
+                    .dispatchIncomingMessage(
+                            bot.getBukkitEntity().getConnection(), relay.getChannel(), relay.getPayload());
+        } catch (RuntimeException exception) {
+            LOGGER.warn(
+                    "The proxy relayed a message to bot {} on the invalid channel {}.",
+                    relay.getUuid(),
+                    relay.getChannel(),
+                    exception);
+        }
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")

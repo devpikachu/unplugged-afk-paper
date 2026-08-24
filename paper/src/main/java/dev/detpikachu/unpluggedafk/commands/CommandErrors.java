@@ -28,6 +28,12 @@ public final class CommandErrors {
     public static final SimpleCommandExceptionType ERR_REASON_REQUIRED = new SimpleCommandExceptionType(
             MessageComponentSerializer.message().serialize(text("A reason must be given when unplugging.", RED)));
 
+    public static final SimpleCommandExceptionType ERR_PROXY_UNAVAILABLE =
+            new SimpleCommandExceptionType(MessageComponentSerializer.message()
+                    .serialize(text(
+                            "The proxy cannot be reached right now, so your spot could not be held. Please try again in a moment.",
+                            RED)));
+
     public static SimpleCommandExceptionType errDurationTooLarge(int durationMins) {
         return new SimpleCommandExceptionType(MessageComponentSerializer.message()
                 .serialize(text("The duration of ")

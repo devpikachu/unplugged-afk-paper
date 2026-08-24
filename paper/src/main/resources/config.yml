@@ -2,7 +2,7 @@ debug: false
 maxUnpluggedPlayers: 16
 maxDurationMins: 480
 link:
-  host: ''
+  host: 127.0.0.1
   port: 25580
   secret: ''
   serverName: ''

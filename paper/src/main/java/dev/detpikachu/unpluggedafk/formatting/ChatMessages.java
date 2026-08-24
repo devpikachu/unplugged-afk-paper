@@ -46,6 +46,10 @@ public final class ChatMessages {
         return prefix.append(duration).append(suffix).append(reasonComponent);
     }
 
+    public static Component formatUnplugRefused(String reason) {
+        return text("Your unplug request was refused. ").append(text(reason)).color(RED);
+    }
+
     public static Component formatUnpluggedBroadcast(Player player) {
         final var playerName = text(player.getName(), YELLOW);
         final var unplugged = text(" has unplugged, leaving their character behind", YELLOW);

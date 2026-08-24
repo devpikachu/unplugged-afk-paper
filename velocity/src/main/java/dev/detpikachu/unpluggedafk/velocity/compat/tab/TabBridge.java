@@ -14,6 +14,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity.logDebug;
+
 @ApiStatus.Internal
 public final class TabBridge {
 
@@ -87,7 +89,12 @@ public final class TabBridge {
     }
 
     public void addBot(String serverName, UUID uuid, String username, Session.@Nullable Skin skin) {
+        logDebug("Building a TAB entry for {} ({}) on {}.", username, uuid, serverName);
         this.dispatch(feature -> this.bots.put(uuid, this.newProxyPlayer(uuid, username, serverName, skin)));
+        this.refreshLater();
+    }
+
+    public void refreshLater() {
         this.proxyServer
                 .getScheduler()
                 .buildTask(this.plugin, this::refresh)
@@ -110,6 +117,7 @@ public final class TabBridge {
             return;
         }
 
+        logDebug("Re-asserting {} TAB entr(ies) to every viewer.", this.bots.size());
         this.dispatch(feature -> {
             for (final var bot : this.bots.values()) {
                 this.onJoin.invoke(feature, bot);
@@ -121,6 +129,7 @@ public final class TabBridge {
         final var feature = this.globalPlayerList();
 
         if (feature == null) {
+            logDebug("TAB has no GlobalPlayerList feature, so unplugged players stay backend-local.");
             return;
         }
 
