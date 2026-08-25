@@ -148,6 +148,13 @@ Everything here is gated behind the `debug` configuration flag, which is off by 
 The proxy has its own `debug` flag, set independently of the backends'. It gates noisy console logging useful for
 debugging.
 
+## Contributing
+
+Contributions are welcome, whether that is a bug report, a compatibility finding from your own server, a feature
+request, or a pull request.
+
+Everyone taking part is expected to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Acknowledgements
 
 Huge thanks to Sakura Ryoko for [Unplugged-AFK](https://github.com/sakura-ryoko/unplugged-afk), the mod this ports. This
