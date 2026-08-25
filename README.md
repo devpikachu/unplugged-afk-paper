@@ -97,6 +97,11 @@ are set.
 
 Out-of-range values are clamped back to their default, with a warning in the console.
 
+> [!WARNING]
+> The link port is an internal channel between the proxy and its backends, never a player-facing one. If you widen
+> `link.host` past `127.0.0.1`, restrict the port to your backends at the firewall. An open one gets found by server
+> scanners.
+
 ## Permissions
 
 | Node                        | Grants                                 | Default   |
