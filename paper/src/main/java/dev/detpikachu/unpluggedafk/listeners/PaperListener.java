@@ -42,7 +42,7 @@ public final class PaperListener implements Listener {
             event.quitMessage(null);
             UnpluggedAfk.getInstance().getLinkClient().endSession(bot, removeReason.name());
 
-            logDebug("Removed bot {} ({}). {} still active.", player.getName(), player.getUniqueId(), registry.count());
+            logDebug("Removed bot {}. {} still active.", bot.describe(), registry.count());
 
             new UnpluggedPlayerRemoveEvent(bot.getBukkitEntity(), bot.toInfo(), removeReason).callEvent();
 

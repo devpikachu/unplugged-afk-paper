@@ -80,6 +80,10 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
                 this.session.isFake());
     }
 
+    public String describe() {
+        return this.getPlainTextName() + " (" + this.getUUID() + ")";
+    }
+
     @Override
     public void tick() {
         final var server = this.level().getServer();
@@ -107,19 +111,15 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         super.die(damageSource);
 
         if (!this.isDeadOrDying()) {
-            logDebug(
-                    "Bot {} ({}) survived a cancelled death, so the session continues.",
-                    this.getPlainTextName(),
-                    this.getUUID());
+            logDebug("Bot {} survived a cancelled death, so the session continues.", this.describe());
             return;
         }
 
         this.deathMessage = PaperAdventure.asAdventure(this.getCombatTracker().getDeathMessage());
 
         LOGGER.warn(
-                "Bot {} ({}) died. Their items dropped and their spot is held for another {} tick(s).",
-                this.getPlainTextName(),
-                this.getUUID(),
+                "Bot {} died. Their items dropped and their spot is held for another {} tick(s).",
+                this.describe(),
                 DEATH_LINGER_TICKS);
     }
 
@@ -161,7 +161,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
             return;
         }
 
-        logDebug("Bot {} ({}) was removed from the world: {}.", this.getPlainTextName(), this.getUUID(), reason);
+        logDebug("Bot {} was removed from the world: {}.", this.describe(), reason);
         this.deferredDisconnect(Component.text(KickReasons.REMOVED), Reason.ENTITY_REMOVED);
     }
 
@@ -174,9 +174,8 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         this.removeReason = reason;
 
         LOGGER.info(
-                "Killing bot {} ({}) after {} of {} minute(s): {}",
-                this.getPlainTextName(),
-                this.getUUID(),
+                "Killing bot {} after {} of {} minute(s): {}",
+                this.describe(),
                 this.session.elapsed().toMinutes(),
                 this.session.durationMins(),
                 PlainTextComponentSerializer.plainText().serialize(message));
@@ -192,10 +191,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         }
 
         if (this.deathMessage != null && !this.isDeadOrDying()) {
-            logDebug(
-                    "Bot {} ({}) was healed mid-death, so the linger is dropped.",
-                    this.getPlainTextName(),
-                    this.getUUID());
+            logDebug("Bot {} was healed mid-death, so the linger is dropped.", this.describe());
             this.deathMessage = null;
             this.deathTime = 0;
         }
@@ -222,9 +218,8 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         this.isSpawnStatePending = false;
 
         logDebug(
-                "Sent deferred spawn packets for {} ({}) after {}ms.",
-                this.getPlainTextName(),
-                this.getUUID(),
+                "Sent deferred spawn packets for {} after {}ms.",
+                this.describe(),
                 this.session.elapsed().toMillis());
     }
 

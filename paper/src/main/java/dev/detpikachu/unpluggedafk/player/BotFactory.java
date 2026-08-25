@@ -67,7 +67,7 @@ public final class BotFactory {
 
         LOGGER.info(
                 "Spawned fake bot {} at {}, {}, {} in {} for {} minute(s).",
-                bot.getPlainTextName(),
+                bot.describe(),
                 (int) position.x(),
                 (int) position.y(),
                 (int) position.z(),

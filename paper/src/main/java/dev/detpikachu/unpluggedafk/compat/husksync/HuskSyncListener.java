@@ -46,7 +46,7 @@ public final class HuskSyncListener implements Listener {
                 bot.getUUID(),
                 new Handoff(snapshotOf(BukkitHuskSyncAPI.getInstance().getUser(player))));
 
-        logDebug("Held the data of bot {} ({}) for the returning player.", bot.getPlainTextName(), bot.getUUID());
+        logDebug("Held the data of bot {} for the returning player.", bot.describe());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -58,7 +58,7 @@ public final class HuskSyncListener implements Listener {
             final var repaired = snapshotOf(user);
 
             event.editData(stale -> overwrite(stale, repaired));
-            logDebug("Repaired HuskSync's snapshot for bot {} ({}).", bot.getPlainTextName(), bot.getUUID());
+            logDebug("Repaired HuskSync's snapshot for bot {}.", bot.describe());
 
             return;
         }

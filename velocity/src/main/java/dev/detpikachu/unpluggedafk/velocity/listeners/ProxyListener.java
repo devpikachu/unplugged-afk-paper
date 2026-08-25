@@ -49,7 +49,10 @@ public final class ProxyListener {
 
     @Subscribe
     public void onGameProfileRequest(GameProfileRequestEvent event) {
-        logDebug("GameProfileRequest for {}, clearing any presence under that uuid.", event.getUsername());
+        logDebug(
+                "GameProfileRequest for {} ({}), clearing any presence under that uuid.",
+                event.getUsername(),
+                event.getGameProfile().getId());
         this.botPlayerBridge.remove(event.getGameProfile().getId());
     }
 
@@ -110,13 +113,14 @@ public final class ProxyListener {
 
         if (server.isEmpty()) {
             this.logger.warn(
-                    "{} unplugged on {}, which is no longer registered, so they fall back to the try list.",
+                    "{} ({}) unplugged on {}, which is no longer registered, so they fall back to the try list.",
                     player.getUsername(),
+                    player.getUniqueId(),
                     serverName);
             return;
         }
 
         event.setInitialServer(server.get());
-        this.logger.info("Routing {} back to {}", player.getUsername(), serverName);
+        this.logger.info("Routing {} ({}) back to {}", player.getUsername(), player.getUniqueId(), serverName);
     }
 }

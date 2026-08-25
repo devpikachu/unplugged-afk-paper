@@ -253,7 +253,10 @@ public final class BotPlayerBridge {
             this.unregisterConnection.invoke(this.proxyServer, bot.player());
         } catch (ReflectiveOperationException | RuntimeException exception) {
             this.logger.warn(
-                    "Could not clear bot {} from the proxy.", bot.player().getUsername(), exception);
+                    "Could not clear bot {} ({}) from the proxy.",
+                    bot.player().getUsername(),
+                    bot.player().getUniqueId(),
+                    exception);
         }
     }
 

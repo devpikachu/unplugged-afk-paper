@@ -4,6 +4,7 @@ import dev.detpikachu.unpluggedafk.api.UnpluggedAfkApi;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent;
 import dev.detpikachu.unpluggedafk.commands.CommandTree;
 import dev.detpikachu.unpluggedafk.compat.husksync.HuskSyncCompat;
+import dev.detpikachu.unpluggedafk.compat.luckperms.LuckPermsCompat;
 import dev.detpikachu.unpluggedafk.compat.packetevents.PacketEventsCompat;
 import dev.detpikachu.unpluggedafk.compat.placeholderapi.PlaceholderApiCompat;
 import dev.detpikachu.unpluggedafk.config.Options;
@@ -105,6 +106,7 @@ public final class UnpluggedAfk extends JavaPlugin {
         PacketEventsCompat.register(this);
         HuskSyncCompat.register(this);
         PlaceholderApiCompat.register(this);
+        LuckPermsCompat.register(this);
     }
 
     private void logStartupSummary() {

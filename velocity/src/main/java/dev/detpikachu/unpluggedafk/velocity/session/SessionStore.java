@@ -39,8 +39,9 @@ public final class SessionStore {
 
         if (previous != null && previous.isAlive() && !previous.serverName().equals(serverName)) {
             this.logger.warn(
-                    "Refused a session for {} on {}: they already have a live session on {}.",
+                    "Refused a session for {} ({}) on {}: they already have a live session on {}.",
                     username,
+                    uuid,
                     serverName,
                     previous.serverName());
             return false;

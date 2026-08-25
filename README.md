@@ -11,9 +11,10 @@ until the time you declared runs out.
 > get the death screen on rejoining.
 
 > [!WARNING]
-> The unplugged player joins without the login step permission plugins hook into, so it resolves permissions from
-> operator status and plugin defaults alone. An AFK-kick bypass granted through a group in a permission plugin such as
-> LuckPerms will not apply to it.
+> The unplugged player joins without the login step permission plugins hook into. LuckPerms is supported directly, so
+> with it installed the unplugged player resolves permissions exactly as you do. Every other permission plugin needs
+> support added for it specifically, and until then the unplugged player falls back to operator status and plugin
+> defaults alone, so an AFK-kick bypass granted through a group will not apply to it.
 
 ## Features
 

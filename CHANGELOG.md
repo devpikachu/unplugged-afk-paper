@@ -10,6 +10,10 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ## [Unreleased]
 
+### Added
+
+- **LuckPerms support:** the bot now correctly inherits the LuckPerms container from the real player
+
 ### Changed
 
 - **Silently drop unknown packets:** instead of logging a warning, the plugin now silently drops unknown packets so that port scanners don't create log spam

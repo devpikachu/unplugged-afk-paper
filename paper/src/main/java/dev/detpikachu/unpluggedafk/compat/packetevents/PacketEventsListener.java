@@ -17,9 +17,9 @@ public final class PacketEventsListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerKick(PlayerKickEvent event) {
-        final var player = event.getPlayer();
+        final var bot = UnpluggedServerPlayer.from(event.getPlayer());
 
-        if (UnpluggedServerPlayer.from(player) == null) {
+        if (bot == null) {
             return;
         }
 
@@ -30,6 +30,6 @@ public final class PacketEventsListener implements Listener {
         }
 
         event.setCancelled(true);
-        logDebug("Refused a kick of bot {} ({}): {}", player.getName(), player.getUniqueId(), reason);
+        logDebug("Refused a kick of bot {}: {}", bot.describe(), reason);
     }
 }
