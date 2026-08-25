@@ -222,14 +222,14 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     private void onSessionStart(ChannelHandlerContext context, SessionStart start, String serverName) {
         final var uuid = start.uuid();
         final var username = start.username();
-        final var skin = skinOf(start.skin());
+        final var session = toSession(serverName, start);
 
-        if (!this.sessionStore.start(serverName, uuid, username, skin, start.secondsRemaining())) {
+        if (!this.sessionStore.start(uuid, session)) {
             send(context, new SessionAck(uuid, false, SESSION_HELD_ELSEWHERE));
             return;
         }
 
-        this.addPresence(serverName, uuid, username, skin);
+        this.addPresence(serverName, uuid, username, session.skin());
         send(context, new SessionAck(uuid, true, ""));
         this.logger.info(
                 "SESSION_START: {} ({}) on {} for {} second(s).", username, uuid, serverName, start.secondsRemaining());
@@ -338,11 +338,16 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     }
 
     private static Session toSession(String serverName, SessionStart start) {
+        final var now = Instant.now();
+
         return new Session(
                 serverName,
                 start.username(),
                 skinOf(start.skin()),
-                Instant.now().plusSeconds(start.secondsRemaining()));
+                start.durationMins(),
+                start.reason(),
+                now.minusSeconds(start.durationMins() * 60L - start.secondsRemaining()),
+                now.plusSeconds(start.secondsRemaining()));
     }
 
     private static Session.@Nullable Skin skinOf(SessionStart.@Nullable Skin skin) {

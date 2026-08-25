@@ -1,7 +1,7 @@
 package dev.detpikachu.unpluggedafk.compat.placeholderapi;
 
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
-import dev.detpikachu.unpluggedafk.formatting.DurationFormatting;
+import dev.detpikachu.unpluggedafk.common.formatting.DurationFormatting;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;

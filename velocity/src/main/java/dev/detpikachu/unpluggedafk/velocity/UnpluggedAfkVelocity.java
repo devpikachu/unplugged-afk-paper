@@ -8,6 +8,7 @@ import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
+import dev.detpikachu.unpluggedafk.velocity.compat.miniplaceholders.MiniPlaceholdersCompat;
 import dev.detpikachu.unpluggedafk.velocity.compat.tab.TabCompat;
 import dev.detpikachu.unpluggedafk.velocity.config.Options;
 import dev.detpikachu.unpluggedafk.velocity.listeners.ProxyListener;
@@ -29,7 +30,8 @@ import java.nio.file.Path;
         description = "Routes returning players back to the server holding their unplugged character.",
         url = "https://github.com/devpikachu/unplugged-afk-paper",
         authors = {"Andrei \"detpikachu\" Hava"},
-        dependencies = {@Dependency(id = "tab", optional = true)})
+        dependencies = {@Dependency(id = "tab", optional = true), @Dependency(id = "miniplaceholders", optional = true)
+        })
 @ApiStatus.Internal
 public final class UnpluggedAfkVelocity {
 
@@ -93,6 +95,7 @@ public final class UnpluggedAfkVelocity {
         Options.deserialize(this.dataDirectory, LOGGER);
 
         final var tabBridge = TabCompat.register(this);
+        MiniPlaceholdersCompat.register(this);
 
         this.linkServer.start(this, botPlayerBridge, tabBridge);
 

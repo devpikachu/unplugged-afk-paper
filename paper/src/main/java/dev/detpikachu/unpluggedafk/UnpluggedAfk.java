@@ -5,6 +5,7 @@ import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent;
 import dev.detpikachu.unpluggedafk.commands.CommandTree;
 import dev.detpikachu.unpluggedafk.compat.husksync.HuskSyncCompat;
 import dev.detpikachu.unpluggedafk.compat.luckperms.LuckPermsCompat;
+import dev.detpikachu.unpluggedafk.compat.miniplaceholders.MiniPlaceholdersCompat;
 import dev.detpikachu.unpluggedafk.compat.packetevents.PacketEventsCompat;
 import dev.detpikachu.unpluggedafk.compat.placeholderapi.PlaceholderApiCompat;
 import dev.detpikachu.unpluggedafk.config.Options;
@@ -78,6 +79,7 @@ public final class UnpluggedAfk extends JavaPlugin {
         final var bots = registry.all();
 
         this.getServer().getServicesManager().unregisterAll(this);
+        this.unregisterCompat();
 
         if (!bots.isEmpty()) {
             LOGGER.warn("Disabling with {} bot(s) still active. Their spots will no longer be held.", bots.size());
@@ -107,6 +109,11 @@ public final class UnpluggedAfk extends JavaPlugin {
         HuskSyncCompat.register(this);
         PlaceholderApiCompat.register(this);
         LuckPermsCompat.register(this);
+        MiniPlaceholdersCompat.register(this);
+    }
+
+    private void unregisterCompat() {
+        MiniPlaceholdersCompat.unregister(this);
     }
 
     private void logStartupSummary() {

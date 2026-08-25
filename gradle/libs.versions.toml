@@ -8,6 +8,7 @@ velocity = "3.5.0-SNAPSHOT"
 husksync = "4.0.0+1.21.11"
 placeholderapi = "2.12.3"
 luckperms = "5.5"
+miniplaceholders = "3.1.0"
 
 errorprone = "2.50.0"
 nullaway = "0.14.0"
@@ -24,6 +25,7 @@ velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "vel
 husksync-bukkit = { module = "net.william278.husksync:husksync-bukkit", version.ref = "husksync" }
 placeholderapi = { module = "me.clip:placeholderapi", version.ref = "placeholderapi" }
 luckperms-api = { module = "net.luckperms:api", version.ref = "luckperms" }
+miniplaceholders-api = { module = "io.github.miniplaceholders:miniplaceholders-api", version.ref = "miniplaceholders" }
 
 errorprone-annotations = { module = "com.google.errorprone:error_prone_annotations", version.ref = "errorprone" }
 errorprone-core = { module = "com.google.errorprone:error_prone_core", version.ref = "errorprone" }

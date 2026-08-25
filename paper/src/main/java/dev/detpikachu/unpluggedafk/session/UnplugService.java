@@ -56,7 +56,7 @@ public final class UnplugService {
             return;
         }
 
-        client.startSession(player, session.remaining().toSeconds(), ack -> onAcknowledged(player, session, ack));
+        client.startSession(player, session, ack -> onAcknowledged(player, session, ack));
     }
 
     private static void onAcknowledged(ServerPlayer player, Session session, SessionAck ack) {

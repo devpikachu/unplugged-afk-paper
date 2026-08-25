@@ -4,7 +4,6 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
-import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,24 +30,31 @@ public final class SessionStore {
         return session != null && session.isAlive() && session.serverName().equals(serverName);
     }
 
-    public boolean start(
-            String serverName, UUID uuid, String username, Session.@Nullable Skin skin, long secondsRemaining) {
+    public @Nullable Session find(UUID uuid) {
+        final var session = this.sessions.get(uuid);
+        return session != null && session.isAlive() ? session : null;
+    }
+
+    public int count() {
+        return (int) this.sessions.values().stream().filter(Session::isAlive).count();
+    }
+
+    public boolean start(UUID uuid, Session session) {
         this.pruneExpired();
 
         final var previous = this.sessions.get(uuid);
 
-        if (previous != null && previous.isAlive() && !previous.serverName().equals(serverName)) {
+        if (previous != null && previous.isAlive() && !previous.serverName().equals(session.serverName())) {
             this.logger.warn(
                     "Refused a session for {} ({}) on {}: they already have a live session on {}.",
-                    username,
+                    session.username(),
                     uuid,
-                    serverName,
+                    session.serverName(),
                     previous.serverName());
             return false;
         }
 
-        this.sessions.put(
-                uuid, new Session(serverName, username, skin, Instant.now().plusSeconds(secondsRemaining)));
+        this.sessions.put(uuid, session);
         return true;
     }
 

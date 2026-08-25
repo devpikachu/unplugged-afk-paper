@@ -13,7 +13,8 @@ import java.util.UUID;
 
 @ApiStatus.Internal
 public record SessionStart(
-        UUID uuid, String username, @Nullable Skin skin, long secondsRemaining) implements Message {
+        UUID uuid, String username, @Nullable Skin skin, int durationMins, String reason, long secondsRemaining)
+        implements Message {
 
     @Override
     public MessageType getType() {
@@ -24,9 +25,11 @@ public record SessionStart(
         final var uuid = MessageCodec.readUuid(in);
         final var username = in.readUTF();
         final var skin = Skin.read(in);
+        final var durationMins = in.readInt();
+        final var reason = in.readUTF();
         final var secondsRemaining = in.readLong();
 
-        return new SessionStart(uuid, username, skin, secondsRemaining);
+        return new SessionStart(uuid, username, skin, durationMins, reason, secondsRemaining);
     }
 
     @Override
@@ -40,6 +43,8 @@ public record SessionStart(
             out.writeBoolean(false);
         }
 
+        out.writeInt(this.durationMins);
+        out.writeUTF(this.reason);
         out.writeLong(this.secondsRemaining);
     }
 

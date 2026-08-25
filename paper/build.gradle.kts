@@ -46,6 +46,7 @@ dependencies {
     compileOnly(libs.husksync.bukkit)
     compileOnly(libs.placeholderapi)
     compileOnly(libs.luckperms.api)
+    compileOnly(libs.miniplaceholders.api)
 
     // Annotations
     compileOnly(libs.errorprone.annotations)

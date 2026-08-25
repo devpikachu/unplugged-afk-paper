@@ -14,6 +14,7 @@ import dev.detpikachu.unpluggedafk.common.network.messages.Sync;
 import dev.detpikachu.unpluggedafk.config.Options;
 import dev.detpikachu.unpluggedafk.formatting.ChatMessages;
 import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
+import dev.detpikachu.unpluggedafk.session.Session;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -150,7 +151,7 @@ public final class LinkClient {
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")
-    public void startSession(ServerPlayer player, long secondsRemaining, Consumer<SessionAck> onAck) {
+    public void startSession(ServerPlayer player, Session session, Consumer<SessionAck> onAck) {
         final var uuid = player.getUUID();
         final var channel = this.channel;
 
@@ -169,6 +170,8 @@ public final class LinkClient {
             return;
         }
 
+        final var secondsRemaining = session.remaining().toSeconds();
+
         logDebug(
                 "Sending SESSION_START for {} ({}), {} second(s) remaining.",
                 player.getPlainTextName(),
@@ -178,13 +181,14 @@ public final class LinkClient {
         final var timeout = channel.eventLoop().schedule(() -> timedOut(uuid), ACK_TIMEOUT_SECS, TimeUnit.SECONDS);
         this.pendingSessions.put(uuid, new PendingSession(onAck, timeout));
 
-        channel.writeAndFlush(describe(player, secondsRemaining));
+        channel.writeAndFlush(describe(player, session, secondsRemaining));
     }
 
-    public void endSession(ServerPlayer bot, String reason) {
-        if (!(bot instanceof UnpluggedServerPlayer unplugged)
-                || !unplugged.getSession().isFake()) {
-            this.endedSessions.put(bot.getUUID(), EndedSession.of(describe(bot, 0L)));
+    public void endSession(UnpluggedServerPlayer bot, String reason) {
+        final var session = bot.getSession();
+
+        if (!session.isFake()) {
+            this.endedSessions.put(bot.getUUID(), EndedSession.of(describe(bot, session, 0L)));
         }
 
         pruneEndedSessions();
@@ -298,18 +302,17 @@ public final class LinkClient {
         final var sessions = new ArrayList<SessionStart>();
 
         for (final var bot : SessionRegistry.getInstance().all()) {
-            if (bot.getSession().isFake()) {
+            final var session = bot.getSession();
+
+            if (session.isFake()) {
                 continue;
             }
 
-            sessions.add(describe(bot, bot.getSession().remaining().toSeconds()));
+            sessions.add(describe(bot, session, session.remaining().toSeconds()));
         }
 
         pruneEndedSessions();
-        this.endedSessions
-                .values()
-                .forEach(ended -> sessions.add(
-                        new SessionStart(ended.uuid(), ended.username(), ended.skin(), -ended.secondsSinceEnd())));
+        this.endedSessions.values().forEach(ended -> sessions.add(ended.hint()));
 
         logDebug("Sending SYNC with {} session(s).", sessions.size());
         channel.writeAndFlush(new Sync(sessions));
@@ -398,8 +401,14 @@ public final class LinkClient {
         channel.writeAndFlush(new Heartbeat(System.nanoTime()));
     }
 
-    private static SessionStart describe(ServerPlayer player, long secondsRemaining) {
-        return new SessionStart(player.getUUID(), player.getPlainTextName(), skinOf(player), secondsRemaining);
+    private static SessionStart describe(ServerPlayer player, Session session, long secondsRemaining) {
+        return new SessionStart(
+                player.getUUID(),
+                player.getPlainTextName(),
+                skinOf(player),
+                session.durationMins(),
+                session.reason(),
+                secondsRemaining);
     }
 
     private static SessionStart.@Nullable Skin skinOf(ServerPlayer player) {
@@ -416,10 +425,20 @@ public final class LinkClient {
 
     private record PendingSession(Consumer<SessionAck> callback, ScheduledFuture<?> timeout) {}
 
-    private record EndedSession(UUID uuid, String username, SessionStart.@Nullable Skin skin, Instant endedAt) {
+    private record EndedSession(SessionStart start, Instant endedAt) {
 
         static EndedSession of(SessionStart start) {
-            return new EndedSession(start.uuid(), start.username(), start.skin(), Instant.now());
+            return new EndedSession(start, Instant.now());
+        }
+
+        SessionStart hint() {
+            return new SessionStart(
+                    this.start.uuid(),
+                    this.start.username(),
+                    this.start.skin(),
+                    this.start.durationMins(),
+                    this.start.reason(),
+                    -this.secondsSinceEnd());
         }
 
         long secondsSinceEnd() {

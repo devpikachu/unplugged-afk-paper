@@ -27,6 +27,9 @@ dependencies {
     // Common
     implementation(project(":common"))
 
+    // Integrations
+    compileOnly(libs.miniplaceholders.api)
+
     // Dependencies
     compileOnly(libs.netty.buffer)
     compileOnly(libs.netty.codec.base)

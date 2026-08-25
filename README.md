@@ -22,8 +22,8 @@ until the time you declared runs out.
 - **Inventory carries over:** the unplugged player starts with your inventory, and hands back whatever it collected
 - **Configurable limits:** operators set the maximum duration and a global cap on how many unplugged players can exist
 - **Admin control:** commands to inspect who is unplugged, and to debug the plugin's behaviour
-- **Placeholder aware:** with PlaceholderAPI installed, scoreboards, tab lists and chat plugins can show who is
-  unplugged and for how long
+- **Placeholder aware:** with PlaceholderAPI or MiniPlaceholders installed, scoreboards, tab lists and chat plugins can
+  show who is unplugged and for how long
 - **Proxy aware:** behind Velocity, unplugging disconnects you from the whole network, returning puts you back on the
   server your unplugged player is on, and the server list still counts it
 
@@ -35,7 +35,6 @@ until the time you declared runs out.
 - **Historical data:** persist records to disk so staff can review how players have used the plugin
 - **Re-spawn unplugged players on server reboot:** bring them back automatically when a backend restarts
 - **More admin commands:** unplug an online player on their behalf, unplug an offline player, and similar
-- **[MiniPlaceholders](https://modrinth.com/plugin/miniplaceholders) support:** support MiniPlaceholders like we do PAPI
 
 ## Requirements
 
@@ -115,8 +114,10 @@ Out-of-range values are clamped back to their default, with a warning in the con
 
 ## Placeholders
 
-With [PlaceholderAPI](https://github.com/PlaceholderAPI/PlaceholderAPI) installed, the plugin registers an expansion
-under the identifier `unplugged-afk`.
+### PlaceholderAPI
+
+With [PlaceholderAPI](https://github.com/PlaceholderAPI/PlaceholderAPI) installed, the backend plugin registers an
+expansion under the identifier `unplugged-afk`.
 
 | Placeholder                      | Gives                                                             |
 |----------------------------------|-------------------------------------------------------------------|
@@ -131,6 +132,22 @@ under the identifier `unplugged-afk`.
 
 Every placeholder except `%unplugged-afk_count%` describes one player and renders empty when that player is not
 unplugged. `%unplugged-afk_is_unplugged%` renders `false` instead.
+
+### MiniPlaceholders
+
+With [MiniPlaceholders](https://modrinth.com/plugin/miniplaceholders) installed, both JARs register an expansion under
+the same name. MiniMessage spells the tags `<unplugged-afk_is_unplugged>` rather than `%unplugged-afk_is_unplugged%`.
+
+Installed on a backend, the tags answer for that server. Installed on the proxy, they answer for the whole network.
+Three of them differ between the two sides:
+
+| Tag                       | On a backend                             | On the proxy                          |
+|---------------------------|------------------------------------------|---------------------------------------|
+| `<unplugged-afk_count>`   | How many this server holds               | How many the network holds            |
+| `<unplugged-afk_server>`  | Not registered                           | The server the unplugged player is on |
+| `<unplugged-afk_is_fake>` | `true` for `/unplugged debug spawn-fake` | Not registered                        |
+
+The rest carry the meanings listed above and render identically on either side.
 
 ## Proxy Support
 

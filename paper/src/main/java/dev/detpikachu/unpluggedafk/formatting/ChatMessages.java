@@ -1,5 +1,6 @@
 package dev.detpikachu.unpluggedafk.formatting;
 
+import dev.detpikachu.unpluggedafk.common.formatting.DurationFormatting;
 import dev.detpikachu.unpluggedafk.config.Options;
 import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;

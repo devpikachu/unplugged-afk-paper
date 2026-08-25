@@ -13,6 +13,7 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 ### Added
 
 - **LuckPerms support:** the bot now correctly inherits the LuckPerms container from the real player
+- **MiniPlaceholders support:** the plugin now provides placeholders for unplugged player state
 
 ### Changed
 

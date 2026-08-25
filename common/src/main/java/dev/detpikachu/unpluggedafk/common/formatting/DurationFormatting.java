@@ -1,4 +1,4 @@
-package dev.detpikachu.unpluggedafk.formatting;
+package dev.detpikachu.unpluggedafk.common.formatting;
 
 import org.jetbrains.annotations.ApiStatus;
 
