@@ -94,7 +94,12 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext context, Throwable cause) {
-        this.logger.warn("Link error from {}. Closing.", context.channel().remoteAddress(), cause);
+        final var serverName = this.serverName;
+
+        if (serverName != null) {
+            this.logger.warn("Link error from backend {}. Closing.", serverName, cause);
+        }
+
         close(context);
     }
 

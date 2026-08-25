@@ -10,6 +10,10 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ## [Unreleased]
 
+### Changed
+
+- **Silently drop unknown packets:** instead of logging a warning, the plugin now silently drops unknown packets so that port scanners don't create log spam
+
 ## [0.5.0] - 2026-08-24
 
 ### Added
