@@ -13,6 +13,7 @@ import java.time.Duration;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity.logDebug;
 
@@ -48,6 +49,7 @@ public final class TabBridge {
     private final Method onQuit;
 
     private final ConcurrentHashMap<UUID, Object> bots = new ConcurrentHashMap<>();
+    private final AtomicBoolean refreshPending = new AtomicBoolean();
 
     private TabBridge(UnpluggedAfkVelocity plugin) throws ReflectiveOperationException {
         final var tabClass = Class.forName(LOCATOR_TAB);
@@ -89,27 +91,34 @@ public final class TabBridge {
     }
 
     public void addBot(String serverName, UUID uuid, String username, Session.@Nullable Skin skin) {
-        logDebug("Building a TAB entry for {} ({}) on {}.", username, uuid, serverName);
+        logDebug("Building a TAB entry for bot {} ({}) on {}.", username, uuid, serverName);
         this.dispatch(feature -> this.bots.put(uuid, this.newProxyPlayer(uuid, username, serverName, skin)));
         this.refreshLater();
     }
 
     public void refreshLater() {
+        if (!this.refreshPending.compareAndSet(false, true)) {
+            return;
+        }
+
         this.proxyServer
                 .getScheduler()
-                .buildTask(this.plugin, this::refresh)
+                .buildTask(this.plugin, () -> {
+                    this.refreshPending.set(false);
+                    this.refresh();
+                })
                 .delay(Duration.ofSeconds(RESYNC_DELAY_SECS))
                 .schedule();
     }
 
     public void removeBot(UUID uuid) {
-        final var bot = this.bots.remove(uuid);
+        this.dispatch(feature -> {
+            final var bot = this.bots.remove(uuid);
 
-        if (bot == null) {
-            return;
-        }
-
-        this.dispatch(feature -> this.onQuit.invoke(feature, bot));
+            if (bot != null) {
+                this.onQuit.invoke(feature, bot);
+            }
+        });
     }
 
     public void refresh() {
@@ -129,7 +138,7 @@ public final class TabBridge {
         final var feature = this.globalPlayerList();
 
         if (feature == null) {
-            logDebug("TAB has no GlobalPlayerList feature, so unplugged players stay backend-local.");
+            logDebug("TAB has no GlobalPlayerList feature, so bots stay backend-local.");
             return;
         }
 
@@ -144,7 +153,7 @@ public final class TabBridge {
         try {
             call.invoke(feature);
         } catch (ReflectiveOperationException | RuntimeException exception) {
-            this.logger.warn("TAB rejected an unplugged player's tab list entry.", exception);
+            this.logger.warn("TAB rejected a bot's tab list entry.", exception);
         }
     }
 

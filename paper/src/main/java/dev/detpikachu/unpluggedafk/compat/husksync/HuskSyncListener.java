@@ -41,8 +41,8 @@ public final class HuskSyncListener implements Listener {
             return;
         }
 
-        handoffs.values().removeIf(Handoff::isExpired);
-        handoffs.put(
+        this.handoffs.values().removeIf(Handoff::isExpired);
+        this.handoffs.put(
                 bot.getUUID(),
                 new Handoff(snapshotOf(BukkitHuskSyncAPI.getInstance().getUser(player))));
 
@@ -63,7 +63,7 @@ public final class HuskSyncListener implements Listener {
             return;
         }
 
-        final var handoff = handoffs.remove(user.getUuid());
+        final var handoff = this.handoffs.remove(user.getUuid());
         final var repair = handoff == null || handoff.isExpired() ? null : handoff.data();
         final var incoming = repair == null ? unpack(event.getData()) : repair;
         final var withhold =
@@ -91,8 +91,8 @@ public final class HuskSyncListener implements Listener {
             return;
         }
 
-        withheldDeaths.values().removeIf(HuskSyncListener::isExpired);
-        withheldDeaths.put(user.getUuid(), Instant.now());
+        this.withheldDeaths.values().removeIf(HuskSyncListener::isExpired);
+        this.withheldDeaths.put(user.getUuid(), Instant.now());
 
         logDebug("Held back the death of {} ({}) until their sync completes.", user.getName(), user.getUuid());
     }
@@ -100,7 +100,7 @@ public final class HuskSyncListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onSyncComplete(BukkitSyncCompleteEvent event) {
         final var user = (BukkitUser) event.getUser();
-        final var withheldAt = withheldDeaths.remove(user.getUuid());
+        final var withheldAt = this.withheldDeaths.remove(user.getUuid());
 
         if (withheldAt == null || isExpired(withheldAt) || user.hasDisconnected()) {
             return;

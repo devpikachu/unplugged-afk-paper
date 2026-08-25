@@ -2,6 +2,7 @@ package dev.detpikachu.unpluggedafk.velocity;
 
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
+import com.velocitypowered.api.event.proxy.ProxyPreShutdownEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Dependency;
 import com.velocitypowered.api.plugin.Plugin;
@@ -15,6 +16,7 @@ import dev.detpikachu.unpluggedafk.velocity.network.LinkServer;
 import dev.detpikachu.unpluggedafk.velocity.session.SessionStore;
 import jakarta.inject.Inject;
 import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +40,8 @@ public final class UnpluggedAfkVelocity {
     private final SessionStore sessionStore;
     private final Path dataDirectory;
     private final LinkServer linkServer;
+
+    private @Nullable BotPlayerBridge botPlayerBridge;
 
     @Inject
     public UnpluggedAfkVelocity(Logger logger, ProxyServer proxyServer, @DataDirectory Path dataDirectory) {
@@ -66,10 +70,6 @@ public final class UnpluggedAfkVelocity {
         return this.sessionStore;
     }
 
-    public Path getDataDirectory() {
-        return this.dataDirectory;
-    }
-
     public LinkServer getLinkServer() {
         return this.linkServer;
     }
@@ -84,11 +84,12 @@ public final class UnpluggedAfkVelocity {
             botPlayerBridge = new BotPlayerBridge(this);
         } catch (ReflectiveOperationException | RuntimeException exception) {
             LOGGER.error(
-                    "Unplugged AFK could not resolve Velocity's internals, which it needs to give an unplugged player a proxy connection. Ensure you are using a version of Velocity that is supported by this version of the plugin.",
+                    "Unplugged AFK could not resolve Velocity's internals, which it needs to give a bot a proxy connection. Ensure you are using a version of Velocity that is supported by this version of the plugin.",
                     exception);
             return;
         }
 
+        this.botPlayerBridge = botPlayerBridge;
         Options.deserialize(this.dataDirectory, LOGGER);
 
         final var tabBridge = TabCompat.register(this);
@@ -103,6 +104,17 @@ public final class UnpluggedAfkVelocity {
                 "Unplugged AFK has been enabled. Link listening on {}:{}.",
                 linkOptions.getHost(),
                 linkOptions.getPort());
+    }
+
+    @Subscribe
+    public void onProxyPreShutdown(ProxyPreShutdownEvent event) {
+        final var bridge = this.botPlayerBridge;
+
+        if (bridge == null) {
+            return;
+        }
+
+        bridge.removeAll();
     }
 
     @Subscribe

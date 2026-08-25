@@ -42,6 +42,10 @@ public final class UnpluggedAfk extends JavaPlugin {
         }
     }
 
+    public static boolean isProxyMode() {
+        return GlobalConfiguration.get().proxies.velocity.enabled;
+    }
+
     public LinkClient getLinkClient() {
         return this.linkClient;
     }
@@ -108,11 +112,11 @@ public final class UnpluggedAfk extends JavaPlugin {
 
         LOGGER.info(
                 "Enabled for Minecraft {}. maxUnpluggedPlayers={}, maxDurationMins={}",
-                getServer().getMinecraftVersion(),
+                this.getServer().getMinecraftVersion(),
                 options.getMaxUnpluggedPlayers(),
                 options.getMaxDurationMins());
 
-        if (GlobalConfiguration.get().proxies.velocity.enabled) {
+        if (isProxyMode()) {
             final var link = options.getLink();
 
             LOGGER.info(
@@ -128,7 +132,7 @@ public final class UnpluggedAfk extends JavaPlugin {
     }
 
     private void startLink() {
-        if (!GlobalConfiguration.get().proxies.velocity.enabled) {
+        if (!isProxyMode()) {
             return;
         }
 
@@ -136,7 +140,7 @@ public final class UnpluggedAfk extends JavaPlugin {
     }
 
     private boolean hasRequiredLink() {
-        if (!GlobalConfiguration.get().proxies.velocity.enabled) {
+        if (!isProxyMode()) {
             return true;
         }
 
@@ -150,8 +154,8 @@ public final class UnpluggedAfk extends JavaPlugin {
     }
 
     private void warnOnVersionMismatch() {
-        final var targetVersion = getTargetMinecraftVersion();
-        final var runningVersion = getServer().getMinecraftVersion();
+        final var targetVersion = this.getTargetMinecraftVersion();
+        final var runningVersion = this.getServer().getMinecraftVersion();
 
         if (runningVersion.equals(targetVersion)) {
             return;
@@ -166,7 +170,7 @@ public final class UnpluggedAfk extends JavaPlugin {
     private @Nullable String getTargetMinecraftVersion() {
         final var properties = new Properties();
 
-        try (var stream = getResource(PROPERTIES_RESOURCE)) {
+        try (var stream = this.getResource(PROPERTIES_RESOURCE)) {
             if (stream == null) {
                 LOGGER.error("{} is missing from the JAR.", PROPERTIES_RESOURCE);
                 return null;

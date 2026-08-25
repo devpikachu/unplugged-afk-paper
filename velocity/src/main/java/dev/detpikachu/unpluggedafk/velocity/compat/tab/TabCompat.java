@@ -8,7 +8,7 @@ import org.jspecify.annotations.Nullable;
 import java.time.Duration;
 
 /**
- * Registers unplugged players with TAB so they appear in the network-wide tab list.
+ * Registers bots with TAB so they appear in the network-wide tab list.
  *
  * <p>Verified against TAB 6.1.0 for Velocity, sha256
  * {@code 14fe9601ce09f2efe8a395ef2359dbf109a3572aa1b0b140b99c04b1b391d397}. Everything below was read out of that JAR,
@@ -49,7 +49,7 @@ public final class TabCompat {
 
         final var bridge = TabBridge.resolve(plugin);
         if (bridge == null) {
-            logger.warn("TAB detected, but its internals have changed. Unplugged players stay backend-local.");
+            logger.warn("TAB detected, but its internals have changed. Bots stay backend-local.");
             return null;
         }
 

@@ -6,10 +6,10 @@ import org.jetbrains.annotations.ApiStatus;
 @ApiStatus.Internal
 public final class LinkOptions extends OptionsBase {
 
-    public static final String DEFAULT_HOST = "127.0.0.1";
-    public static final int DEFAULT_PORT = 25580;
-    public static final String DEFAULT_SECRET = "";
-    public static final String DEFAULT_SERVER_NAME = "";
+    private static final String DEFAULT_HOST = "127.0.0.1";
+    private static final int DEFAULT_PORT = 25580;
+    private static final String DEFAULT_SECRET = "";
+    private static final String DEFAULT_SERVER_NAME = "";
 
     private static final String KEY_HOST = "link.host";
     private static final String KEY_PORT = "link.port";

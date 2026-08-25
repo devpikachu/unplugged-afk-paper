@@ -6,7 +6,6 @@ import dev.detpikachu.unpluggedafk.common.network.Message;
 import dev.detpikachu.unpluggedafk.common.network.Protocol;
 import dev.detpikachu.unpluggedafk.common.network.messages.Auth;
 import dev.detpikachu.unpluggedafk.common.network.messages.Challenge;
-import dev.detpikachu.unpluggedafk.common.network.messages.Heartbeat;
 import dev.detpikachu.unpluggedafk.common.network.messages.Ready;
 import dev.detpikachu.unpluggedafk.common.network.messages.Relay;
 import dev.detpikachu.unpluggedafk.common.network.messages.SessionAck;
@@ -26,6 +25,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     private final LinkClient client;
     private final LinkOptions options;
 
+    private boolean challenged;
     private boolean ready;
 
     public LinkHandler(LinkClient client, LinkOptions options) {
@@ -47,41 +47,45 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext context, Message message) throws Exception {
-        if (message instanceof Challenge challenge) {
-            onChallenge(context, challenge);
-            return;
+    protected void channelRead0(ChannelHandlerContext context, Message message) {
+        switch (message.getType()) {
+            case CHALLENGE -> onChallenge(context, (Challenge) message);
+            case READY -> onReady(context, (Ready) message);
+            case RELAY -> {
+                if (this.requireReady(context, message)) {
+                    onRelay((Relay) message);
+                }
+            }
+            case SESSION_ACK -> {
+                if (this.requireReady(context, message)) {
+                    this.client.acknowledged((SessionAck) message);
+                }
+            }
+            case HEARTBEAT -> this.requireReady(context, message);
+            case AUTH, GOODBYE, SYNC, SESSION_START, SESSION_END ->
+                logDebug("Ignoring {} from the proxy. A backend never handles it.", message.getType());
+        }
+    }
+
+    private boolean requireReady(ChannelHandlerContext context, Message message) {
+        if (this.ready) {
+            return true;
         }
 
-        if (message instanceof Ready(boolean accepted, String reason)) {
-            onReady(context, accepted, reason);
-            return;
-        }
+        this.client.warnOnce("The proxy sent {} before the link was ready. Closing.", message.getType());
+        close(context);
+        return false;
+    }
 
-        if (!this.ready) {
-            this.client.warnOnce("The proxy sent {} before the link was ready. Closing.", message.getType());
+    private void onChallenge(ChannelHandlerContext context, Challenge challenge) {
+        if (this.challenged) {
+            this.client.warnOnce("The proxy sent a second CHALLENGE on an open link. Closing.");
             close(context);
             return;
         }
 
-        if (message instanceof Relay relay) {
-            onRelay(relay);
-            return;
-        }
+        this.challenged = true;
 
-        if (message instanceof SessionAck ack) {
-            this.client.acknowledged(ack);
-            return;
-        }
-
-        if (message instanceof Heartbeat) {
-            return;
-        }
-
-        logDebug("Ignoring {} from the proxy. Unknown message type.", message.getType());
-    }
-
-    private void onChallenge(ChannelHandlerContext context, Challenge challenge) {
         if (challenge.protocolVersion() != Protocol.VERSION) {
             this.client.errorOnce(
                     "Link protocol mismatch. This backend uses {}, the proxy uses {}. Use the same version of both plugins.",
@@ -95,9 +99,15 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
         send(context, new Auth(Protocol.VERSION, this.options.getServerName(), signature));
     }
 
-    private void onReady(ChannelHandlerContext context, boolean accepted, String reason) {
-        if (!accepted) {
-            this.client.errorOnce("The proxy refused the link. {}", reason);
+    private void onReady(ChannelHandlerContext context, Ready message) {
+        if (!this.challenged || this.ready) {
+            this.client.warnOnce("The proxy sent an unexpected READY. Closing.");
+            close(context);
+            return;
+        }
+
+        if (!message.accepted()) {
+            this.client.errorOnce("The proxy refused the link. {}", message.reason());
             close(context);
             return;
         }

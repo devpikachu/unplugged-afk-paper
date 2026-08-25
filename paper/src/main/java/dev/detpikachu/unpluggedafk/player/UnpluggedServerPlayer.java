@@ -106,6 +106,14 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         this.dismount();
         super.die(damageSource);
 
+        if (!this.isDeadOrDying()) {
+            logDebug(
+                    "Bot {} ({}) survived a cancelled death, so the session continues.",
+                    this.getPlainTextName(),
+                    this.getUUID());
+            return;
+        }
+
         this.deathMessage = PaperAdventure.asAdventure(this.getCombatTracker().getDeathMessage());
 
         LOGGER.warn(
@@ -133,7 +141,8 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         super.teleport(transition);
 
         if (this.wonGame) {
-            var packet = new ServerboundClientCommandPacket(ServerboundClientCommandPacket.Action.PERFORM_RESPAWN);
+            final var packet =
+                    new ServerboundClientCommandPacket(ServerboundClientCommandPacket.Action.PERFORM_RESPAWN);
             this.connection.handleClientCommand(packet);
         }
 
@@ -182,6 +191,15 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
             this.applyDeferredSpawnState(server);
         }
 
+        if (this.deathMessage != null && !this.isDeadOrDying()) {
+            logDebug(
+                    "Bot {} ({}) was healed mid-death, so the linger is dropped.",
+                    this.getPlainTextName(),
+                    this.getUUID());
+            this.deathMessage = null;
+            this.deathTime = 0;
+        }
+
         if (this.deathMessage == null && this.session.isExpired()) {
             this.deferredDisconnect(Component.text(KickReasons.EXPIRED), Reason.EXPIRED);
         }
@@ -221,7 +239,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
             this.stopRiding();
         }
 
-        for (var entity : vehicle.getPassengers()) {
+        for (final var entity : vehicle.getPassengers()) {
             if (entity instanceof Player) {
                 entity.stopRiding();
             }

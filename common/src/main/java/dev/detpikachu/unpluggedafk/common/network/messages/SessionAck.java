@@ -2,6 +2,7 @@ package dev.detpikachu.unpluggedafk.common.network.messages;
 
 import dev.detpikachu.unpluggedafk.common.network.Message;
 import dev.detpikachu.unpluggedafk.common.network.MessageType;
+import dev.detpikachu.unpluggedafk.common.network.codec.MessageCodec;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.io.DataInput;
@@ -18,7 +19,7 @@ public record SessionAck(UUID uuid, boolean accepted, String reason) implements 
     }
 
     public static SessionAck read(DataInput in) throws IOException {
-        final var uuid = new UUID(in.readLong(), in.readLong());
+        final var uuid = MessageCodec.readUuid(in);
         final var accepted = in.readBoolean();
         final var reason = in.readUTF();
 
@@ -27,8 +28,7 @@ public record SessionAck(UUID uuid, boolean accepted, String reason) implements 
 
     @Override
     public void write(DataOutput out) throws IOException {
-        out.writeLong(this.uuid.getMostSignificantBits());
-        out.writeLong(this.uuid.getLeastSignificantBits());
+        MessageCodec.writeUuid(this.uuid, out);
         out.writeBoolean(this.accepted);
         out.writeUTF(this.reason);
     }

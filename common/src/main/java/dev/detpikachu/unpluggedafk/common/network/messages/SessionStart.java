@@ -2,6 +2,7 @@ package dev.detpikachu.unpluggedafk.common.network.messages;
 
 import dev.detpikachu.unpluggedafk.common.network.Message;
 import dev.detpikachu.unpluggedafk.common.network.MessageType;
+import dev.detpikachu.unpluggedafk.common.network.codec.MessageCodec;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
@@ -20,7 +21,7 @@ public record SessionStart(
     }
 
     public static SessionStart read(DataInput in) throws IOException {
-        final var uuid = new UUID(in.readLong(), in.readLong());
+        final var uuid = MessageCodec.readUuid(in);
         final var username = in.readUTF();
         final var skin = Skin.read(in);
         final var secondsRemaining = in.readLong();
@@ -30,8 +31,7 @@ public record SessionStart(
 
     @Override
     public void write(DataOutput out) throws IOException {
-        out.writeLong(this.uuid.getMostSignificantBits());
-        out.writeLong(this.uuid.getLeastSignificantBits());
+        MessageCodec.writeUuid(this.uuid, out);
         out.writeUTF(this.username);
 
         if (this.skin != null) {

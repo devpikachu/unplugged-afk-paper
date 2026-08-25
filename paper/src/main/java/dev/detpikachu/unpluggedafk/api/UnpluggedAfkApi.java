@@ -24,11 +24,15 @@ import java.util.UUID;
 public interface UnpluggedAfkApi {
 
     /**
-     * Whether this player has been kicked by {@code /unplug} but their bot has not been placed yet.
+     * Whether an unplug is in flight for this player, with no bot standing in for them yet.
      *
-     * <p>The plugin waits for the kicked connection to finish closing before creating the bot, so this window is
-     * normally a couple of ticks and lasts at most 100. It is disjoint from {@link #isUnplugged(UUID)}: no UUID is
-     * reported by both at once, and a UUID in this state has no {@link UnpluggedPlayerInfo} yet.
+     * <p>Do not read this as "they have already been kicked". Behind a proxy the plugin announces the session and waits
+     * for the proxy to acknowledge it before kicking anyone, so a player in this state may still be connected and
+     * playing, and the request may yet be refused. Without a proxy the kick is immediate and the remaining wait is only
+     * for the closing connection to settle, a couple of ticks in the normal case.
+     *
+     * <p>It is disjoint from {@link #isUnplugged(UUID)}: no UUID is reported by both at once, and a UUID in this state
+     * has no {@link UnpluggedPlayerInfo} yet.
      *
      * @param uuid the player's UUID
      * @return {@code true} if an unplug is in flight for this UUID

@@ -78,7 +78,7 @@ public final class LinkOptions extends OptionsBase {
             return port;
         }
 
-        logger.warn("link.port of {} is outside 1-65535. Resetting to {}.", port, DEFAULT_PORT);
+        logger.warn("link.port of {} is outside {}-{}. Resetting to {}.", port, MIN_PORT, MAX_PORT, DEFAULT_PORT);
         return DEFAULT_PORT;
     }
 }

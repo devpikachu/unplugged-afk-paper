@@ -21,9 +21,11 @@ import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_PROXY_UNAVA
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_REASON_REQUIRED;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.errUnplugCancelled;
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.ARG_DURATION_MINS;
+import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireAllowedExecutor;
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireCapacity;
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireDuration;
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireExecutor;
+import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireNotAlreadyUnplugging;
 
 @ApiStatus.Internal
 public final class PlayerUnplugCommand {
@@ -55,6 +57,8 @@ public final class PlayerUnplugCommand {
             throw ERR_REASON_REQUIRED.create();
         }
 
+        requireAllowedExecutor(player);
+        requireNotAlreadyUnplugging(player);
         requireCapacity();
 
         try {

@@ -36,23 +36,20 @@ public final class PaperListener implements Listener {
 
         if (bot != null) {
             final var reason = bot.getRemoveReason();
+            final var removeReason = reason != null ? reason : Reason.UNKNOWN;
 
             registry.remove(bot);
             event.quitMessage(null);
-            UnpluggedAfk.getInstance()
-                    .getLinkClient()
-                    .endSession(bot, reason != null ? reason.name() : Reason.UNKNOWN.name());
+            UnpluggedAfk.getInstance().getLinkClient().endSession(bot, removeReason.name());
 
             logDebug("Removed bot {} ({}). {} still active.", player.getName(), player.getUniqueId(), registry.count());
 
-            new UnpluggedPlayerRemoveEvent(
-                            bot.getBukkitEntity(), bot.toInfo(), reason != null ? reason : Reason.UNKNOWN)
-                    .callEvent();
+            new UnpluggedPlayerRemoveEvent(bot.getBukkitEntity(), bot.toInfo(), removeReason).callEvent();
 
             return;
         }
 
-        if (registry.isUnplugging(player.getUniqueId())) {
+        if (registry.isCommitting(player.getUniqueId())) {
             event.quitMessage(ChatMessages.formatUnpluggedBroadcast(player));
         }
     }

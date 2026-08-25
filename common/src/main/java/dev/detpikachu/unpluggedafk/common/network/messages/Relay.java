@@ -3,6 +3,7 @@ package dev.detpikachu.unpluggedafk.common.network.messages;
 import dev.detpikachu.unpluggedafk.common.network.Message;
 import dev.detpikachu.unpluggedafk.common.network.MessageType;
 import dev.detpikachu.unpluggedafk.common.network.Protocol;
+import dev.detpikachu.unpluggedafk.common.network.codec.MessageCodec;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.io.DataInput;
@@ -41,7 +42,7 @@ public final class Relay implements Message {
     }
 
     public static Relay read(DataInput in) throws IOException {
-        final var uuid = new UUID(in.readLong(), in.readLong());
+        final var uuid = MessageCodec.readUuid(in);
         final var channel = in.readUTF();
         final var length = in.readInt();
 
@@ -57,8 +58,7 @@ public final class Relay implements Message {
 
     @Override
     public void write(DataOutput out) throws IOException {
-        out.writeLong(this.uuid.getMostSignificantBits());
-        out.writeLong(this.uuid.getLeastSignificantBits());
+        MessageCodec.writeUuid(this.uuid, out);
         out.writeUTF(this.channel);
         out.writeInt(this.payload.length);
         out.write(this.payload);

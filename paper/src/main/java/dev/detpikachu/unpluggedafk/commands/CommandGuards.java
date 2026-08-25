@@ -2,6 +2,7 @@ package dev.detpikachu.unpluggedafk.commands;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import dev.detpikachu.unpluggedafk.Permissions;
 import dev.detpikachu.unpluggedafk.config.Options;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -11,6 +12,8 @@ import org.jetbrains.annotations.ApiStatus;
 
 import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
 import static dev.detpikachu.unpluggedafk.UnpluggedAfk.logDebug;
+import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_ALREADY_UNPLUGGING;
+import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_EXECUTOR_NOT_ALLOWED;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_NOT_A_PLAYER;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.errCapReached;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.errDurationTooLarge;
@@ -43,6 +46,26 @@ public final class CommandGuards {
         }
 
         return durationMins;
+    }
+
+    public static void requireAllowedExecutor(ServerPlayer player) throws CommandSyntaxException {
+        if (!player.getBukkitEntity().hasPermission(Permissions.UNPLUG)) {
+            logDebug(
+                    "Refused an unplug for {} ({}): they lack the permission.",
+                    player.getPlainTextName(),
+                    player.getUUID());
+            throw ERR_EXECUTOR_NOT_ALLOWED.create();
+        }
+    }
+
+    public static void requireNotAlreadyUnplugging(ServerPlayer player) throws CommandSyntaxException {
+        final var registry = SessionRegistry.getInstance();
+        final var uuid = player.getUUID();
+
+        if (registry.isUnplugging(uuid) || registry.isUnplugged(uuid)) {
+            logDebug("Refused a repeat unplug for {} ({}). One is already in flight.", player.getPlainTextName(), uuid);
+            throw ERR_ALREADY_UNPLUGGING.create();
+        }
     }
 
     public static void requireCapacity() throws CommandSyntaxException {

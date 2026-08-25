@@ -17,6 +17,7 @@ import org.jetbrains.annotations.ApiStatus;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.UUID;
 
 @ApiStatus.Internal
 public final class MessageCodec {
@@ -46,5 +47,17 @@ public final class MessageCodec {
     public static void write(Message message, DataOutput out) throws IOException {
         out.writeByte(message.getType().getId());
         message.write(out);
+    }
+
+    public static UUID readUuid(DataInput in) throws IOException {
+        final var mostSignificantBits = in.readLong();
+        final var leastSignificantBits = in.readLong();
+
+        return new UUID(mostSignificantBits, leastSignificantBits);
+    }
+
+    public static void writeUuid(UUID uuid, DataOutput out) throws IOException {
+        out.writeLong(uuid.getMostSignificantBits());
+        out.writeLong(uuid.getLeastSignificantBits());
     }
 }

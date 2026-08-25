@@ -53,7 +53,7 @@ public final class UnpluggedConnection extends Connection {
     }
 
     @Override
-    public void send(Packet<?> packet, @Nullable ChannelFutureListener futureListener, boolean bl) {
+    public void send(Packet<?> packet, @Nullable ChannelFutureListener futureListener, boolean flush) {
         // Everything else stays dropped. A plugin message is the only packet with an identity to relay.
         if (packet instanceof ClientboundCustomPayloadPacket(DiscardedPayload(Identifier id, byte[] data))
                 && isRelayable(id, data)) {

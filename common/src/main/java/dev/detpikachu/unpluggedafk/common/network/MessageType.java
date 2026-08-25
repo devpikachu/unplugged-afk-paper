@@ -35,6 +35,6 @@ public enum MessageType {
     }
 
     public int getId() {
-        return id;
+        return this.id;
     }
 }

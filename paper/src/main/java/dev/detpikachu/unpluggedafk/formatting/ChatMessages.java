@@ -24,6 +24,10 @@ import static net.kyori.adventure.text.format.NamedTextColor.YELLOW;
 @ApiStatus.Internal
 public final class ChatMessages {
 
+    public static final String REFUSED_UNREACHABLE = "The proxy could not be reached.";
+    public static final String REFUSED_TIMED_OUT = "The proxy did not answer in time.";
+    public static final String REFUSED_IN_FLIGHT = "An unplug request is already being processed for you.";
+
     public static Component formatPlayer(Player player) {
         final var bot = UnpluggedServerPlayer.from(player);
 
@@ -52,9 +56,9 @@ public final class ChatMessages {
 
     public static Component formatUnpluggedBroadcast(Player player) {
         final var playerName = text(player.getName(), YELLOW);
-        final var unplugged = text(" has unplugged, leaving their character behind", YELLOW);
+        final var unplugged = text(" has unplugged, leaving their character behind");
 
-        return playerName.append(unplugged);
+        return playerName.append(unplugged).color(YELLOW);
     }
 
     public static Component formatList(Collection<UnpluggedServerPlayer> bots) {
@@ -72,8 +76,10 @@ public final class ChatMessages {
     private static Component formatBot(UnpluggedServerPlayer bot) {
         final var session = bot.getSession();
         final var name = text(bot.getPlainTextName(), GOLD);
-        final var header =
-                text("Unplugged information for ", WHITE).append(name).append(text(":", WHITE));
+        final var header = text("Unplugged information for ")
+                .append(name)
+                .append(text(":"))
+                .color(WHITE);
 
         return Component.join(
                 JoinConfiguration.newlines(),
@@ -90,16 +96,17 @@ public final class ChatMessages {
     }
 
     private static Component formatListHeader(int unplugged, int unplugging) {
-        final var label = text("Unplugged players: ", WHITE);
+        final var label = text("Unplugged players: ");
         final var unpluggedValue = text(unplugged, GOLD);
         final var pendingMarker = formatPendingMarker(unplugging);
-        final var separator = text("/", WHITE);
+        final var separator = text("/");
         final var capValue = text(Options.getInstance().getMaxUnpluggedPlayers(), GOLD);
 
         return label.append(unpluggedValue)
                 .append(pendingMarker)
                 .append(separator)
-                .append(capValue);
+                .append(capValue)
+                .color(WHITE);
     }
 
     private static Component formatPendingMarker(int unplugging) {
@@ -107,7 +114,7 @@ public final class ChatMessages {
             return Component.empty();
         }
 
-        return text("(+", GRAY).append(text(unplugging, GOLD)).append(text(")", GRAY));
+        return text("(+").append(text(unplugging, GOLD)).append(text(")")).color(GRAY);
     }
 
     private static Component formatListEntry(UnpluggedServerPlayer bot) {

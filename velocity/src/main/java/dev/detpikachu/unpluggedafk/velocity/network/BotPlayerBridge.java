@@ -224,6 +224,13 @@ public final class BotPlayerBridge {
         return removed;
     }
 
+    public void removeAll() {
+        this.pending.clear();
+
+        final var uuids = new ArrayList<>(this.bots.keySet());
+        uuids.forEach(this::remove);
+    }
+
     public @Nullable ServerConnection connectionOf(UUID uuid) {
         final var bot = this.bots.get(uuid);
         return bot == null ? null : bot.connection();

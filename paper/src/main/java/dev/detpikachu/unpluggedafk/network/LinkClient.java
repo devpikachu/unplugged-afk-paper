@@ -1,5 +1,6 @@
 package dev.detpikachu.unpluggedafk.network;
 
+import dev.detpikachu.unpluggedafk.KickReasons;
 import dev.detpikachu.unpluggedafk.common.network.Protocol;
 import dev.detpikachu.unpluggedafk.common.network.codec.MessageDecoder;
 import dev.detpikachu.unpluggedafk.common.network.codec.MessageEncoder;
@@ -11,6 +12,8 @@ import dev.detpikachu.unpluggedafk.common.network.messages.SessionEnd;
 import dev.detpikachu.unpluggedafk.common.network.messages.SessionStart;
 import dev.detpikachu.unpluggedafk.common.network.messages.Sync;
 import dev.detpikachu.unpluggedafk.config.Options;
+import dev.detpikachu.unpluggedafk.formatting.ChatMessages;
+import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -47,13 +50,11 @@ public final class LinkClient {
     private static final int HANDSHAKE_TIMEOUT_SECS = 10;
     private static final int WORKER_THREADS = 1;
     private static final int BACKOFF_MIN_SECS = 1;
-    private static final int BACKOFF_MAX_SECS = 60;
+    private static final int BACKOFF_MAX_SECS = 5;
     private static final int SHUTDOWN_WAIT_SECS = 1;
     private static final int ACK_TIMEOUT_SECS = 5;
     private static final String TEXTURES_PROPERTY = "textures";
-    private static final String GOODBYE_DISABLED = "Plugin disabled";
-    private static final String ACK_UNREACHABLE = "The proxy could not be reached.";
-    private static final String ACK_TIMED_OUT = "The proxy did not answer in time.";
+    private static final String END_TIMED_OUT = "ACK_TIMEOUT";
 
     private final ConcurrentHashMap<UUID, PendingSession> pendingSessions = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, EndedSession> endedSessions = new ConcurrentHashMap<>();
@@ -61,9 +62,8 @@ public final class LinkClient {
     private volatile boolean running;
     private volatile @Nullable Channel channel;
     private volatile @Nullable ScheduledFuture<?> heartbeat;
-
-    private @Nullable EventLoopGroup workers;
-    private @Nullable Bootstrap bootstrap;
+    private volatile @Nullable EventLoopGroup workers;
+    private volatile @Nullable Bootstrap bootstrap;
 
     private boolean quiet;
     private int backoffSecs;
@@ -118,26 +118,30 @@ public final class LinkClient {
         this.running = false;
 
         cancelHeartbeat();
-        failPending(ACK_UNREACHABLE);
 
-        final var channel = this.channel;
-        if (channel != null && channel.isActive()) {
-            final var future = channel.writeAndFlush(new Goodbye(GOODBYE_DISABLED));
+        try {
+            failPending(ChatMessages.REFUSED_UNREACHABLE);
+        } finally {
+            final var channel = this.channel;
+            if (channel != null && channel.isActive()) {
+                final var future = channel.writeAndFlush(new Goodbye(KickReasons.DISABLED));
 
-            try {
-                future.await(SHUTDOWN_WAIT_SECS, TimeUnit.SECONDS);
-            } catch (InterruptedException exception) {
-                Thread.currentThread().interrupt();
+                try {
+                    future.await(SHUTDOWN_WAIT_SECS, TimeUnit.SECONDS);
+                } catch (InterruptedException exception) {
+                    Thread.currentThread().interrupt();
+                }
             }
-        }
 
-        if (this.workers != null) {
-            this.workers.shutdownGracefully(0, SHUTDOWN_WAIT_SECS, TimeUnit.SECONDS);
-        }
+            final var group = this.workers;
+            if (group != null) {
+                group.shutdownGracefully(0, SHUTDOWN_WAIT_SECS, TimeUnit.SECONDS);
+            }
 
-        this.channel = null;
-        this.workers = null;
-        this.bootstrap = null;
+            this.channel = null;
+            this.workers = null;
+            this.bootstrap = null;
+        }
     }
 
     public boolean isReady() {
@@ -152,7 +156,16 @@ public final class LinkClient {
 
         if (channel == null || !channel.isActive()) {
             logDebug("Refusing SESSION_START for {} ({}). The link is down.", player.getPlainTextName(), uuid);
-            onAck.accept(new SessionAck(uuid, false, ACK_UNREACHABLE));
+            onAck.accept(new SessionAck(uuid, false, ChatMessages.REFUSED_UNREACHABLE));
+            return;
+        }
+
+        if (this.pendingSessions.containsKey(uuid)) {
+            LOGGER.warn(
+                    "Refusing a second SESSION_START for {} ({}). One is already pending.",
+                    player.getPlainTextName(),
+                    uuid);
+            onAck.accept(new SessionAck(uuid, false, ChatMessages.REFUSED_IN_FLIGHT));
             return;
         }
 
@@ -162,23 +175,22 @@ public final class LinkClient {
                 uuid,
                 secondsRemaining);
 
-        final var timeout =
-                channel.eventLoop().schedule(() -> answer(uuid, ACK_TIMED_OUT), ACK_TIMEOUT_SECS, TimeUnit.SECONDS);
-        final var previous = this.pendingSessions.put(uuid, new PendingSession(onAck, timeout));
-
-        if (previous != null) {
-            previous.timeout().cancel(false);
-        }
+        final var timeout = channel.eventLoop().schedule(() -> timedOut(uuid), ACK_TIMEOUT_SECS, TimeUnit.SECONDS);
+        this.pendingSessions.put(uuid, new PendingSession(onAck, timeout));
 
         channel.writeAndFlush(describe(player, secondsRemaining));
     }
 
     public void endSession(ServerPlayer bot, String reason) {
-        this.endedSessions.put(bot.getUUID(), new EndedSession(describe(bot, 0L), Instant.now()));
+        if (!(bot instanceof UnpluggedServerPlayer unplugged)
+                || !unplugged.getSession().isFake()) {
+            this.endedSessions.put(bot.getUUID(), EndedSession.of(describe(bot, 0L)));
+        }
+
+        pruneEndedSessions();
         this.endSession(bot.getUUID(), reason);
     }
 
-    @SuppressWarnings("FutureReturnValueIgnored")
     public void endSession(UUID uuid, String reason) {
         final var pending = this.pendingSessions.remove(uuid);
 
@@ -186,14 +198,19 @@ public final class LinkClient {
             pending.timeout().cancel(false);
         }
 
+        sendEnd(uuid, reason);
+    }
+
+    @SuppressWarnings("FutureReturnValueIgnored")
+    private void sendEnd(UUID uuid, String reason) {
         final var channel = this.channel;
 
         if (channel == null || !channel.isActive()) {
-            logDebug("Could not send SESSION_END for {} ({}). The link is down.", uuid, reason);
+            logDebug("Could not send SESSION_END for {}: {}. The link is down.", uuid, reason);
             return;
         }
 
-        logDebug("Sending SESSION_END for {} ({}).", uuid, reason);
+        logDebug("Sending SESSION_END for {}: {}.", uuid, reason);
         channel.writeAndFlush(new SessionEnd(uuid, reason));
     }
 
@@ -249,7 +266,7 @@ public final class LinkClient {
         this.channel = null;
         cancelHeartbeat();
         logDebug("Link closed. Ready before the close: {}.", wasReady);
-        failPending(ACK_UNREACHABLE);
+        failPending(ChatMessages.REFUSED_UNREACHABLE);
 
         if (wasReady) {
             warnOnce("Link to the proxy lost. Reconnecting in the background.");
@@ -281,35 +298,56 @@ public final class LinkClient {
         final var sessions = new ArrayList<SessionStart>();
 
         for (final var bot : SessionRegistry.getInstance().all()) {
+            if (bot.getSession().isFake()) {
+                continue;
+            }
+
             sessions.add(describe(bot, bot.getSession().remaining().toSeconds()));
         }
 
-        this.endedSessions.values().removeIf(ended -> ended.secondsSinceEnd() > Protocol.GRACE_SECS);
+        pruneEndedSessions();
         this.endedSessions
                 .values()
-                .forEach(ended -> sessions.add(new SessionStart(
-                        ended.start().uuid(),
-                        ended.start().username(),
-                        ended.start().skin(),
-                        -ended.secondsSinceEnd())));
+                .forEach(ended -> sessions.add(
+                        new SessionStart(ended.uuid(), ended.username(), ended.skin(), -ended.secondsSinceEnd())));
 
         logDebug("Sending SYNC with {} session(s).", sessions.size());
         channel.writeAndFlush(new Sync(sessions));
     }
 
-    private void answer(UUID uuid, String reason) {
+    private void timedOut(UUID uuid) {
         final var pending = this.pendingSessions.remove(uuid);
 
         if (pending == null) {
             return;
         }
 
-        pending.timeout().cancel(false);
-        pending.callback().accept(new SessionAck(uuid, false, reason));
+        LOGGER.warn("The proxy did not acknowledge the unplug of {} in time. Undoing the session.", uuid);
+        sendEnd(uuid, END_TIMED_OUT);
+        answer(pending, uuid, ChatMessages.REFUSED_TIMED_OUT);
     }
 
     private void failPending(String reason) {
-        this.pendingSessions.keySet().forEach(uuid -> answer(uuid, reason));
+        this.pendingSessions.keySet().forEach(uuid -> {
+            final var pending = this.pendingSessions.remove(uuid);
+
+            if (pending != null) {
+                pending.timeout().cancel(false);
+                answer(pending, uuid, reason);
+            }
+        });
+    }
+
+    private static void answer(PendingSession pending, UUID uuid, String reason) {
+        try {
+            pending.callback().accept(new SessionAck(uuid, false, reason));
+        } catch (RuntimeException exception) {
+            LOGGER.error("Failed to answer the pending unplug of {}.", uuid, exception);
+        }
+    }
+
+    private void pruneEndedSessions() {
+        this.endedSessions.values().removeIf(ended -> ended.secondsSinceEnd() > Protocol.GRACE_SECS);
     }
 
     private void cancelHeartbeat() {
@@ -322,11 +360,13 @@ public final class LinkClient {
     }
 
     private void connect() {
-        if (this.bootstrap == null || !this.running) {
+        final var bootstrap = this.bootstrap;
+
+        if (bootstrap == null || !this.running) {
             return;
         }
 
-        this.bootstrap.connect().addListener(attempt -> {
+        bootstrap.connect().addListener(attempt -> {
             if (attempt.isSuccess()) {
                 return;
             }
@@ -338,13 +378,15 @@ public final class LinkClient {
 
     @SuppressWarnings("FutureReturnValueIgnored")
     private void scheduleReconnect() {
-        if (this.workers == null || !this.running) {
+        final var group = this.workers;
+
+        if (group == null || !this.running) {
             return;
         }
 
         final var delay = this.backoffSecs;
         this.backoffSecs = Math.min(this.backoffSecs * 2, BACKOFF_MAX_SECS);
-        this.workers.schedule(this::connect, delay, TimeUnit.SECONDS);
+        group.schedule(this::connect, delay, TimeUnit.SECONDS);
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")
@@ -374,7 +416,11 @@ public final class LinkClient {
 
     private record PendingSession(Consumer<SessionAck> callback, ScheduledFuture<?> timeout) {}
 
-    private record EndedSession(SessionStart start, Instant endedAt) {
+    private record EndedSession(UUID uuid, String username, SessionStart.@Nullable Skin skin, Instant endedAt) {
+
+        static EndedSession of(SessionStart start) {
+            return new EndedSession(start.uuid(), start.username(), start.skin(), Instant.now());
+        }
 
         long secondsSinceEnd() {
             return Duration.between(this.endedAt, Instant.now()).toSeconds();

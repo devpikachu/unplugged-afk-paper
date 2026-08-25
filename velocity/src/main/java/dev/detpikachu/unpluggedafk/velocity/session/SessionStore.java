@@ -51,14 +51,40 @@ public final class SessionStore {
         return true;
     }
 
-    public void end(UUID uuid) {
-        this.sessions.computeIfPresent(uuid, (key, session) -> session.ended());
+    public void end(String serverName, UUID uuid) {
+        this.sessions.computeIfPresent(uuid, (key, session) -> {
+            if (!session.serverName().equals(serverName)) {
+                this.logger.warn(
+                        "Ignored a SESSION_END for {} from {}: the session is held by {}.",
+                        uuid,
+                        serverName,
+                        session.serverName());
+                return session;
+            }
+
+            return session.ended();
+        });
         this.pruneExpired();
     }
 
     public void replace(String serverName, Map<UUID, Session> incoming) {
         this.dropServer(serverName);
-        this.sessions.putAll(incoming);
+
+        incoming.forEach((uuid, session) -> {
+            final var previous = this.sessions.get(uuid);
+
+            if (previous != null && previous.isAlive() && !previous.serverName().equals(serverName)) {
+                this.logger.warn(
+                        "Ignored a synced session for {} from {}: they have a live session on {}.",
+                        uuid,
+                        serverName,
+                        previous.serverName());
+                return;
+            }
+
+            this.sessions.put(uuid, session);
+        });
+
         this.pruneExpired();
     }
 

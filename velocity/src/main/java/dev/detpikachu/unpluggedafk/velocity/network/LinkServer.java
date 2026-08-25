@@ -33,7 +33,7 @@ public final class LinkServer {
     private static final int ACCEPTOR_THREADS = 1;
     private static final int WORKER_THREADS = 2;
     private static final long BOOT_QUIET_MILLIS = 500;
-    private static final long BOOT_CAP_MILLIS = 2000;
+    private static final long BOOT_CAP_MILLIS = 8000;
     private static final long BOOT_POLL_MILLIS = 50;
 
     private final Logger logger;
@@ -41,10 +41,11 @@ public final class LinkServer {
 
     private volatile long startedAt;
     private volatile long lastLinkAt;
+    private volatile int expectedBackends;
 
-    private @Nullable EventLoopGroup acceptors;
-    private @Nullable EventLoopGroup workers;
-    private @Nullable Channel channel;
+    private volatile @Nullable EventLoopGroup acceptors;
+    private volatile @Nullable EventLoopGroup workers;
+    private volatile @Nullable Channel channel;
 
     public LinkServer(Logger logger) {
         this.logger = logger;
@@ -58,6 +59,7 @@ public final class LinkServer {
 
         this.startedAt = System.currentTimeMillis();
         this.lastLinkAt = this.startedAt;
+        this.expectedBackends = plugin.getProxyServer().getAllServers().size();
         this.acceptors = acceptorGroup;
         this.workers = workerGroup;
 
@@ -104,18 +106,21 @@ public final class LinkServer {
     public void stop() {
         this.links.clear();
 
-        if (this.channel != null) {
-            this.channel.close();
+        final var channel = this.channel;
+        if (channel != null) {
+            channel.close();
             this.channel = null;
         }
 
-        if (this.acceptors != null) {
-            this.acceptors.shutdownGracefully();
+        final var acceptorGroup = this.acceptors;
+        if (acceptorGroup != null) {
+            acceptorGroup.shutdownGracefully();
             this.acceptors = null;
         }
 
-        if (this.workers != null) {
-            this.workers.shutdownGracefully();
+        final var workerGroup = this.workers;
+        if (workerGroup != null) {
+            workerGroup.shutdownGracefully();
             this.workers = null;
         }
     }
@@ -124,6 +129,7 @@ public final class LinkServer {
         final var deadline = this.startedAt + BOOT_CAP_MILLIS;
 
         while (System.currentTimeMillis() < deadline
+                && this.links.size() < this.expectedBackends
                 && System.currentTimeMillis() - this.lastLinkAt < BOOT_QUIET_MILLIS) {
             try {
                 Thread.sleep(BOOT_POLL_MILLIS);
@@ -134,20 +140,18 @@ public final class LinkServer {
         }
     }
 
-    @SuppressWarnings("FutureReturnValueIgnored")
-    void linked(String serverName, Channel link) {
-        this.lastLinkAt = System.currentTimeMillis();
-
-        final var previous = this.links.put(serverName, link);
-
-        if (previous != null) {
-            this.logger.warn("Backend {} linked twice. Closing the older link.", serverName);
-            previous.close();
-        }
+    boolean isLinked(String serverName) {
+        final var link = this.links.get(serverName);
+        return link != null && link.isActive();
     }
 
-    void unlinked(String serverName, Channel link) {
-        this.links.remove(serverName, link);
+    void linked(String serverName, Channel link) {
+        this.lastLinkAt = System.currentTimeMillis();
+        this.links.put(serverName, link);
+    }
+
+    boolean unlinked(String serverName, Channel link) {
+        return this.links.remove(serverName, link);
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")

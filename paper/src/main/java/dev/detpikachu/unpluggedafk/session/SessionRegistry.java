@@ -16,11 +16,13 @@ public final class SessionRegistry {
     private static final SessionRegistry INSTANCE = new SessionRegistry();
 
     private final ConcurrentHashMap.KeySetView<UUID, Boolean> unplugging;
+    private final ConcurrentHashMap.KeySetView<UUID, Boolean> committing;
     private final ConcurrentHashMap<UUID, CompoundTag> snapshots;
     private final ConcurrentHashMap<UUID, UnpluggedServerPlayer> unplugged;
 
     private SessionRegistry() {
         this.unplugging = ConcurrentHashMap.newKeySet(16);
+        this.committing = ConcurrentHashMap.newKeySet(16);
         this.unplugged = new ConcurrentHashMap<>(16, 0.9F, 1);
         this.snapshots = new ConcurrentHashMap<>(16, 0.9F, 1);
     }
@@ -41,8 +43,17 @@ public final class SessionRegistry {
         return this.unplugging.size();
     }
 
+    public boolean isCommitting(UUID uuid) {
+        return this.committing.contains(uuid);
+    }
+
+    public void markCommitting(UUID uuid) {
+        this.committing.add(uuid);
+    }
+
     public void clearUnplugging(UUID uuid) {
         this.unplugging.remove(uuid);
+        this.committing.remove(uuid);
         this.snapshots.remove(uuid);
     }
 
@@ -80,6 +91,7 @@ public final class SessionRegistry {
 
     public void removeAll() {
         this.unplugging.clear();
+        this.committing.clear();
         this.snapshots.clear();
         this.unplugged.clear();
     }

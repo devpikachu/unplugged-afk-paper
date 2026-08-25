@@ -28,6 +28,14 @@ public final class CommandErrors {
     public static final SimpleCommandExceptionType ERR_REASON_REQUIRED = new SimpleCommandExceptionType(
             MessageComponentSerializer.message().serialize(text("A reason must be given when unplugging.", RED)));
 
+    public static final SimpleCommandExceptionType ERR_ALREADY_UNPLUGGING =
+            new SimpleCommandExceptionType(MessageComponentSerializer.message()
+                    .serialize(text("You are already unplugging. Please wait for that request to finish.", RED)));
+
+    public static final SimpleCommandExceptionType ERR_EXECUTOR_NOT_ALLOWED =
+            new SimpleCommandExceptionType(MessageComponentSerializer.message()
+                    .serialize(text("The player this command runs as is not allowed to unplug.", RED)));
+
     public static final SimpleCommandExceptionType ERR_PROXY_UNAVAILABLE =
             new SimpleCommandExceptionType(MessageComponentSerializer.message()
                     .serialize(text(

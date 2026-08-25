@@ -12,7 +12,6 @@ import dev.detpikachu.unpluggedafk.exceptions.UnplugFailedException;
 import dev.detpikachu.unpluggedafk.formatting.ChatMessages;
 import dev.detpikachu.unpluggedafk.player.BotFactory;
 import io.papermc.paper.adventure.PaperAdventure;
-import io.papermc.paper.configuration.GlobalConfiguration;
 import net.kyori.adventure.text.Component;
 import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.server.level.ServerPlayer;
@@ -38,7 +37,7 @@ public final class UnplugService {
         }
 
         final var client = UnpluggedAfk.getInstance().getLinkClient();
-        final var proxied = GlobalConfiguration.get().proxies.velocity.enabled;
+        final var proxied = UnpluggedAfk.isProxyMode();
 
         if (proxied && !client.isReady()) {
             throw new ProxyUnavailableException(uuid, name);
@@ -62,6 +61,12 @@ public final class UnplugService {
 
     private static void onAcknowledged(ServerPlayer player, Session session, SessionAck ack) {
         final var plugin = UnpluggedAfk.getInstance();
+
+        if (!plugin.isEnabled()) {
+            resume(player, session, ack);
+            return;
+        }
+
         plugin.getServer().getGlobalRegionScheduler().run(plugin, task -> resume(player, session, ack));
     }
 
@@ -109,6 +114,7 @@ public final class UnplugService {
         var spawnScheduled = false;
 
         try {
+            registry.markCommitting(uuid);
             player.getBukkitEntity().kick(message, PlayerKickEvent.Cause.PLUGIN);
 
             if (playerList.getPlayer(uuid) != null) {

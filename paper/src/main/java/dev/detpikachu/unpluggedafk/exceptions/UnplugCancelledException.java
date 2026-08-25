@@ -6,7 +6,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
 @ApiStatus.Internal
-public class UnplugCancelledException extends UnplugFailedException {
+public final class UnplugCancelledException extends UnplugFailedException {
 
     private final transient @Nullable Component cancelMessage;
 

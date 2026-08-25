@@ -9,6 +9,7 @@ import org.yaml.snakeyaml.error.YAMLException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -20,20 +21,14 @@ public final class Options extends OptionsBase {
     private static final String FILE_NAME = "config.yml";
     private static final String KEY_DEBUG = "debug";
     private static final boolean DEFAULT_DEBUG = false;
+    private static final String POSIX_VIEW = "posix";
+    private static final String SECRET_FILE_PERMISSIONS = "rw-------";
 
     private boolean debug = DEFAULT_DEBUG;
     private LinkOptions link = new LinkOptions();
 
     public static Options getInstance() {
         return INSTANCE;
-    }
-
-    public boolean isDebug() {
-        return this.debug;
-    }
-
-    public LinkOptions getLink() {
-        return this.link;
     }
 
     public static void deserialize(Path dataDirectory, Logger logger) {
@@ -51,6 +46,14 @@ public final class Options extends OptionsBase {
         INSTANCE.link = link.withGeneratedSecret();
         write(file, INSTANCE.link, logger);
         logger.info("Generated a link secret in {}. Copy it into link.secret on every backend.", file);
+    }
+
+    public boolean isDebug() {
+        return this.debug;
+    }
+
+    public LinkOptions getLink() {
+        return this.link;
     }
 
     private static Map<?, ?> read(Path file, Logger logger) {
@@ -80,8 +83,22 @@ public final class Options extends OptionsBase {
             try (var writer = Files.newBufferedWriter(file)) {
                 new Yaml(dumperOptions).dump(document, writer);
             }
+
+            restrictToOwner(file, logger);
         } catch (IOException exception) {
             logger.error("Could not write {}, so the generated secret will not survive a restart.", file, exception);
+        }
+    }
+
+    private static void restrictToOwner(Path file, Logger logger) {
+        if (!file.getFileSystem().supportedFileAttributeViews().contains(POSIX_VIEW)) {
+            return;
+        }
+
+        try {
+            Files.setPosixFilePermissions(file, PosixFilePermissions.fromString(SECRET_FILE_PERMISSIONS));
+        } catch (IOException | UnsupportedOperationException exception) {
+            logger.warn("Could not restrict the permissions of {}. Check them by hand.", file, exception);
         }
     }
 }

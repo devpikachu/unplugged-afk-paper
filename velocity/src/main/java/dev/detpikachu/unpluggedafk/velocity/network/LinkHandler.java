@@ -82,7 +82,12 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
         }
 
         this.serverName = null;
-        this.linkServer.unlinked(serverName, context.channel());
+
+        if (!this.linkServer.unlinked(serverName, context.channel())) {
+            this.logger.info("A superseded link for backend {} closed. Its replacement keeps the backend.", serverName);
+            return;
+        }
+
         this.dropBackend(serverName);
         this.logger.info("Backend {} unlinked.", serverName);
     }
@@ -107,40 +112,31 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
             return;
         }
 
-        if (message instanceof Heartbeat heartbeat) {
-            logDebug("Heartbeat {} from backend {}, echoing.", heartbeat.id(), serverName);
-            send(context, heartbeat);
-            return;
+        switch (message.getType()) {
+            case HEARTBEAT -> {
+                logDebug("Heartbeat {} from backend {}, echoing.", ((Heartbeat) message).id(), serverName);
+                send(context, message);
+            }
+            case RELAY -> onRelay((Relay) message, serverName);
+            case SESSION_START -> onSessionStart(context, (SessionStart) message, serverName);
+            case SESSION_END -> onSessionEnd((SessionEnd) message, serverName);
+            case SYNC -> onSync((Sync) message, serverName);
+            case GOODBYE -> onGoodbye(context, (Goodbye) message, serverName);
+            case AUTH, CHALLENGE, READY, SESSION_ACK ->
+                logDebug("Ignoring {} from backend {}. A proxy never handles it.", message.getType(), serverName);
         }
+    }
 
-        if (message instanceof Relay relay) {
-            onRelay(relay, serverName);
-            return;
-        }
+    private void onGoodbye(ChannelHandlerContext context, Goodbye message, String serverName) {
+        this.logger.info("Backend {} said goodbye: {}", serverName, message.reason());
 
-        if (message instanceof SessionStart start) {
-            onSessionStart(context, start, serverName);
-            return;
-        }
+        this.serverName = null;
 
-        if (message instanceof SessionEnd end) {
-            onSessionEnd(end);
-            return;
-        }
-
-        if (message instanceof Sync sync) {
-            onSync(sync, serverName);
-            return;
-        }
-
-        if (message instanceof Goodbye(String reason)) {
-            this.logger.info("Backend {} said goodbye: {}", serverName, reason);
+        if (this.linkServer.unlinked(serverName, context.channel())) {
             this.dropBackend(serverName);
-            close(context);
-            return;
         }
 
-        this.logger.debug("Ignoring {} from backend {}.", message.getType(), serverName);
+        close(context);
     }
 
     private void onAuth(ChannelHandlerContext context, Auth auth) {
@@ -156,6 +152,14 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
 
         if (this.nonce == null || !Handshake.verify(this.secret, this.nonce, auth.signature())) {
             refuse(context, "The backend's link.secret does not match this proxy's.");
+            return;
+        }
+
+        if (this.linkServer.isLinked(auth.serverName())) {
+            refuse(
+                    context,
+                    "Backend " + auth.serverName()
+                            + " is already linked from another connection. Two servers must not share a link.serverName.");
             return;
         }
 
@@ -226,18 +230,30 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
                 "SESSION_START: {} ({}) on {} for {} second(s).", username, uuid, serverName, start.secondsRemaining());
     }
 
-    private void onSessionEnd(SessionEnd end) {
+    private void onSessionEnd(SessionEnd end, String serverName) {
         final var uuid = end.uuid();
 
-        this.sessionStore.end(uuid);
+        if (!this.sessionStore.isHeldBy(uuid, serverName)) {
+            this.sessionStore.end(serverName, uuid);
+            logDebug("Ignored a SESSION_END for {} from {}: they hold no live session there.", uuid, serverName);
+            return;
+        }
+
+        this.sessionStore.end(serverName, uuid);
         this.dropPresence(uuid);
-        this.logger.info("SESSION_END: {} ({})", uuid, end.reason());
+        this.logger.info("SESSION_END: {}: {}", uuid, end.reason());
     }
 
     private void onSync(Sync sync, String serverName) {
         final var sessions = new HashMap<UUID, Session>();
 
         for (final var start : sync.sessions()) {
+            final var previous = sessions.get(start.uuid());
+
+            if (previous != null && previous.isAlive() && start.secondsRemaining() <= 0) {
+                continue;
+            }
+
             sessions.put(start.uuid(), toSession(serverName, start));
         }
 
@@ -256,13 +272,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     }
 
     private void addPresence(String serverName, UUID uuid, String username, Session.@Nullable Skin skin) {
-        logDebug(
-                "Adding presence for {} ({}) on {}. Skin: {}. TAB: {}.",
-                username,
-                uuid,
-                serverName,
-                skin != null,
-                this.tabBridge != null);
+        logDebug("Adding presence for {} ({}) on {}. Skin: {}.", username, uuid, serverName, skin != null);
         this.botPlayerBridge.addWhenDisconnected(serverName, uuid, username, skin);
 
         if (this.tabBridge != null) {
