@@ -1,6 +1,6 @@
 # Unplugged AFK Paper
 
-A **feature-incomplete** Paper port of [Unplugged-AFK](https://github.com/sakura-ryoko/unplugged-afk), the Fabric mod by
+A **feature-incomplete** Paper port of [Unplugged AFK](https://github.com/sakura-ryoko/unplugged-afk), the Fabric mod by
 Sakura Ryoko, published under the LGPL3-or-later license.
 
 One command disconnects your client and leaves an unplugged player standing where you were, holding your spot at a farm
@@ -180,7 +180,7 @@ Everyone taking part is expected to follow the [Code of Conduct](CODE_OF_CONDUCT
 
 ## Acknowledgements
 
-Huge thanks to Sakura Ryoko for [Unplugged-AFK](https://github.com/sakura-ryoko/unplugged-afk), the mod this ports. This
+Huge thanks to Sakura Ryoko for [Unplugged AFK](https://github.com/sakura-ryoko/unplugged-afk), the mod this ports. This
 plugin would not exist without their work.
 
 ## License
