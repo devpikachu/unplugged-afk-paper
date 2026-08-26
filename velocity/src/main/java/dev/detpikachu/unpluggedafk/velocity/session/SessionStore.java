@@ -30,6 +30,11 @@ public final class SessionStore {
         return session != null && session.isAlive() && session.serverName().equals(serverName);
     }
 
+    public boolean isHeldElsewhere(UUID uuid, String serverName) {
+        final var session = this.sessions.get(uuid);
+        return session != null && session.isAlive() && !session.serverName().equals(serverName);
+    }
+
     public @Nullable Session find(UUID uuid) {
         final var session = this.sessions.get(uuid);
         return session != null && session.isAlive() ? session : null;

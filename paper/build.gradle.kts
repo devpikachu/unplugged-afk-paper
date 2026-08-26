@@ -78,6 +78,7 @@ tasks {
             "apiVersion" to apiVersion,
             "minecraftVersion" to minecraftVersion
         )
+        inputs.properties(props)
         filesMatching(listOf("plugin.yml", "unplugged-afk.properties")) {
             expand(props)
         }

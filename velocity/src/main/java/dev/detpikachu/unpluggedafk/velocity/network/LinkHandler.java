@@ -238,9 +238,8 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     private void onSessionEnd(SessionEnd end, String serverName) {
         final var uuid = end.uuid();
 
-        if (!this.sessionStore.isHeldBy(uuid, serverName)) {
-            this.sessionStore.end(serverName, uuid);
-            logDebug("Ignored a SESSION_END for {} from {}: they hold no live session there.", uuid, serverName);
+        if (this.sessionStore.isHeldElsewhere(uuid, serverName)) {
+            logDebug("Ignored a SESSION_END for {} from {}: another backend holds it.", uuid, serverName);
             return;
         }
 

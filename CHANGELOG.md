@@ -10,6 +10,10 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ## [Unreleased]
 
+### Fixed
+
+- **Drop presence on expiry:** bot presence is now properly dropped when the session expires on the proxy
+
 ## [0.6.0] - 2026-08-25
 
 ### Added
