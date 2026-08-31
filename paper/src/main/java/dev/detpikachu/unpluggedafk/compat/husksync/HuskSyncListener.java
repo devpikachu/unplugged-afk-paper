@@ -1,6 +1,7 @@
 package dev.detpikachu.unpluggedafk.compat.husksync;
 
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import net.william278.husksync.api.BukkitHuskSyncAPI;
@@ -20,8 +21,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.logDebug;
 
 @ApiStatus.Internal
 public final class HuskSyncListener implements Listener {
@@ -46,7 +45,7 @@ public final class HuskSyncListener implements Listener {
                 bot.getUUID(),
                 new Handoff(snapshotOf(BukkitHuskSyncAPI.getInstance().getUser(player))));
 
-        logDebug("Held the data of bot {} for the returning player.", bot.describe());
+        Log.debug("Held the data of bot {} for the returning player.", bot.describe());
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
@@ -58,7 +57,7 @@ public final class HuskSyncListener implements Listener {
             final var repaired = snapshotOf(user);
 
             event.editData(stale -> overwrite(stale, repaired));
-            logDebug("Repaired HuskSync's snapshot for bot {}.", bot.describe());
+            Log.debug("Repaired HuskSync's snapshot for bot {}.", bot.describe());
 
             return;
         }
@@ -84,7 +83,7 @@ public final class HuskSyncListener implements Listener {
         });
 
         if (repair != null) {
-            logDebug("Repaired HuskSync's snapshot for {} ({}) with their bot's.", user.getName(), user.getUuid());
+            Log.debug("Repaired HuskSync's snapshot for {} ({}) with their bot's.", user.getName(), user.getUuid());
         }
 
         if (!withhold) {
@@ -94,7 +93,7 @@ public final class HuskSyncListener implements Listener {
         this.withheldDeaths.values().removeIf(HuskSyncListener::isExpired);
         this.withheldDeaths.put(user.getUuid(), Instant.now());
 
-        logDebug("Held back the death of {} ({}) until their sync completes.", user.getName(), user.getUuid());
+        Log.debug("Held back the death of {} ({}) until their sync completes.", user.getName(), user.getUuid());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -107,7 +106,7 @@ public final class HuskSyncListener implements Listener {
         }
 
         ((CraftPlayer) user.getPlayer()).getHandle().setHealth(0.0F);
-        logDebug("Restored the death of {} ({}) now that their sync has completed.", user.getName(), user.getUuid());
+        Log.debug("Restored the death of {} ({}) now that their sync has completed.", user.getName(), user.getUuid());
     }
 
     private static void overwrite(DataSnapshot.Unpacked destination, DataSnapshot.Unpacked source) {

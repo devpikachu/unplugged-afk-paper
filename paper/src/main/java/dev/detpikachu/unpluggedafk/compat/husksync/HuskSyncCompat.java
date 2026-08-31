@@ -1,9 +1,8 @@
 package dev.detpikachu.unpluggedafk.compat.husksync;
 
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import org.jetbrains.annotations.ApiStatus;
-
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
 
 /**
  * Repairs the snapshot HuskSync is about to apply across an unplug handoff.
@@ -41,7 +40,7 @@ public final class HuskSyncCompat {
         }
 
         pluginManager.registerEvents(new HuskSyncListener(), plugin);
-        LOGGER.info(
+        Log.info(
                 "HuskSync detected. Snapshots will be patched so that the inventory gets correctly transferred between player and bot, and vice-versa.");
     }
 }

@@ -1,5 +1,6 @@
 package dev.detpikachu.unpluggedafk.velocity.compat.tab;
 
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity;
 import dev.detpikachu.unpluggedafk.velocity.session.SessionStore;
 import org.jetbrains.annotations.ApiStatus;
@@ -41,7 +42,6 @@ public final class TabCompat {
 
     public static @Nullable TabBridge register(UnpluggedAfkVelocity plugin) {
         final var proxyServer = plugin.getProxyServer();
-        final var logger = plugin.getLogger();
 
         if (!proxyServer.getPluginManager().isLoaded(PLUGIN_NAME)) {
             return null;
@@ -49,7 +49,7 @@ public final class TabCompat {
 
         final var bridge = TabBridge.resolve(plugin);
         if (bridge == null) {
-            logger.warn("TAB detected, but its internals have changed. Bots stay backend-local.");
+            Log.warn("TAB detected, but its internals have changed. Bots stay backend-local.");
             return null;
         }
 
@@ -61,7 +61,7 @@ public final class TabCompat {
 
         proxyServer.getEventManager().register(plugin, new TabListener(bridge));
 
-        logger.info("TAB detected. Bots will be synchronized across player lists in addition to real players.");
+        Log.info("TAB detected. Bots will be synchronized across player lists in addition to real players.");
         return bridge;
     }
 

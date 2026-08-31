@@ -1,11 +1,11 @@
 package dev.detpikachu.unpluggedafk.velocity.compat.tab;
 
 import com.velocitypowered.api.proxy.ProxyServer;
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity;
 import dev.detpikachu.unpluggedafk.velocity.session.Session;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -14,8 +14,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity.logDebug;
 
 @ApiStatus.Internal
 public final class TabBridge {
@@ -35,7 +33,6 @@ public final class TabBridge {
 
     private final UnpluggedAfkVelocity plugin;
     private final ProxyServer proxyServer;
-    private final Logger logger;
 
     private final Method getInstance;
     private final Method getFeatureManager;
@@ -62,7 +59,6 @@ public final class TabBridge {
 
         this.plugin = plugin;
         this.proxyServer = plugin.getProxyServer();
-        this.logger = plugin.getLogger();
 
         this.getInstance = tabClass.getMethod("getInstance");
         this.getFeatureManager = tabClass.getMethod("getFeatureManager");
@@ -81,7 +77,7 @@ public final class TabBridge {
         try {
             return new TabBridge(plugin);
         } catch (ReflectiveOperationException | RuntimeException exception) {
-            plugin.getLogger().warn("Could not resolve TAB's internals.", exception);
+            Log.warn("Could not resolve TAB's internals.", exception);
             return null;
         }
     }
@@ -91,7 +87,7 @@ public final class TabBridge {
     }
 
     public void addBot(String serverName, UUID uuid, String username, Session.@Nullable Skin skin) {
-        logDebug("Building a TAB entry for bot {} ({}) on {}.", username, uuid, serverName);
+        Log.debug("Building a TAB entry for bot {} ({}) on {}.", username, uuid, serverName);
         this.dispatch(feature -> this.bots.put(uuid, this.newProxyPlayer(uuid, username, serverName, skin)));
         this.refreshLater();
     }
@@ -126,7 +122,7 @@ public final class TabBridge {
             return;
         }
 
-        logDebug("Re-asserting {} TAB entr(ies) to every viewer.", this.bots.size());
+        Log.debug("Re-asserting {} TAB entr(ies) to every viewer.", this.bots.size());
         this.dispatch(feature -> {
             for (final var bot : this.bots.values()) {
                 this.onJoin.invoke(feature, bot);
@@ -138,14 +134,14 @@ public final class TabBridge {
         final var feature = this.globalPlayerList();
 
         if (feature == null) {
-            logDebug("TAB has no GlobalPlayerList feature, so bots stay backend-local.");
+            Log.debug("TAB has no GlobalPlayerList feature, so bots stay backend-local.");
             return;
         }
 
         try {
             this.execute.invoke(this.getCustomThread.invoke(feature), (Runnable) () -> this.run(feature, call));
         } catch (ReflectiveOperationException | RuntimeException exception) {
-            this.logger.warn("Could not reach TAB's feature thread.", exception);
+            Log.warn("Could not reach TAB's feature thread.", exception);
         }
     }
 
@@ -153,7 +149,7 @@ public final class TabBridge {
         try {
             call.invoke(feature);
         } catch (ReflectiveOperationException | RuntimeException exception) {
-            this.logger.warn("TAB rejected a bot's tab list entry.", exception);
+            Log.warn("TAB rejected a bot's tab list entry.", exception);
         }
     }
 
@@ -167,7 +163,7 @@ public final class TabBridge {
 
             return this.getFeature.invoke(this.getFeatureManager.invoke(tab), FEATURE_NAME);
         } catch (ReflectiveOperationException | RuntimeException exception) {
-            this.logger.warn("Could not ask TAB for its global player list.", exception);
+            Log.warn("Could not ask TAB for its global player list.", exception);
             return null;
         }
     }

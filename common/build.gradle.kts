@@ -19,6 +19,7 @@ dependencies {
     compileOnly(libs.netty.buffer)
     compileOnly(libs.netty.codec.base)
     compileOnly(libs.netty.transport)
+    compileOnly(libs.slf4j.api)
 
     // Annotations
     compileOnly(libs.jspecify)

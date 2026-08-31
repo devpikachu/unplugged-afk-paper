@@ -1,5 +1,6 @@
 package dev.detpikachu.unpluggedafk.velocity.network;
 
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.common.network.Protocol;
 import dev.detpikachu.unpluggedafk.common.network.codec.MessageDecoder;
 import dev.detpikachu.unpluggedafk.common.network.codec.MessageEncoder;
@@ -21,7 +22,6 @@ import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
 
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,7 +36,6 @@ public final class LinkServer {
     private static final long BOOT_CAP_MILLIS = 8000;
     private static final long BOOT_POLL_MILLIS = 50;
 
-    private final Logger logger;
     private final ConcurrentHashMap<String, Channel> links = new ConcurrentHashMap<>();
 
     private volatile long startedAt;
@@ -46,10 +45,6 @@ public final class LinkServer {
     private volatile @Nullable EventLoopGroup acceptors;
     private volatile @Nullable EventLoopGroup workers;
     private volatile @Nullable Channel channel;
-
-    public LinkServer(Logger logger) {
-        this.logger = logger;
-    }
 
     @SuppressWarnings("FutureReturnValueIgnored")
     public void start(UnpluggedAfkVelocity plugin, BotPlayerBridge botPlayerBridge, @Nullable TabBridge tabBridge) {
@@ -94,11 +89,11 @@ public final class LinkServer {
         this.channel = future.channel();
         future.addListener(result -> {
             if (result.isSuccess()) {
-                this.logger.info("Link listening on {}:{}.", options.getHost(), options.getPort());
+                Log.info("Link listening on {}:{}.", options.getHost(), options.getPort());
                 return;
             }
 
-            this.logger.error("Link could not bind {}:{}.", options.getHost(), options.getPort(), result.cause());
+            Log.error("Link could not bind {}:{}.", options.getHost(), options.getPort(), result.cause());
         });
     }
 
@@ -163,7 +158,7 @@ public final class LinkServer {
         }
 
         if (payload.length > Protocol.MAX_PAYLOAD_BYTES) {
-            this.logger.warn(
+            Log.warn(
                     "Dropped a {} byte(s) plugin message on {} for bot {}. The link carries at most {}.",
                     payload.length,
                     channelName,

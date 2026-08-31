@@ -1,9 +1,8 @@
 package dev.detpikachu.unpluggedafk.compat.packetevents;
 
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import org.jetbrains.annotations.ApiStatus;
-
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
 
 /**
  * Cancels the kick PacketEvents issues when it fails to inject into a bot's fake channel.
@@ -30,6 +29,6 @@ public final class PacketEventsCompat {
         }
 
         pluginManager.registerEvents(new PacketEventsListener(), plugin);
-        LOGGER.info("PacketEvents detected. Preventing bot kicks due to injection errors thrown by PacketEvents.");
+        Log.info("PacketEvents detected. Preventing bot kicks due to injection errors thrown by PacketEvents.");
     }
 }

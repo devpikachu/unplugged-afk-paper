@@ -3,13 +3,14 @@ package dev.detpikachu.unpluggedafk.player;
 import dev.detpikachu.unpluggedafk.KickReasons;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
 import io.papermc.paper.connection.DisconnectionReason;
-import net.kyori.adventure.text.Component;
 import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.jetbrains.annotations.ApiStatus;
+
+import static net.kyori.adventure.text.Component.text;
 
 @ApiStatus.Internal
 public final class GamePacketListener extends ServerGamePacketListenerImpl {
@@ -39,7 +40,7 @@ public final class GamePacketListener extends ServerGamePacketListenerImpl {
             return;
         }
 
-        this.bot.deferredDisconnect(Component.text(KickReasons.RETURNED), Reason.PLAYER_RETURNED);
+        this.bot.deferredDisconnect(text(KickReasons.RETURNED), Reason.PLAYER_RETURNED);
     }
 
     @Override

@@ -5,12 +5,12 @@ import dev.detpikachu.unpluggedafk.KickReasons;
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerSpawnEvent;
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.config.Options;
 import dev.detpikachu.unpluggedafk.session.Session;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import io.papermc.paper.util.KeepAlive;
-import net.kyori.adventure.text.Component;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketFlow;
@@ -33,7 +33,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
+import static net.kyori.adventure.text.Component.text;
 
 @ApiStatus.Internal
 public final class BotFactory {
@@ -65,7 +65,7 @@ public final class BotFactory {
         bot.getBukkitEntity().setPersistent(false);
         bot.connection.teleport(position.x, position.y, position.z, yRot, xRot);
 
-        LOGGER.info(
+        Log.info(
                 "Spawned fake bot {} at {}, {}, {} in {} for {} minute(s).",
                 bot.describe(),
                 (int) position.x(),
@@ -95,7 +95,7 @@ public final class BotFactory {
         registry.add(bot);
         var placed = false;
 
-        try (final var reporter = new ProblemReporter.ScopedCollector(bot.problemPath(), LOGGER)) {
+        try (final var reporter = new ProblemReporter.ScopedCollector(bot.problemPath(), Log.logger())) {
             final var data = toValueInput(bot, reporter, persistedData);
 
             // Vanilla loads persisted state before placing the player (PrepareSpawnTask$Ready.spawn). Placing first
@@ -120,7 +120,7 @@ public final class BotFactory {
             }
         } catch (RuntimeException exception) {
             if (placed) {
-                bot.deferredDisconnect(Component.text(KickReasons.SPAWN_FAILED), Reason.SPAWN_FAILED);
+                bot.deferredDisconnect(text(KickReasons.SPAWN_FAILED), Reason.SPAWN_FAILED);
                 throw exception;
             }
 
@@ -171,7 +171,7 @@ public final class BotFactory {
             if (this.hasReconnected()) {
                 task.cancel();
                 SessionRegistry.getInstance().clearUnplugging(this.uuid);
-                LOGGER.warn("{} ({}) reconnected before their bot existed, so none was created.", this.name, this.uuid);
+                Log.warn("{} ({}) reconnected before their bot existed, so none was created.", this.name, this.uuid);
                 return;
             }
 
@@ -198,7 +198,7 @@ public final class BotFactory {
                 return false;
             }
 
-            LOGGER.warn(
+            Log.warn(
                     "{} ({}) still had an open connection after {} tick(s). Creating their bot anyway.",
                     this.name,
                     this.uuid,
@@ -213,7 +213,7 @@ public final class BotFactory {
                 bot = spawn(
                         this.level, this.profile, this.clientInformation, this.channels, this.session, persistedData);
             } catch (RuntimeException exception) {
-                LOGGER.error(
+                Log.error(
                         "{} ({}) was disconnected but no bot could be created to hold their spot.",
                         this.name,
                         this.uuid,
@@ -221,7 +221,7 @@ public final class BotFactory {
                 return;
             }
 
-            LOGGER.info(
+            Log.info(
                     "{} ({}) is unplugged at {}, {}, {} in {}. {} of {} slot(s) in use.",
                     this.name,
                     this.uuid,
@@ -242,7 +242,7 @@ public final class BotFactory {
                 return snapshot;
             }
 
-            LOGGER.warn("No snapshot for {} ({}). Falling back to their playerdata file.", this.name, this.uuid);
+            Log.warn("No snapshot for {} ({}). Falling back to their playerdata file.", this.name, this.uuid);
             return this.readPersistedData();
         }
 
@@ -251,7 +251,7 @@ public final class BotFactory {
             final var persistedData = playerList.loadPlayerData(new NameAndId(this.profile));
 
             if (persistedData.isEmpty()) {
-                LOGGER.warn(
+                Log.warn(
                         "No persisted data for {} ({}). The bot holds world spawn with an empty inventory.",
                         this.name,
                         this.uuid);

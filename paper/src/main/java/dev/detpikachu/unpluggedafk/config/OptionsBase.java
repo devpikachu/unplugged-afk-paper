@@ -1,9 +1,8 @@
 package dev.detpikachu.unpluggedafk.config;
 
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.ApiStatus;
-
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
 
 @ApiStatus.Internal
 public abstract class OptionsBase {
@@ -15,7 +14,7 @@ public abstract class OptionsBase {
             return value;
         }
 
-        LOGGER.warn(
+        Log.warn(
                 "{} of {} is invalid. The value must be greater than or equal to 1. Resetting to {}.",
                 key,
                 value,
@@ -30,7 +29,7 @@ public abstract class OptionsBase {
             return value;
         }
 
-        LOGGER.warn(
+        Log.warn(
                 "{} of {} is invalid. The value must be between {} and {}. Resetting to {}.",
                 key,
                 value,

@@ -3,6 +3,7 @@ package dev.detpikachu.unpluggedafk;
 import dev.detpikachu.unpluggedafk.api.UnpluggedAfkApi;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent;
 import dev.detpikachu.unpluggedafk.commands.CommandTree;
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.compat.husksync.HuskSyncCompat;
 import dev.detpikachu.unpluggedafk.compat.luckperms.LuckPermsCompat;
 import dev.detpikachu.unpluggedafk.compat.miniplaceholders.MiniPlaceholdersCompat;
@@ -14,8 +15,6 @@ import dev.detpikachu.unpluggedafk.network.LinkClient;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.papermc.paper.configuration.GlobalConfiguration;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.ApiStatus;
@@ -24,24 +23,18 @@ import org.jspecify.annotations.Nullable;
 import java.io.IOException;
 import java.util.Properties;
 
+import static net.kyori.adventure.text.Component.text;
+
 @ApiStatus.Internal
 public final class UnpluggedAfk extends JavaPlugin {
 
     private static final String PROPERTIES_RESOURCE = "unplugged-afk.properties";
     private static final String KEY_MINECRAFT_VERSION = "minecraftVersion";
 
-    public static ComponentLogger LOGGER = ComponentLogger.logger();
-
     private final LinkClient linkClient = new LinkClient();
 
     public static UnpluggedAfk getInstance() {
         return JavaPlugin.getPlugin(UnpluggedAfk.class);
-    }
-
-    public static void logDebug(String message, Object... arguments) {
-        if (Options.getInstance().isDebug()) {
-            LOGGER.info(message, arguments);
-        }
     }
 
     public static boolean isProxyMode() {
@@ -54,7 +47,7 @@ public final class UnpluggedAfk extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        LOGGER = getComponentLogger();
+        Log.configure(this.getComponentLogger(), () -> Options.getInstance().isDebug());
         this.warnOnVersionMismatch();
 
         this.saveDefaultConfig();
@@ -82,11 +75,11 @@ public final class UnpluggedAfk extends JavaPlugin {
         this.unregisterCompat();
 
         if (!bots.isEmpty()) {
-            LOGGER.warn("Disabling with {} bot(s) still active. Their spots will no longer be held.", bots.size());
+            Log.warn("Disabling with {} bot(s) still active. Their spots will no longer be held.", bots.size());
         }
 
-        bots.forEach(bot -> bot.deferredDisconnect(
-                Component.text(KickReasons.DISABLED), UnpluggedPlayerRemoveEvent.Reason.PLUGIN_DISABLED));
+        bots.forEach(bot ->
+                bot.deferredDisconnect(text(KickReasons.DISABLED), UnpluggedPlayerRemoveEvent.Reason.PLUGIN_DISABLED));
         registry.removeAll();
 
         this.linkClient.stop();
@@ -119,7 +112,7 @@ public final class UnpluggedAfk extends JavaPlugin {
     private void logStartupSummary() {
         final var options = Options.getInstance();
 
-        LOGGER.info(
+        Log.info(
                 "Enabled for Minecraft {}. maxUnpluggedPlayers={}, maxDurationMins={}",
                 this.getServer().getMinecraftVersion(),
                 options.getMaxUnpluggedPlayers(),
@@ -128,7 +121,7 @@ public final class UnpluggedAfk extends JavaPlugin {
         if (isProxyMode()) {
             final var link = options.getLink();
 
-            LOGGER.info(
+            Log.info(
                     "Proxy mode is on. Sessions ride the link to {}:{} as {}.",
                     link.getHost(),
                     link.getPort(),
@@ -136,7 +129,7 @@ public final class UnpluggedAfk extends JavaPlugin {
             return;
         }
 
-        LOGGER.info(
+        Log.info(
                 "Proxy mode is off (proxies.velocity.enabled in paper-global.yml). /unplug only kicks locally, which behind a proxy redirects the player to the try list instead of disconnecting them.");
     }
 
@@ -157,7 +150,7 @@ public final class UnpluggedAfk extends JavaPlugin {
             return true;
         }
 
-        LOGGER.error(
+        Log.error(
                 "Proxy mode is on but the proxy link is not configured. Set link.secret and link.serverName in the plugin's config.yml, plus link.host if the proxy is not on this machine. The secret comes from the Unplugged AFK companion on your proxy, and the server name is this server's name in the proxy's own configuration.");
         return false;
     }
@@ -170,7 +163,7 @@ public final class UnpluggedAfk extends JavaPlugin {
             return;
         }
 
-        LOGGER.warn(
+        Log.warn(
                 "Unplugged AFK targets Minecraft {} but this server runs {}. It relies on server internals, so features may misbehave or fail outright on another version.",
                 targetVersion,
                 runningVersion);
@@ -181,13 +174,13 @@ public final class UnpluggedAfk extends JavaPlugin {
 
         try (var stream = this.getResource(PROPERTIES_RESOURCE)) {
             if (stream == null) {
-                LOGGER.error("{} is missing from the JAR.", PROPERTIES_RESOURCE);
+                Log.error("{} is missing from the JAR.", PROPERTIES_RESOURCE);
                 return null;
             }
 
             properties.load(stream);
         } catch (IOException exception) {
-            LOGGER.error("Could not read {} from the JAR.", PROPERTIES_RESOURCE, exception);
+            Log.error("Could not read {} from the JAR.", PROPERTIES_RESOURCE, exception);
             return null;
         }
 

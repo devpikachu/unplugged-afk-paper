@@ -1,5 +1,6 @@
 package dev.detpikachu.unpluggedafk.compat.luckperms;
 
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
 import net.luckperms.api.LuckPerms;
 import net.luckperms.api.LuckPermsProvider;
@@ -11,9 +12,6 @@ import org.jspecify.annotations.Nullable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Objects;
-
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.logDebug;
 
 @ApiStatus.Internal
 public final class LuckPermsBridge {
@@ -65,7 +63,7 @@ public final class LuckPermsBridge {
         try {
             return new LuckPermsBridge(LuckPermsProvider.get());
         } catch (ReflectiveOperationException | RuntimeException exception) {
-            LOGGER.warn("Could not resolve LuckPerms' internals. Bots will resolve permissions without it.", exception);
+            Log.warn("Could not resolve LuckPerms' internals. Bots will resolve permissions without it.", exception);
             return null;
         }
     }
@@ -74,8 +72,7 @@ public final class LuckPermsBridge {
         final var user = this.api.getUserManager().getUser(bot.getUUID());
 
         if (user == null) {
-            LOGGER.warn(
-                    "LuckPerms holds no loaded user for bot {}, so it keeps the vanilla permissible.", bot.describe());
+            Log.warn("LuckPerms holds no loaded user for bot {}, so it keeps the vanilla permissible.", bot.describe());
             return;
         }
 
@@ -87,9 +84,9 @@ public final class LuckPermsBridge {
                     player,
                     this.permissible.newInstance(player, this.cast.invoke(null, user), this.luckPermsPlugin),
                     this.getLogger.invoke(this.luckPermsPlugin));
-            logDebug("Attached LuckPerms to bot {}.", bot.describe());
+            Log.debug("Attached LuckPerms to bot {}.", bot.describe());
         } catch (ReflectiveOperationException | RuntimeException exception) {
-            LOGGER.warn("LuckPerms rejected an injection into bot {}.", bot.describe(), exception);
+            Log.warn("LuckPerms rejected an injection into bot {}.", bot.describe(), exception);
         }
     }
 }

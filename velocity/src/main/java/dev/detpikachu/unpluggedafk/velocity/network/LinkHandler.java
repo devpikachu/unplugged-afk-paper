@@ -4,6 +4,7 @@ import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.common.network.Handshake;
 import dev.detpikachu.unpluggedafk.common.network.Message;
 import dev.detpikachu.unpluggedafk.common.network.Protocol;
@@ -28,14 +29,11 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
-import static dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity.logDebug;
 
 @ApiStatus.Internal
 public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
@@ -47,7 +45,6 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     private final @Nullable TabBridge tabBridge;
     private final ProxyServer proxyServer;
     private final SessionStore sessionStore;
-    private final Logger logger;
     private final String secret;
 
     private @Nullable String nonce;
@@ -63,7 +60,6 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
         this.tabBridge = tabBridge;
         this.proxyServer = plugin.getProxyServer();
         this.sessionStore = plugin.getSessionStore();
-        this.logger = plugin.getLogger();
         this.secret = Options.getInstance().getLink().getSecret();
     }
 
@@ -84,12 +80,12 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
         this.serverName = null;
 
         if (!this.linkServer.unlinked(serverName, context.channel())) {
-            this.logger.info("A superseded link for backend {} closed. Its replacement keeps the backend.", serverName);
+            Log.info("A superseded link for backend {} closed. Its replacement keeps the backend.", serverName);
             return;
         }
 
         this.dropBackend(serverName);
-        this.logger.info("Backend {} unlinked.", serverName);
+        Log.info("Backend {} unlinked.", serverName);
     }
 
     @Override
@@ -97,7 +93,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
         final var serverName = this.serverName;
 
         if (serverName != null) {
-            this.logger.warn("Link error from backend {}. Closing.", serverName, cause);
+            Log.warn("Link error from backend {}. Closing.", serverName, cause);
         }
 
         close(context);
@@ -119,7 +115,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
 
         switch (message.getType()) {
             case HEARTBEAT -> {
-                logDebug("Heartbeat {} from backend {}, echoing.", ((Heartbeat) message).id(), serverName);
+                Log.debug("Heartbeat {} from backend {}, echoing.", ((Heartbeat) message).id(), serverName);
                 send(context, message);
             }
             case RELAY -> onRelay((Relay) message, serverName);
@@ -128,12 +124,12 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
             case SYNC -> onSync((Sync) message, serverName);
             case GOODBYE -> onGoodbye(context, (Goodbye) message, serverName);
             case AUTH, CHALLENGE, READY, SESSION_ACK ->
-                logDebug("Ignoring {} from backend {}. A proxy never handles it.", message.getType(), serverName);
+                Log.debug("Ignoring {} from backend {}. A proxy never handles it.", message.getType(), serverName);
         }
     }
 
     private void onGoodbye(ChannelHandlerContext context, Goodbye message, String serverName) {
-        this.logger.info("Backend {} said goodbye: {}", serverName, message.reason());
+        Log.info("Backend {} said goodbye: {}", serverName, message.reason());
 
         this.serverName = null;
 
@@ -185,7 +181,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
                 .replace(ReadTimeoutHandler.class, "timeout", new ReadTimeoutHandler(Protocol.IDLE_TIMEOUT_SECS));
         this.linkServer.linked(auth.serverName(), context.channel());
         send(context, new Ready(true, ""));
-        this.logger.info(
+        Log.info(
                 "Backend {} linked from {}.",
                 auth.serverName(),
                 context.channel().remoteAddress());
@@ -195,20 +191,18 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
         final var identifier = parseChannel(relay.getChannel());
 
         if (identifier == null) {
-            this.logger.warn(
-                    "Dropped a relayed message from {} on the invalid channel {}.", serverName, relay.getChannel());
+            Log.warn("Dropped a relayed message from {} on the invalid channel {}.", serverName, relay.getChannel());
             return;
         }
 
         final var source = this.botPlayerBridge.connectionOf(relay.getUuid());
 
         if (source == null) {
-            this.logger.warn(
-                    "Dropped a relayed message from {}: bot {} has no proxy connection.", serverName, relay.getUuid());
+            Log.warn("Dropped a relayed message from {}: bot {} has no proxy connection.", serverName, relay.getUuid());
             return;
         }
 
-        logDebug(
+        Log.debug(
                 "Relaying {} byte(s) from bot {} on {} to the proxy on channel {}.",
                 relay.getPayload().length,
                 relay.getUuid(),
@@ -231,7 +225,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
 
         this.addPresence(serverName, uuid, username, session.skin());
         send(context, new SessionAck(uuid, true, ""));
-        this.logger.info(
+        Log.info(
                 "SESSION_START: {} ({}) on {} for {} second(s).", username, uuid, serverName, start.secondsRemaining());
     }
 
@@ -239,13 +233,13 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
         final var uuid = end.uuid();
 
         if (this.sessionStore.isHeldElsewhere(uuid, serverName)) {
-            logDebug("Ignored a SESSION_END for {} from {}: another backend holds it.", uuid, serverName);
+            Log.debug("Ignored a SESSION_END for {} from {}: another backend holds it.", uuid, serverName);
             return;
         }
 
         this.sessionStore.end(serverName, uuid);
         this.dropPresence(uuid);
-        this.logger.info("SESSION_END: {}: {}", uuid, end.reason());
+        Log.info("SESSION_END: {}: {}", uuid, end.reason());
     }
 
     private void onSync(Sync sync, String serverName) {
@@ -272,11 +266,11 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
             this.addPresence(serverName, start.uuid(), start.username(), skinOf(start.skin()));
         }
 
-        this.logger.info("SYNC from {}: {} session(s).", serverName, sessions.size());
+        Log.info("SYNC from {}: {} session(s).", serverName, sessions.size());
     }
 
     private void addPresence(String serverName, UUID uuid, String username, Session.@Nullable Skin skin) {
-        logDebug("Adding presence for {} ({}) on {}. Skin: {}.", username, uuid, serverName, skin != null);
+        Log.debug("Adding presence for {} ({}) on {}. Skin: {}.", username, uuid, serverName, skin != null);
         this.botPlayerBridge.addWhenDisconnected(serverName, uuid, username, skin);
 
         if (this.tabBridge != null) {
@@ -285,7 +279,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     }
 
     private void dropPresence(UUID uuid) {
-        logDebug("Dropping presence for {}.", uuid);
+        Log.debug("Dropping presence for {}.", uuid);
         this.botPlayerBridge.remove(uuid);
 
         if (this.tabBridge != null) {
@@ -303,7 +297,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     }
 
     private void refuse(ChannelHandlerContext context, String reason) {
-        this.logger.warn("Refusing a link from {}. {}", context.channel().remoteAddress(), reason);
+        Log.warn("Refusing a link from {}. {}", context.channel().remoteAddress(), reason);
         sendAndClose(context, new Ready(false, reason));
     }
 

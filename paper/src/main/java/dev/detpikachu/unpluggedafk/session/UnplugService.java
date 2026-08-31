@@ -3,13 +3,14 @@ package dev.detpikachu.unpluggedafk.session;
 import dev.detpikachu.unpluggedafk.DumpWriter;
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import dev.detpikachu.unpluggedafk.api.events.PlayerUnplugEvent;
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.common.network.messages.SessionAck;
 import dev.detpikachu.unpluggedafk.config.Options;
 import dev.detpikachu.unpluggedafk.exceptions.PlayerStillConnectedException;
 import dev.detpikachu.unpluggedafk.exceptions.ProxyUnavailableException;
 import dev.detpikachu.unpluggedafk.exceptions.UnplugCancelledException;
 import dev.detpikachu.unpluggedafk.exceptions.UnplugFailedException;
-import dev.detpikachu.unpluggedafk.formatting.ChatMessages;
+import dev.detpikachu.unpluggedafk.format.ChatMessages;
 import dev.detpikachu.unpluggedafk.player.BotFactory;
 import io.papermc.paper.adventure.PaperAdventure;
 import net.kyori.adventure.text.Component;
@@ -17,8 +18,6 @@ import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.server.level.ServerPlayer;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.jetbrains.annotations.ApiStatus;
-
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
 
 @ApiStatus.Internal
 public final class UnplugService {
@@ -32,7 +31,7 @@ public final class UnplugService {
         final var event = new PlayerUnplugEvent(player.getBukkitEntity(), session.durationMins(), session.reason());
 
         if (!event.callEvent()) {
-            LOGGER.info("Refused to unplug {} ({}): another plugin cancelled the request.", name, uuid);
+            Log.info("Refused to unplug {} ({}): another plugin cancelled the request.", name, uuid);
             throw new UnplugCancelledException(event.getCancelMessage());
         }
 
@@ -43,7 +42,7 @@ public final class UnplugService {
             throw new ProxyUnavailableException(uuid, name);
         }
 
-        LOGGER.info("Unplugging {} ({}) for {} minute(s): {}", name, uuid, session.durationMins(), session.reason());
+        Log.info("Unplugging {} ({}) for {} minute(s): {}", name, uuid, session.durationMins(), session.reason());
 
         if (Options.getInstance().isDebug()) {
             DumpWriter.write(player.getBukkitEntity(), session);
@@ -77,15 +76,14 @@ public final class UnplugService {
         final var name = player.getPlainTextName();
 
         if (!ack.accepted()) {
-            LOGGER.warn("The proxy refused the unplug of {} ({}): {}", name, uuid, ack.reason());
+            Log.warn("The proxy refused the unplug of {} ({}): {}", name, uuid, ack.reason());
             registry.clearUnplugging(uuid);
             player.getBukkitEntity().sendMessage(ChatMessages.formatUnplugRefused(ack.reason()));
             return;
         }
 
         if (player.hasDisconnected() || player.isDeadOrDying()) {
-            LOGGER.warn(
-                    "{} ({}) was no longer eligible when the proxy answered, so the session is undone.", name, uuid);
+            Log.warn("{} ({}) was no longer eligible when the proxy answered, so the session is undone.", name, uuid);
             client.endSession(uuid, END_ABORTED);
             registry.clearUnplugging(uuid);
             return;
@@ -94,7 +92,7 @@ public final class UnplugService {
         try {
             commit(player, session);
         } catch (UnplugFailedException exception) {
-            LOGGER.error("Failed to unplug {} ({}) after the proxy acknowledged the session.", name, uuid, exception);
+            Log.error("Failed to unplug {} ({}) after the proxy acknowledged the session.", name, uuid, exception);
             client.endSession(uuid, END_ABORTED);
         }
     }
@@ -118,7 +116,7 @@ public final class UnplugService {
             player.getBukkitEntity().kick(message, PlayerKickEvent.Cause.PLUGIN);
 
             if (playerList.getPlayer(uuid) != null) {
-                LOGGER.warn(
+                Log.warn(
                         "A plugin cancelled the kick of {} ({}), but the unplug is already committed. Forcing it.",
                         name,
                         uuid);

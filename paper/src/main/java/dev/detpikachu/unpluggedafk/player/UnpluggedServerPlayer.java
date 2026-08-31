@@ -4,6 +4,7 @@ import com.mojang.authlib.GameProfile;
 import dev.detpikachu.unpluggedafk.KickReasons;
 import dev.detpikachu.unpluggedafk.api.UnpluggedPlayerInfo;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.session.Session;
 import io.papermc.paper.adventure.PaperAdventure;
 import net.kyori.adventure.text.Component;
@@ -28,8 +29,7 @@ import org.jspecify.annotations.Nullable;
 
 import java.time.Duration;
 
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.logDebug;
+import static net.kyori.adventure.text.Component.text;
 
 @ApiStatus.Internal
 public final class UnpluggedServerPlayer extends ServerPlayer {
@@ -111,13 +111,13 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         super.die(damageSource);
 
         if (!this.isDeadOrDying()) {
-            logDebug("Bot {} survived a cancelled death, so the session continues.", this.describe());
+            Log.debug("Bot {} survived a cancelled death, so the session continues.", this.describe());
             return;
         }
 
         this.deathMessage = PaperAdventure.asAdventure(this.getCombatTracker().getDeathMessage());
 
-        LOGGER.warn(
+        Log.warn(
                 "Bot {} died. Their items dropped and their spot is held for another {} tick(s).",
                 this.describe(),
                 DEATH_LINGER_TICKS);
@@ -161,8 +161,8 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
             return;
         }
 
-        logDebug("Bot {} was removed from the world: {}.", this.describe(), reason);
-        this.deferredDisconnect(Component.text(KickReasons.REMOVED), Reason.ENTITY_REMOVED);
+        Log.debug("Bot {} was removed from the world: {}.", this.describe(), reason);
+        this.deferredDisconnect(text(KickReasons.REMOVED), Reason.ENTITY_REMOVED);
     }
 
     public void deferredDisconnect(Component message, @Nullable Reason reason) {
@@ -173,7 +173,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         this.isDisconnectScheduled = true;
         this.removeReason = reason;
 
-        LOGGER.info(
+        Log.info(
                 "Killing bot {} after {} of {} minute(s): {}",
                 this.describe(),
                 this.session.elapsed().toMinutes(),
@@ -191,13 +191,13 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         }
 
         if (this.deathMessage != null && !this.isDeadOrDying()) {
-            logDebug("Bot {} was healed mid-death, so the linger is dropped.", this.describe());
+            Log.debug("Bot {} was healed mid-death, so the linger is dropped.", this.describe());
             this.deathMessage = null;
             this.deathTime = 0;
         }
 
         if (this.deathMessage == null && this.session.isExpired()) {
-            this.deferredDisconnect(Component.text(KickReasons.EXPIRED), Reason.EXPIRED);
+            this.deferredDisconnect(text(KickReasons.EXPIRED), Reason.EXPIRED);
         }
 
         this.connection.resetPosition();
@@ -217,7 +217,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
 
         this.isSpawnStatePending = false;
 
-        logDebug(
+        Log.debug(
                 "Sent deferred spawn packets for {} after {}ms.",
                 this.describe(),
                 this.session.elapsed().toMillis());

@@ -1,8 +1,8 @@
 package dev.detpikachu.unpluggedafk.velocity.session;
 
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
 
 import java.util.Map;
 import java.util.Optional;
@@ -12,11 +12,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @ApiStatus.Internal
 public final class SessionStore {
 
-    private final Logger logger;
     private final ConcurrentHashMap<UUID, Session> sessions;
 
-    public SessionStore(Logger logger) {
-        this.logger = logger;
+    public SessionStore() {
         this.sessions = new ConcurrentHashMap<>();
     }
 
@@ -50,7 +48,7 @@ public final class SessionStore {
         final var previous = this.sessions.get(uuid);
 
         if (previous != null && previous.isAlive() && !previous.serverName().equals(session.serverName())) {
-            this.logger.warn(
+            Log.warn(
                     "Refused a session for {} ({}) on {}: they already have a live session on {}.",
                     session.username(),
                     uuid,
@@ -66,7 +64,7 @@ public final class SessionStore {
     public void end(String serverName, UUID uuid) {
         this.sessions.computeIfPresent(uuid, (key, session) -> {
             if (!session.serverName().equals(serverName)) {
-                this.logger.warn(
+                Log.warn(
                         "Ignored a SESSION_END for {} from {}: the session is held by {}.",
                         uuid,
                         serverName,
@@ -86,7 +84,7 @@ public final class SessionStore {
             final var previous = this.sessions.get(uuid);
 
             if (previous != null && previous.isAlive() && !previous.serverName().equals(serverName)) {
-                this.logger.warn(
+                Log.warn(
                         "Ignored a synced session for {} from {}: they have a live session on {}.",
                         uuid,
                         serverName,
@@ -112,7 +110,7 @@ public final class SessionStore {
         }
 
         if (!session.canRoute()) {
-            this.logger.info(
+            Log.info(
                     "The session for {} on {} expired at {}, so they fall back to the try list.",
                     uuid,
                     session.serverName(),

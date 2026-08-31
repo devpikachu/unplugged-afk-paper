@@ -1,6 +1,7 @@
 package dev.detpikachu.unpluggedafk;
 
-import dev.detpikachu.unpluggedafk.formatting.DumpFormatting;
+import dev.detpikachu.unpluggedafk.common.logging.Log;
+import dev.detpikachu.unpluggedafk.format.DumpFormatting;
 import dev.detpikachu.unpluggedafk.session.Session;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.ApiStatus;
@@ -11,8 +12,6 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
-
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
 
 @ApiStatus.Internal
 public final class DumpWriter {
@@ -36,7 +35,7 @@ public final class DumpWriter {
                     directory.resolve(fileName(player.getName(), timestamp)),
                     DumpFormatting.formatDump(player, session, timestamp));
         } catch (Exception exception) {
-            LOGGER.error("Failed to write unplug dump for {} ({})", player.getName(), player.getUniqueId(), exception);
+            Log.error("Failed to write unplug dump for {} ({})", player.getName(), player.getUniqueId(), exception);
         }
     }
 

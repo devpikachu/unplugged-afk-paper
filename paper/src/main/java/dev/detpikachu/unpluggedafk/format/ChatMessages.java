@@ -1,4 +1,4 @@
-package dev.detpikachu.unpluggedafk.formatting;
+package dev.detpikachu.unpluggedafk.format;
 
 import dev.detpikachu.unpluggedafk.common.formatting.DurationFormatting;
 import dev.detpikachu.unpluggedafk.config.Options;
@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 
+import static net.kyori.adventure.text.Component.empty;
+import static net.kyori.adventure.text.Component.join;
 import static net.kyori.adventure.text.Component.text;
 import static net.kyori.adventure.text.format.NamedTextColor.GOLD;
 import static net.kyori.adventure.text.format.NamedTextColor.GRAY;
@@ -71,7 +73,7 @@ public final class ChatMessages {
                 .map(ChatMessages::formatListEntry)
                 .forEach(lines::add);
 
-        return Component.join(JoinConfiguration.newlines(), lines);
+        return join(JoinConfiguration.newlines(), lines);
     }
 
     private static Component formatBot(UnpluggedServerPlayer bot) {
@@ -82,7 +84,7 @@ public final class ChatMessages {
                 .append(text(":"))
                 .color(WHITE);
 
-        return Component.join(
+        return join(
                 JoinConfiguration.newlines(),
                 header,
                 formatRow("Duration: ", formatDuration(Duration.ofMinutes(session.durationMins()))),
@@ -112,7 +114,7 @@ public final class ChatMessages {
 
     private static Component formatPendingMarker(int unplugging) {
         if (unplugging < 1) {
-            return Component.empty();
+            return empty();
         }
 
         return text("(+").append(text(unplugging, GOLD)).append(text(")")).color(GRAY);
@@ -122,7 +124,7 @@ public final class ChatMessages {
         final var session = bot.getSession();
 
         final var name = text(bot.getPlainTextName(), GOLD);
-        final var fakeMarker = session.isFake() ? text(" (fake)", RED) : Component.empty();
+        final var fakeMarker = session.isFake() ? text(" (fake)", RED) : empty();
         final var expiresLabel = text(" - expires in ", GRAY);
         final var expiresValue = formatDuration(session.remaining());
 

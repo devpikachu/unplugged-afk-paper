@@ -1,9 +1,8 @@
 package dev.detpikachu.unpluggedafk.compat.luckperms;
 
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import org.jetbrains.annotations.ApiStatus;
-
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
 
 /**
  * Attaches LuckPerms to a bot, so it resolves permissions the way the player it stands in for does.
@@ -47,6 +46,6 @@ public final class LuckPermsCompat {
         }
 
         pluginManager.registerEvents(new LuckPermsListener(bridge), plugin);
-        LOGGER.info("LuckPerms detected. Bots will resolve permissions through it rather than operator status alone.");
+        Log.info("LuckPerms detected. Bots will resolve permissions through it rather than operator status alone.");
     }
 }

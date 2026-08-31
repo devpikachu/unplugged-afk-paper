@@ -1,10 +1,9 @@
 package dev.detpikachu.unpluggedafk.compat.miniplaceholders;
 
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import io.github.miniplaceholders.api.MiniPlaceholders;
 import org.jetbrains.annotations.ApiStatus;
-
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
 
 /**
  * Publishes bot state to MiniPlaceholders on the backend.
@@ -42,7 +41,7 @@ public final class MiniPlaceholdersCompat {
 
         MiniPlaceholdersExpansion.build(plugin).register();
 
-        LOGGER.info("MiniPlaceholders detected. Registering an expansion so other plugins can read bot state.");
+        Log.info("MiniPlaceholders detected. Registering an expansion so other plugins can read bot state.");
     }
 
     public static void unregister(UnpluggedAfk plugin) {

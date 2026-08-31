@@ -3,7 +3,8 @@ package dev.detpikachu.unpluggedafk.listeners;
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
-import dev.detpikachu.unpluggedafk.formatting.ChatMessages;
+import dev.detpikachu.unpluggedafk.common.logging.Log;
+import dev.detpikachu.unpluggedafk.format.ChatMessages;
 import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
 import dev.detpikachu.unpluggedafk.session.PlayerSnapshot;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
@@ -13,8 +14,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.ApiStatus;
-
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.logDebug;
 
 @ApiStatus.Internal
 public final class PaperListener implements Listener {
@@ -42,7 +41,7 @@ public final class PaperListener implements Listener {
             event.quitMessage(null);
             UnpluggedAfk.getInstance().getLinkClient().endSession(bot, removeReason.name());
 
-            logDebug("Removed bot {}. {} still active.", bot.describe(), registry.count());
+            Log.debug("Removed bot {}. {} still active.", bot.describe(), registry.count());
 
             new UnpluggedPlayerRemoveEvent(bot.getBukkitEntity(), bot.toInfo(), removeReason).callEvent();
 
@@ -64,6 +63,6 @@ public final class PaperListener implements Listener {
         }
 
         registry.putSnapshot(player.getUniqueId(), PlayerSnapshot.capture(player));
-        logDebug("Captured a snapshot of {} ({}) for their bot.", player.getName(), player.getUniqueId());
+        Log.debug("Captured a snapshot of {} ({}) for their bot.", player.getName(), player.getUniqueId());
     }
 }

@@ -3,7 +3,7 @@ package dev.detpikachu.unpluggedafk.commands.admin;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import dev.detpikachu.unpluggedafk.Permissions;
-import dev.detpikachu.unpluggedafk.formatting.ChatMessages;
+import dev.detpikachu.unpluggedafk.format.ChatMessages;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;

@@ -1,9 +1,8 @@
 package dev.detpikachu.unpluggedafk.compat.placeholderapi;
 
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import org.jetbrains.annotations.ApiStatus;
-
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
 
 /**
  * Publishes session state to PlaceholderAPI as the {@code unplugged-afk} expansion.
@@ -30,10 +29,10 @@ public final class PlaceholderApiCompat {
         }
 
         if (!new PlaceholderApiExpansion(plugin).register()) {
-            LOGGER.warn("PlaceholderAPI detected, but its expansion could not be registered. Placeholders are off.");
+            Log.warn("PlaceholderAPI detected, but its expansion could not be registered. Placeholders are off.");
             return;
         }
 
-        LOGGER.info("PlaceholderAPI detected. Registering an expansion so other plugins can read bot state.");
+        Log.info("PlaceholderAPI detected. Registering an expansion so other plugins can read bot state.");
     }
 }

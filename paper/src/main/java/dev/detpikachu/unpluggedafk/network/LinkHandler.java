@@ -1,6 +1,7 @@
 package dev.detpikachu.unpluggedafk.network;
 
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.common.network.Handshake;
 import dev.detpikachu.unpluggedafk.common.network.Message;
 import dev.detpikachu.unpluggedafk.common.network.Protocol;
@@ -15,9 +16,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.jetbrains.annotations.ApiStatus;
-
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.logDebug;
 
 @ApiStatus.Internal
 public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
@@ -63,7 +61,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
             }
             case HEARTBEAT -> this.requireReady(context, message);
             case AUTH, GOODBYE, SYNC, SESSION_START, SESSION_END ->
-                logDebug("Ignoring {} from the proxy. A backend never handles it.", message.getType());
+                Log.debug("Ignoring {} from the proxy. A backend never handles it.", message.getType());
         }
     }
 
@@ -127,12 +125,12 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
         final var bot = SessionRegistry.getInstance().find(relay.getUuid());
 
         if (bot == null) {
-            logDebug("Dropped a relayed message on {}. Bot {} is gone.", relay.getChannel(), relay.getUuid());
+            Log.debug("Dropped a relayed message on {}. Bot {} is gone.", relay.getChannel(), relay.getUuid());
             return;
         }
 
         try {
-            logDebug(
+            Log.debug(
                     "Delivering {} byte(s) from the proxy to bot {} on channel {}.",
                     relay.getPayload().length,
                     relay.getUuid(),
@@ -143,7 +141,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
                     .dispatchIncomingMessage(
                             bot.getBukkitEntity().getConnection(), relay.getChannel(), relay.getPayload());
         } catch (RuntimeException exception) {
-            LOGGER.warn(
+            Log.warn(
                     "The proxy relayed a message to bot {} on the invalid channel {}.",
                     relay.getUuid(),
                     relay.getChannel(),

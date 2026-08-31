@@ -8,6 +8,7 @@ import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.crypto.IdentifiedKey;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity;
 import dev.detpikachu.unpluggedafk.velocity.session.Session;
 import io.netty.buffer.ByteBufHolder;
@@ -20,7 +21,6 @@ import io.netty.channel.embedded.EmbeddedChannel;
 import io.netty.util.ReferenceCountUtil;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
-import org.slf4j.Logger;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -32,8 +32,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-
-import static dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity.logDebug;
 
 @ApiStatus.Internal
 public final class BotPlayerBridge {
@@ -55,7 +53,6 @@ public final class BotPlayerBridge {
             "com.velocitypowered.proxy.protocol.packet.PluginMessagePacket";
 
     private final ProxyServer proxyServer;
-    private final Logger logger;
     private final LinkServer linkServer;
 
     private final Constructor<?> minecraftConnection;
@@ -83,7 +80,6 @@ public final class BotPlayerBridge {
         final var pluginMessagePacketClass = Class.forName(LOCATOR_PLUGIN_MESSAGE_PACKET);
 
         this.proxyServer = plugin.getProxyServer();
-        this.logger = plugin.getLogger();
         this.linkServer = plugin.getLinkServer();
 
         this.minecraftConnection = minecraftConnectionClass.getConstructor(Channel.class, velocityServerClass);
@@ -116,7 +112,7 @@ public final class BotPlayerBridge {
         this.pending.put(uuid, new Pending(serverName, username, skin));
 
         final var stillConnected = this.proxyServer.getPlayer(uuid).isPresent();
-        logDebug(
+        Log.debug(
                 "Presence for {} ({}) on {} is pending. Real player still connected: {}.",
                 username,
                 uuid,
@@ -132,12 +128,12 @@ public final class BotPlayerBridge {
         final var details = this.pending.remove(uuid);
 
         if (details == null) {
-            logDebug("No pending presence for {}, so nothing to materialise.", uuid);
+            Log.debug("No pending presence for {}, so nothing to materialise.", uuid);
             return;
         }
 
         if (this.bots.containsKey(uuid)) {
-            logDebug("Presence for {} ({}) already exists, so it is left alone.", details.username(), uuid);
+            Log.debug("Presence for {} ({}) already exists, so it is left alone.", details.username(), uuid);
             return;
         }
 
@@ -146,7 +142,7 @@ public final class BotPlayerBridge {
         final var server = this.proxyServer.getServer(serverName);
 
         if (server.isEmpty()) {
-            this.logger.warn(
+            Log.warn(
                     "Cannot give bot {} ({}) a proxy connection: no server named {} is registered.",
                     username,
                     uuid,
@@ -170,7 +166,7 @@ public final class BotPlayerBridge {
             this.setConnectedServer.invoke(bot, connection);
 
             if (!Boolean.TRUE.equals(this.registerConnection.invoke(this.proxyServer, bot))) {
-                this.logger.warn(
+                Log.warn(
                         "The proxy would not register bot {} ({}). Some functionality will be disabled.",
                         username,
                         uuid);
@@ -179,9 +175,9 @@ public final class BotPlayerBridge {
 
             this.bots.put(uuid, new Bot(bot, (ServerConnection) connection, server.get()));
             this.addPlayer.invoke(server.get(), bot);
-            logDebug("Gave bot {} ({}) a proxy connection on {}.", username, uuid, serverName);
+            Log.debug("Gave bot {} ({}) a proxy connection on {}.", username, uuid, serverName);
         } catch (ReflectiveOperationException | RuntimeException exception) {
-            this.logger.warn(
+            Log.warn(
                     "Could not register bot {} ({}) with the proxy. Some functionality will be disabled.",
                     username,
                     uuid,
@@ -194,7 +190,7 @@ public final class BotPlayerBridge {
         final var bot = this.bots.remove(uuid);
 
         if (wasPending || bot != null) {
-            logDebug("Dropped presence for {}. Was pending: {}. Had a connection: {}.", uuid, wasPending, bot != null);
+            Log.debug("Dropped presence for {}. Was pending: {}. Had a connection: {}.", uuid, wasPending, bot != null);
         }
 
         drop(bot);
@@ -252,7 +248,7 @@ public final class BotPlayerBridge {
             this.removePlayer.invoke(bot.server(), bot.player());
             this.unregisterConnection.invoke(this.proxyServer, bot.player());
         } catch (ReflectiveOperationException | RuntimeException exception) {
-            this.logger.warn(
+            Log.warn(
                     "Could not clear bot {} ({}) from the proxy.",
                     bot.player().getUsername(),
                     bot.player().getUniqueId(),
@@ -330,7 +326,7 @@ public final class BotPlayerBridge {
                 final var payload = ByteBufUtil.getBytes(((ByteBufHolder) message).content());
                 linkServer.relay(this.serverName, this.uuid, (String) packetChannel.invoke(message), payload);
             } catch (ReflectiveOperationException | RuntimeException exception) {
-                logger.warn("Could not relay a message to bot {} on {}.", this.uuid, this.serverName, exception);
+                Log.warn("Could not relay a message to bot {} on {}.", this.uuid, this.serverName, exception);
             }
         }
     }

@@ -1,8 +1,8 @@
 package dev.detpikachu.unpluggedafk.velocity.config;
 
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.common.network.Handshake;
 import org.jetbrains.annotations.ApiStatus;
-import org.slf4j.Logger;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -37,13 +37,11 @@ public final class LinkOptions extends OptionsBase {
         this.secret = secret;
     }
 
-    public static LinkOptions deserialize(Map<?, ?> values, Logger logger) {
+    public static LinkOptions deserialize(Map<?, ?> values) {
         final var section = values.get(KEY_SECTION) instanceof Map<?, ?> nested ? nested : Map.of();
 
         return new LinkOptions(
-                string(section, KEY_HOST, DEFAULT_HOST),
-                port(section, logger),
-                string(section, KEY_SECRET, DEFAULT_SECRET));
+                string(section, KEY_HOST, DEFAULT_HOST), port(section), string(section, KEY_SECRET, DEFAULT_SECRET));
     }
 
     public String getHost() {
@@ -71,14 +69,14 @@ public final class LinkOptions extends OptionsBase {
         return Map.of(KEY_SECTION, section);
     }
 
-    private static int port(Map<?, ?> section, Logger logger) {
+    private static int port(Map<?, ?> section) {
         final var port = integer(section, KEY_PORT, DEFAULT_PORT);
 
         if (port >= MIN_PORT && port <= MAX_PORT) {
             return port;
         }
 
-        logger.warn("link.port of {} is outside {}-{}. Resetting to {}.", port, MIN_PORT, MAX_PORT, DEFAULT_PORT);
+        Log.warn("link.port of {} is outside {}-{}. Resetting to {}.", port, MIN_PORT, MAX_PORT, DEFAULT_PORT);
         return DEFAULT_PORT;
     }
 }

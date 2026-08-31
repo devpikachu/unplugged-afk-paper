@@ -1,5 +1,6 @@
 package dev.detpikachu.unpluggedafk.velocity.compat.miniplaceholders;
 
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -36,7 +37,6 @@ public final class MiniPlaceholdersCompat {
 
         MiniPlaceholdersExpansion.build(plugin).register();
 
-        plugin.getLogger()
-                .info("MiniPlaceholders detected. Registering an expansion so other plugins can read session state.");
+        Log.info("MiniPlaceholders detected. Registering an expansion so other plugins can read session state.");
     }
 }

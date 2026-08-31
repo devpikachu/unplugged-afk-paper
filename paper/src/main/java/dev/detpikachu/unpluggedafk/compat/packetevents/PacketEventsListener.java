@@ -1,5 +1,6 @@
 package dev.detpikachu.unpluggedafk.compat.packetevents;
 
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.event.EventHandler;
@@ -7,8 +8,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.jetbrains.annotations.ApiStatus;
-
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.logDebug;
 
 @ApiStatus.Internal
 public final class PacketEventsListener implements Listener {
@@ -30,6 +29,6 @@ public final class PacketEventsListener implements Listener {
         }
 
         event.setCancelled(true);
-        logDebug("Refused a kick of bot {}: {}", bot.describe(), reason);
+        Log.debug("Refused a kick of bot {}: {}", bot.describe(), reason);
     }
 }

@@ -1,6 +1,7 @@
 package dev.detpikachu.unpluggedafk.network;
 
 import dev.detpikachu.unpluggedafk.KickReasons;
+import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.common.network.Protocol;
 import dev.detpikachu.unpluggedafk.common.network.codec.MessageDecoder;
 import dev.detpikachu.unpluggedafk.common.network.codec.MessageEncoder;
@@ -12,7 +13,7 @@ import dev.detpikachu.unpluggedafk.common.network.messages.SessionEnd;
 import dev.detpikachu.unpluggedafk.common.network.messages.SessionStart;
 import dev.detpikachu.unpluggedafk.common.network.messages.Sync;
 import dev.detpikachu.unpluggedafk.config.Options;
-import dev.detpikachu.unpluggedafk.formatting.ChatMessages;
+import dev.detpikachu.unpluggedafk.format.ChatMessages;
 import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
 import dev.detpikachu.unpluggedafk.session.Session;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
@@ -40,9 +41,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.LOGGER;
-import static dev.detpikachu.unpluggedafk.UnpluggedAfk.logDebug;
 
 @ApiStatus.Internal
 public final class LinkClient {
@@ -156,13 +154,13 @@ public final class LinkClient {
         final var channel = this.channel;
 
         if (channel == null || !channel.isActive()) {
-            logDebug("Refusing SESSION_START for {} ({}). The link is down.", player.getPlainTextName(), uuid);
+            Log.debug("Refusing SESSION_START for {} ({}). The link is down.", player.getPlainTextName(), uuid);
             onAck.accept(new SessionAck(uuid, false, ChatMessages.REFUSED_UNREACHABLE));
             return;
         }
 
         if (this.pendingSessions.containsKey(uuid)) {
-            LOGGER.warn(
+            Log.warn(
                     "Refusing a second SESSION_START for {} ({}). One is already pending.",
                     player.getPlainTextName(),
                     uuid);
@@ -172,7 +170,7 @@ public final class LinkClient {
 
         final var secondsRemaining = session.remaining().toSeconds();
 
-        logDebug(
+        Log.debug(
                 "Sending SESSION_START for {} ({}), {} second(s) remaining.",
                 player.getPlainTextName(),
                 uuid,
@@ -210,11 +208,11 @@ public final class LinkClient {
         final var channel = this.channel;
 
         if (channel == null || !channel.isActive()) {
-            logDebug("Could not send SESSION_END for {}: {}. The link is down.", uuid, reason);
+            Log.debug("Could not send SESSION_END for {}: {}. The link is down.", uuid, reason);
             return;
         }
 
-        logDebug("Sending SESSION_END for {}: {}.", uuid, reason);
+        Log.debug("Sending SESSION_END for {}: {}.", uuid, reason);
         channel.writeAndFlush(new SessionEnd(uuid, reason));
     }
 
@@ -223,12 +221,12 @@ public final class LinkClient {
         final var channel = this.channel;
 
         if (channel == null || !channel.isActive()) {
-            logDebug("Dropped a plugin message on {} for bot {}. The link is down.", channelName, uuid);
+            Log.debug("Dropped a plugin message on {} for bot {}. The link is down.", channelName, uuid);
             return;
         }
 
         if (payload.length > Protocol.MAX_PAYLOAD_BYTES) {
-            LOGGER.warn(
+            Log.warn(
                     "Dropped a {} byte(s) plugin message on {} for bot {}. The link carries at most {}.",
                     payload.length,
                     channelName,
@@ -237,7 +235,7 @@ public final class LinkClient {
             return;
         }
 
-        logDebug("Relaying {} byte(s) from bot {} to the proxy on channel {}.", payload.length, uuid, channelName);
+        Log.debug("Relaying {} byte(s) from bot {} to the proxy on channel {}.", payload.length, uuid, channelName);
         channel.writeAndFlush(new Relay(uuid, channelName, payload));
     }
 
@@ -245,11 +243,11 @@ public final class LinkClient {
         final var pending = this.pendingSessions.remove(ack.uuid());
 
         if (pending == null) {
-            logDebug("Ignoring a SESSION_ACK for {}. Nothing was waiting on it.", ack.uuid());
+            Log.debug("Ignoring a SESSION_ACK for {}. Nothing was waiting on it.", ack.uuid());
             return;
         }
 
-        logDebug("SESSION_ACK for {}: accepted={} reason={}", ack.uuid(), ack.accepted(), ack.reason());
+        Log.debug("SESSION_ACK for {}: accepted={} reason={}", ack.uuid(), ack.accepted(), ack.reason());
         pending.timeout().cancel(false);
         pending.callback().accept(ack);
     }
@@ -262,14 +260,14 @@ public final class LinkClient {
                 .scheduleAtFixedRate(
                         () -> beat(channel), Protocol.HEARTBEAT_SECS, Protocol.HEARTBEAT_SECS, TimeUnit.SECONDS);
 
-        LOGGER.info("Linked to the proxy at {} as {}.", channel.remoteAddress(), serverName);
+        Log.info("Linked to the proxy at {} as {}.", channel.remoteAddress(), serverName);
         sync(channel);
     }
 
     void disconnected(boolean wasReady) {
         this.channel = null;
         cancelHeartbeat();
-        logDebug("Link closed. Ready before the close: {}.", wasReady);
+        Log.debug("Link closed. Ready before the close: {}.", wasReady);
         failPending(ChatMessages.REFUSED_UNREACHABLE);
 
         if (wasReady) {
@@ -285,7 +283,7 @@ public final class LinkClient {
         }
 
         this.quiet = true;
-        LOGGER.warn(message, arguments);
+        Log.warn(message, arguments);
     }
 
     void errorOnce(String message, Object... arguments) {
@@ -294,7 +292,7 @@ public final class LinkClient {
         }
 
         this.quiet = true;
-        LOGGER.error(message, arguments);
+        Log.error(message, arguments);
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")
@@ -314,7 +312,7 @@ public final class LinkClient {
         pruneEndedSessions();
         this.endedSessions.values().forEach(ended -> sessions.add(ended.hint()));
 
-        logDebug("Sending SYNC with {} session(s).", sessions.size());
+        Log.debug("Sending SYNC with {} session(s).", sessions.size());
         channel.writeAndFlush(new Sync(sessions));
     }
 
@@ -325,7 +323,7 @@ public final class LinkClient {
             return;
         }
 
-        LOGGER.warn("The proxy did not acknowledge the unplug of {} in time. Undoing the session.", uuid);
+        Log.warn("The proxy did not acknowledge the unplug of {} in time. Undoing the session.", uuid);
         sendEnd(uuid, END_TIMED_OUT);
         answer(pending, uuid, ChatMessages.REFUSED_TIMED_OUT);
     }
@@ -345,7 +343,7 @@ public final class LinkClient {
         try {
             pending.callback().accept(new SessionAck(uuid, false, reason));
         } catch (RuntimeException exception) {
-            LOGGER.error("Failed to answer the pending unplug of {}.", uuid, exception);
+            Log.error("Failed to answer the pending unplug of {}.", uuid, exception);
         }
     }
 

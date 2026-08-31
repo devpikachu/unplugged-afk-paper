@@ -1,4 +1,4 @@
-package dev.detpikachu.unpluggedafk.formatting;
+package dev.detpikachu.unpluggedafk.format;
 
 import com.google.errorprone.annotations.FormatMethod;
 import dev.detpikachu.unpluggedafk.session.Session;
