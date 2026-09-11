@@ -1,10 +1,12 @@
 [versions]
-java = "21"
+java = "25"
 minecraft = "1.21.11"
 
+configlib = "4.8.1"
 netty = "4.2.7.Final"
 slf4j = "2.0.16"
 snakeyaml = "2.6"
+snakeyaml-engine = "2.7"
 velocity = "3.5.0-SNAPSHOT"
 husksync = "4.0.0+1.21.11"
 placeholderapi = "2.12.3"
@@ -15,14 +17,18 @@ errorprone = "2.50.0"
 nullaway = "0.14.0"
 jspecify = "1.0.1"
 jetbrains-annotations = "26.1.0"
+palantir-java-format = "2.80.0"
 
 [libraries]
+configlib-core = { module = "de.exlll:configlib-core", version.ref = "configlib" }
+configlib-yaml = { module = "de.exlll:configlib-yaml", version.ref = "configlib" }
 netty-buffer = { module = "io.netty:netty-buffer", version.ref = "netty" }
 netty-codec-base = { module = "io.netty:netty-codec-base", version.ref = "netty" }
 netty-handler = { module = "io.netty:netty-handler", version.ref = "netty" }
 netty-transport = { module = "io.netty:netty-transport", version.ref = "netty" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snakeyaml" }
+snakeyaml-engine = { module = "org.snakeyaml:snakeyaml-engine", version.ref = "snakeyaml-engine" }
 velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity" }
 husksync-bukkit = { module = "net.william278.husksync:husksync-bukkit", version.ref = "husksync" }
 placeholderapi = { module = "me.clip:placeholderapi", version.ref = "placeholderapi" }

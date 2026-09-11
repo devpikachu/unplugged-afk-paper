@@ -171,6 +171,19 @@ Everything here is gated behind the `debug` configuration flag, which is off by 
 The proxy has its own `debug` flag, set independently of the backends'. It gates noisy console logging useful for
 debugging.
 
+## Verifying a release
+
+Every published file is signed with cosign keyless, so there is no public key to fetch: the certificate itself records
+that this repository's release workflow produced the file, at a tag. Each one has a `.sigstore.json` bundle beside it.
+
+```sh
+cosign verify-blob \
+  --bundle unplugged-afk-0.6.2.jar.sigstore.json \
+  --certificate-identity-regexp '^https://github\.com/devpikachu/unplugged-afk-paper/\.github/workflows/release\.yml@refs/tags/' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+  unplugged-afk-0.6.2.jar
+```
+
 ## Contributing
 
 Contributions are welcome, whether that is a bug report, a compatibility finding from your own server, a feature

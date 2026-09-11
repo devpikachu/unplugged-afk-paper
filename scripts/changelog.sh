@@ -9,6 +9,10 @@ changelog="${repo_root}/CHANGELOG.md"
 gradle_properties="${repo_root}/gradle.properties"
 release_branch="main"
 
+# SemVer 2.0.0, minus build metadata. Keep in step with the same pattern in publish-artifacts.sh.
+semver_identifier='(0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)'
+semver_pattern="^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-${semver_identifier}(\.${semver_identifier})*)?\$"
+
 die() {
     printf 'error: %s\n' "$*" >&2
     exit 1
@@ -20,9 +24,17 @@ usage:
     scripts/changelog.sh notes <version>
         Print the body of a released CHANGELOG.md section, without its heading. CI feeds this to the GitHub release.
 
-    scripts/changelog.sh bump <version|major|minor|patch> [--no-git]
+    scripts/changelog.sh section <version>
+        Print a released CHANGELOG.md section whole: its dated heading, its body, and the link reference that resolves
+        the heading. publish-artifacts.sh ships this beside the artifacts as that release's own CHANGELOG.md.
+
+    scripts/changelog.sh bump <version|major|minor|patch|final> [--no-git]
         Stamp the Unreleased section as a new release, move gradle.properties to the next dev version, then commit and
         tag. Never pushes; that stays a manual step.
+
+        A version is x.y.z or a pre-release such as 1.0.0-rc.1. Build metadata (1.0.0+abc) is not accepted.
+        major, minor and patch count up from the newest released section, and refuse to guess while a pre-release is
+        in flight. final releases the triple the newest pre-release was cooking, so 1.0.0-rc.2 becomes 1.0.0.
 EOF
     exit 2
 }
@@ -51,6 +63,15 @@ section_body() {
     ' "$changelog" | trim_blank_lines
 }
 
+# Matched on the full "[version]" including the bracket, so 1.0.0 never picks up 1.0.0-rc.1.
+section_heading() {
+    awk -v heading="## [$1]" 'substr($0, 1, length(heading)) == heading { print; exit }' "$changelog"
+}
+
+section_link() {
+    awk -v prefix="[$1]: " 'substr($0, 1, length(prefix)) == prefix { print; exit }' "$changelog"
+}
+
 # The newest version that has a released section, ignoring Unreleased. Empty if there is none.
 latest_released_version() {
     awk '
@@ -67,6 +88,15 @@ latest_released_version() {
     ' "$changelog"
 }
 
+version_core() {
+    printf '%s\n' "${1%%-*}"
+}
+
+is_prerelease() {
+    [[ "$1" == *-* ]]
+}
+
+# Takes a bare x.y.z. Every caller strips the pre-release suffix first, because the arithmetic cannot see one.
 next_version() {
     local major minor patch
     IFS=. read -r major minor patch <<<"$1"
@@ -76,6 +106,14 @@ next_version() {
         patch) printf '%d.%d.%d\n' "$major" "$minor" "$((patch + 1))" ;;
         *) die "unknown bump kind '$2'" ;;
     esac
+}
+
+next_dev_version() {
+    if is_prerelease "$1"; then
+        printf '%s-SNAPSHOT\n' "$(version_core "$1")"
+    else
+        printf '%s-SNAPSHOT\n' "$(next_version "$1" patch)"
+    fi
 }
 
 # The repository URL, taken from the changelog's own link references rather than from the git remote.
@@ -140,6 +178,21 @@ cmd_notes() {
     printf '%s\n' "$body"
 }
 
+cmd_section() {
+    local version="${1:-}" body
+    [[ -n "$version" ]] || usage
+
+    body="$(section_body "$version")"
+    [[ -n "$body" ]] || die "CHANGELOG.md has no entries under '## [$version]'"
+
+    printf '%s\n\n%s\n' "$(section_heading "$version")" "$body"
+
+    # Carried so the heading's [version] still resolves once the section is on its own. Absent is not worth refusing.
+    local link
+    link="$(section_link "$version")"
+    [[ -z "$link" ]] || printf '\n%s\n' "$link"
+}
+
 cmd_bump() {
     local requested="${1:-}" do_git=1
     [[ -n "$requested" ]] || usage
@@ -154,12 +207,24 @@ cmd_bump() {
     previous="$(latest_released_version)"
 
     case "$requested" in
-        major | minor | patch) version="$(next_version "${previous:-0.0.0}" "$requested")" ;;
+        major | minor | patch)
+            [[ -z "$previous" ]] || ! is_prerelease "$previous" ||
+                die "'$previous' is a pre-release, so '$requested' has nothing to count from: name the next" \
+                    "pre-release explicitly, or use final to release $(version_core "$previous")"
+            version="$(next_version "${previous:-0.0.0}" "$requested")"
+            ;;
+        final)
+            is_prerelease "${previous:-}" ||
+                die "there is no pre-release to finalise, the newest released section is '${previous:-none}'"
+            version="$(version_core "$previous")"
+            ;;
         *) version="$requested" ;;
     esac
 
-    [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
-        die "'$requested' is neither an x.y.z version nor one of major, minor, patch"
+    [[ "$version" != *+* ]] || die "'$requested' carries build metadata, which this repository does not release"
+    [[ "$version" =~ $semver_pattern ]] ||
+        die "'$requested' is not a version, expected x.y.z or a pre-release such as 1.0.0-rc.1," \
+            "or one of major, minor, patch, final"
     [[ -z "$(section_body "$version")" ]] || die "CHANGELOG.md already has a '## [$version]' section"
     [[ -n "$(section_body Unreleased)" ]] || die "the Unreleased section is empty, there is nothing to release"
 
@@ -175,7 +240,7 @@ cmd_bump() {
     local base today dev_version
     base="$(changelog_base_url)"
     today="$(date +%F)"
-    dev_version="$(next_version "$version" patch)-SNAPSHOT"
+    dev_version="$(next_dev_version "$version")"
 
     stamp_changelog "$version" "$today" "$previous" "$base"
     set_dev_version "$dev_version"
@@ -196,6 +261,10 @@ case "${1:-}" in
     notes)
         shift
         cmd_notes "$@"
+        ;;
+    section)
+        shift
+        cmd_section "$@"
         ;;
     bump)
         shift

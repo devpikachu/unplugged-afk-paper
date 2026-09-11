@@ -65,6 +65,9 @@ tasks {
 
     shadowJar {
         archiveClassifier = ""
+
+        relocate("de.exlll.configlib", "dev.detpikachu.unpluggedafk.libs.configlib")
+        relocate("org.snakeyaml.engine", "dev.detpikachu.unpluggedafk.libs.snakeyaml.engine")
     }
 
     runServer {
@@ -89,7 +92,7 @@ spotless {
     java {
         target("src/main/java/**/*.java")
 
-        palantirJavaFormat().formatJavadoc(true)
+        palantirJavaFormat(libs.versions.palantir.java.format.get()).formatJavadoc(true)
         removeUnusedImports()
         forbidWildcardImports()
         importOrder("", "javax|java", "\\#")
@@ -100,7 +103,9 @@ spotless {
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    options.compilerArgs.add("-Werror")
+    options.release = 21
+    options.encoding = "UTF-8"
+    options.compilerArgs.addAll(listOf("-Xlint:all,-classfile,-serial", "-Werror"))
     options.errorprone {
         disableWarningsInGeneratedCode = true
 

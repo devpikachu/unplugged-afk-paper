@@ -5,34 +5,53 @@ on:
     tags: ['v*']
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   release:
+    if: github.repository == 'devpikachu/unplugged-afk-paper'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # draft the GitHub release
+      id-token: write # OIDC token Fulcio exchanges for cosign's short-lived certificate
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Resolve the version
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
 
       - name: Extract release notes
-        run: ./scripts/changelog.sh notes "${GITHUB_REF_NAME#v}" > release-notes.md
+        run: ./scripts/changelog.sh notes "$VERSION" > release-notes.md
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
 
-      - uses: gradle/actions/setup-gradle@v6
+      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6
         with:
           cache-provider: basic
 
-      - run: ./gradlew clean build -Pversion="${GITHUB_REF_NAME#v}"
+      - run: ./gradlew clean build -Pversion="$VERSION"
 
-      - uses: softprops/action-gh-release@v3
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      # Never guard this on the secret: an unset token must fail the release, not skip the upload silently.
+      - name: Publish to the artifacts server
+        run: ./scripts/publish-artifacts.sh "$VERSION"
+        env:
+          ARTIFACTS_TOKEN: ${{ secrets.ARTIFACTS_TOKEN }}
+
+      # After the upload on purpose: a draft that exists means the artifacts are already live.
+      - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
         with:
           draft: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
           generate_release_notes: true
           body_path: release-notes.md
           files: |
-            paper/build/libs/*.jar
-            velocity/build/libs/*.jar
+            build/publish/${{ env.VERSION }}/*.jar
+            build/publish/${{ env.VERSION }}/*.jar.sigstore.json
           fail_on_unmatched_files: true
