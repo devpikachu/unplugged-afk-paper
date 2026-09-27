@@ -356,7 +356,8 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
                 start.durationMins(),
                 start.reason(),
                 now.minusSeconds(start.durationMins() * 60L - start.secondsRemaining()),
-                now.plusSeconds(start.secondsRemaining()));
+                now.plusSeconds(start.secondsRemaining()),
+                start.isFake());
     }
 
     private static Session.@Nullable Skin skinOf(SessionStart.@Nullable Skin skin) {

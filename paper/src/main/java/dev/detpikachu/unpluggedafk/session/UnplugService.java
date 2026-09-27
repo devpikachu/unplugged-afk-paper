@@ -1,8 +1,11 @@
 package dev.detpikachu.unpluggedafk.session;
 
+import com.mojang.authlib.GameProfile;
 import dev.detpikachu.unpluggedafk.DumpWriter;
+import dev.detpikachu.unpluggedafk.KickReasons;
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import dev.detpikachu.unpluggedafk.api.events.PlayerUnplugEvent;
+import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
 import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.common.network.messages.SessionAck;
 import dev.detpikachu.unpluggedafk.config.Config;
@@ -12,12 +15,17 @@ import dev.detpikachu.unpluggedafk.exceptions.UnplugCancelledException;
 import dev.detpikachu.unpluggedafk.exceptions.UnplugFailedException;
 import dev.detpikachu.unpluggedafk.format.ChatMessages;
 import dev.detpikachu.unpluggedafk.player.BotFactory;
+import dev.detpikachu.unpluggedafk.player.FakeIdentity;
 import io.papermc.paper.adventure.PaperAdventure;
 import net.kyori.adventure.text.Component;
 import net.minecraft.network.DisconnectionDetails;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.Vec3;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.jetbrains.annotations.ApiStatus;
+
+import static net.kyori.adventure.text.Component.text;
 
 @ApiStatus.Internal
 public final class UnplugService {
@@ -55,23 +63,51 @@ public final class UnplugService {
             return;
         }
 
-        client.startSession(player, session, ack -> onAcknowledged(player, session, ack));
+        final var profile = player.getGameProfile();
+
+        client.startSession(profile, session, ack -> onAcknowledged(profile, ack, () -> resume(player, session, ack)));
     }
 
-    private static void onAcknowledged(ServerPlayer player, Session session, SessionAck ack) {
-        final var plugin = UnpluggedAfk.getInstance();
+    public static void spawnFake(ServerPlayer executor, Session session) throws ProxyUnavailableException {
+        final var fake = new FakeSpawn(
+                executor.level(),
+                FakeIdentity.random().toProfile(),
+                executor.position(),
+                executor.getYRot(),
+                executor.getXRot(),
+                session);
 
-        if (!plugin.isEnabled()) {
-            abandon(player, ack);
+        if (!UnpluggedAfk.isProxyMode()) {
+            fake.spawn();
             return;
         }
 
-        plugin.getServer().getGlobalRegionScheduler().run(plugin, task -> resume(player, session, ack));
+        final var client = UnpluggedAfk.getInstance().getLinkClient();
+        final var profile = fake.profile();
+
+        if (!client.isReady()) {
+            throw new ProxyUnavailableException(profile.id(), profile.name());
+        }
+
+        SessionRegistry.getInstance().markUnplugging(profile.id());
+        client.startSession(
+                profile, session, ack -> onAcknowledged(profile, ack, () -> resumeFake(executor, fake, ack)));
     }
 
-    private static void abandon(ServerPlayer player, SessionAck ack) {
+    private static void onAcknowledged(GameProfile profile, SessionAck ack, Runnable resume) {
+        final var plugin = UnpluggedAfk.getInstance();
+
+        if (!plugin.isEnabled()) {
+            abandon(profile, ack);
+            return;
+        }
+
+        plugin.getServer().getGlobalRegionScheduler().run(plugin, task -> resume.run());
+    }
+
+    private static void abandon(GameProfile profile, SessionAck ack) {
         final var registry = SessionRegistry.getInstance();
-        final var uuid = player.getUUID();
+        final var uuid = profile.id();
 
         registry.clearUnplugging(uuid);
 
@@ -81,9 +117,45 @@ public final class UnplugService {
 
         Log.warn(
                 "The proxy acknowledged the unplug of {} ({}) while the plugin was disabling, so it is undone.",
-                player.getPlainTextName(),
+                profile.name(),
                 uuid);
         UnpluggedAfk.getInstance().getLinkClient().endSession(uuid, END_ABORTED);
+    }
+
+    private static void resumeFake(ServerPlayer executor, FakeSpawn fake, SessionAck ack) {
+        final var uuid = fake.profile().id();
+        final var name = fake.profile().name();
+
+        SessionRegistry.getInstance().clearUnplugging(uuid);
+
+        if (!ack.accepted()) {
+            Log.warn("The proxy refused the fake bot {} ({}): {}", name, uuid, ack.reason());
+
+            if (!executor.hasDisconnected()) {
+                executor.getBukkitEntity().sendMessage(ChatMessages.formatUnplugRefused(ack.reason()));
+            }
+
+            return;
+        }
+
+        try {
+            fake.spawn();
+        } catch (RuntimeException exception) {
+            Log.error(
+                    "Failed to spawn fake bot {} ({}) after the proxy acknowledged the session.",
+                    name,
+                    uuid,
+                    exception);
+
+            final var bot = SessionRegistry.getInstance().find(uuid);
+
+            if (bot != null) {
+                bot.deferredDisconnect(text(KickReasons.SPAWN_FAILED), Reason.SPAWN_FAILED);
+                return;
+            }
+
+            UnpluggedAfk.getInstance().getLinkClient().endSession(uuid, END_ABORTED);
+        }
     }
 
     private static void resume(ServerPlayer player, Session session, SessionAck ack) {
@@ -158,5 +230,13 @@ public final class UnplugService {
 
         player.connection.onDisconnect(details);
         player.connection.connection.disconnect(details);
+    }
+
+    private record FakeSpawn(
+            ServerLevel level, GameProfile profile, Vec3 position, float yRot, float xRot, Session session) {
+
+        void spawn() {
+            BotFactory.spawnFake(this.level, this.profile, this.position, this.yRot, this.xRot, this.session);
+        }
     }
 }

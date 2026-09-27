@@ -13,7 +13,13 @@ import java.util.UUID;
 
 @ApiStatus.Internal
 public record SessionStart(
-        UUID uuid, String username, @Nullable Skin skin, int durationMins, String reason, long secondsRemaining)
+        UUID uuid,
+        String username,
+        @Nullable Skin skin,
+        int durationMins,
+        String reason,
+        long secondsRemaining,
+        boolean isFake)
         implements Message {
 
     @Override
@@ -28,8 +34,9 @@ public record SessionStart(
         final var durationMins = in.readInt();
         final var reason = in.readUTF();
         final var secondsRemaining = in.readLong();
+        final var isFake = in.readBoolean();
 
-        return new SessionStart(uuid, username, skin, durationMins, reason, secondsRemaining);
+        return new SessionStart(uuid, username, skin, durationMins, reason, secondsRemaining, isFake);
     }
 
     @Override
@@ -46,6 +53,7 @@ public record SessionStart(
         out.writeInt(this.durationMins);
         out.writeUTF(this.reason);
         out.writeLong(this.secondsRemaining);
+        out.writeBoolean(this.isFake);
     }
 
     public record Skin(String value, @Nullable String signature) {

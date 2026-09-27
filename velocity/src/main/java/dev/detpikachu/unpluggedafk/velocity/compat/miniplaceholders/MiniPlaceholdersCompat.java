@@ -14,9 +14,7 @@ import org.jetbrains.annotations.ApiStatus;
  * {@code SessionStore} with no backend involved.
  *
  * <p>The two surfaces are deliberately not identical. This one adds {@code server}, since only the proxy knows which
- * backend holds the bot, and omits {@code is_fake}, since a {@code spawn-fake} bot is excluded from the link's sync by
- * design and therefore has no proxy-side session to answer for. {@code count} means network-wide here and backend-local
- * on Paper.
+ * backend holds the bot, and {@code count} means network-wide here and backend-local on Paper.
  *
  * <p>There is no teardown twin of {@link #register} the way there is on Paper. Velocity cannot reload or unload a
  * plugin, so the only thing that ends a registration is the JVM exiting.

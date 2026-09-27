@@ -25,6 +25,7 @@ public final class MiniPlaceholdersExpansion {
     private static final String STARTED = "started";
     private static final String EXPIRES = "expires";
     private static final String REMAINING_MINS = "remaining_mins";
+    private static final String IS_FAKE = "is_fake";
     private static final String SERVER = "server";
     private static final String COUNT = "count";
 
@@ -65,6 +66,11 @@ public final class MiniPlaceholdersExpansion {
                                 sessionStore,
                                 player,
                                 session -> String.valueOf(session.remaining().toMinutes())))
+                .audiencePlaceholder(
+                        Player.class,
+                        IS_FAKE,
+                        (player, queue, context) ->
+                                sessionTag(sessionStore, player, session -> String.valueOf(session.isFake())))
                 .audiencePlaceholder(
                         Player.class,
                         SERVER,

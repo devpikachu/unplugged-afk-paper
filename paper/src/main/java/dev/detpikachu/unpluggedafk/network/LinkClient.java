@@ -1,5 +1,6 @@
 package dev.detpikachu.unpluggedafk.network;
 
+import com.mojang.authlib.GameProfile;
 import dev.detpikachu.unpluggedafk.KickReasons;
 import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.common.network.Protocol;
@@ -30,7 +31,6 @@ import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.util.concurrent.ScheduledFuture;
-import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
@@ -151,34 +151,27 @@ public final class LinkClient {
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")
-    public void startSession(ServerPlayer player, Session session, Consumer<SessionAck> onAck) {
-        final var uuid = player.getUUID();
+    public void startSession(GameProfile profile, Session session, Consumer<SessionAck> onAck) {
+        final var uuid = profile.id();
         final var channel = this.channel;
 
         if (channel == null || !channel.isActive()) {
-            Log.debug("Refusing SESSION_START for {} ({}). The link is down.", player.getPlainTextName(), uuid);
+            Log.debug("Refusing SESSION_START for {} ({}). The link is down.", profile.name(), uuid);
             onAck.accept(new SessionAck(uuid, false, ChatMessages.REFUSED_UNREACHABLE));
             return;
         }
 
         if (this.pendingSessions.containsKey(uuid)) {
-            Log.warn(
-                    "Refusing a second SESSION_START for {} ({}). One is already pending.",
-                    player.getPlainTextName(),
-                    uuid);
+            Log.warn("Refusing a second SESSION_START for {} ({}). One is already pending.", profile.name(), uuid);
             onAck.accept(new SessionAck(uuid, false, ChatMessages.REFUSED_IN_FLIGHT));
             return;
         }
 
         final var secondsRemaining = session.remaining().toSeconds();
 
-        Log.debug(
-                "Sending SESSION_START for {} ({}), {} second(s) remaining.",
-                player.getPlainTextName(),
-                uuid,
-                secondsRemaining);
+        Log.debug("Sending SESSION_START for {} ({}), {} second(s) remaining.", profile.name(), uuid, secondsRemaining);
 
-        final var start = describe(player, session, secondsRemaining);
+        final var start = describe(profile, session, secondsRemaining);
         final var timeout = channel.eventLoop().schedule(() -> timedOut(uuid), ACK_TIMEOUT_SECS, TimeUnit.SECONDS);
 
         this.pendingSessions.put(uuid, new PendingSession(onAck, timeout));
@@ -192,7 +185,7 @@ public final class LinkClient {
         final var session = bot.getSession();
 
         if (!session.isFake()) {
-            this.endedSessions.put(bot.getUUID(), EndedSession.of(describe(bot, session, 0L)));
+            this.endedSessions.put(bot.getUUID(), EndedSession.of(describe(bot.getGameProfile(), session, 0L)));
         }
 
         pruneEndedSessions();
@@ -315,12 +308,9 @@ public final class LinkClient {
         for (final var bot : SessionRegistry.getInstance().all()) {
             final var session = bot.getSession();
 
-            if (session.isFake()) {
-                continue;
-            }
-
             seen.add(bot.getUUID());
-            sessions.add(describe(bot, session, session.remaining().toSeconds()));
+            sessions.add(
+                    describe(bot.getGameProfile(), session, session.remaining().toSeconds()));
         }
 
         pruneCommittedSessions();
@@ -432,19 +422,19 @@ public final class LinkClient {
         channel.writeAndFlush(new Heartbeat(System.nanoTime()));
     }
 
-    private static SessionStart describe(ServerPlayer player, Session session, long secondsRemaining) {
+    private static SessionStart describe(GameProfile profile, Session session, long secondsRemaining) {
         return new SessionStart(
-                player.getUUID(),
-                player.getPlainTextName(),
-                skinOf(player),
+                profile.id(),
+                profile.name(),
+                skinOf(profile),
                 session.durationMins(),
                 session.reason(),
-                secondsRemaining);
+                secondsRemaining,
+                session.isFake());
     }
 
-    private static SessionStart.@Nullable Skin skinOf(ServerPlayer player) {
-        final var textures =
-                player.getGameProfile().properties().get(TEXTURES_PROPERTY).iterator();
+    private static SessionStart.@Nullable Skin skinOf(GameProfile profile) {
+        final var textures = profile.properties().get(TEXTURES_PROPERTY).iterator();
 
         if (!textures.hasNext()) {
             return null;
@@ -465,7 +455,8 @@ public final class LinkClient {
                     this.start.skin(),
                     this.start.durationMins(),
                     this.start.reason(),
-                    this.session.remaining().toSeconds());
+                    this.session.remaining().toSeconds(),
+                    this.start.isFake());
         }
     }
 
@@ -482,7 +473,8 @@ public final class LinkClient {
                     this.start.skin(),
                     this.start.durationMins(),
                     this.start.reason(),
-                    -this.secondsSinceEnd());
+                    -this.secondsSinceEnd(),
+                    this.start.isFake());
         }
 
         long secondsSinceEnd() {

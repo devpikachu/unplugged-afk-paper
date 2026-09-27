@@ -141,13 +141,12 @@ With [MiniPlaceholders](https://modrinth.com/plugin/miniplaceholders) installed,
 the same name. MiniMessage spells the tags `<unplugged-afk_is_unplugged>` rather than `%unplugged-afk_is_unplugged%`.
 
 Installed on a backend, the tags answer for that server. Installed on the proxy, they answer for the whole network.
-Three of them differ between the two sides:
+Two of them differ between the two sides:
 
-| Tag                       | On a backend                             | On the proxy                          |
-|---------------------------|------------------------------------------|---------------------------------------|
-| `<unplugged-afk_count>`   | How many this server holds               | How many the network holds            |
-| `<unplugged-afk_server>`  | Not registered                           | The server the unplugged player is on |
-| `<unplugged-afk_is_fake>` | `true` for `/unplugged debug spawn-fake` | Not registered                        |
+| Tag                      | On a backend               | On the proxy                          |
+|--------------------------|----------------------------|---------------------------------------|
+| `<unplugged-afk_count>`  | How many this server holds | How many the network holds            |
+| `<unplugged-afk_server>` | Not registered             | The server the unplugged player is on |
 
 The rest carry the meanings listed above and render identically on either side.
 
@@ -167,6 +166,7 @@ companion logs an error on startup when it cannot resolve the internals it needs
 Everything here is gated behind the `debug` configuration flag, which is off by default.
 
 - `/unplugged debug spawn-fake` becomes available. It spawns a throwaway unplugged player with a random UUID and name.
+  Behind a proxy it needs the proxy to be reachable, just like `/unplug`.
 - Every `/unplug` writes a text file to `plugins/unplugged-afk/dumps/` holding the session details and a full snapshot
   of the player, inventory and ender chest included.
 

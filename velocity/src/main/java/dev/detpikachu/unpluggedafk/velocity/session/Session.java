@@ -15,7 +15,8 @@ public record Session(
         int durationMins,
         String reason,
         Instant startedAt,
-        Instant expiresAt) {
+        Instant expiresAt,
+        boolean isFake) {
 
     public boolean isAlive() {
         return Instant.now().isBefore(this.expiresAt);
@@ -42,7 +43,8 @@ public record Session(
                 this.durationMins,
                 this.reason,
                 this.startedAt,
-                Instant.now());
+                Instant.now(),
+                this.isFake);
     }
 
     public record Skin(String value, @Nullable String signature) {}

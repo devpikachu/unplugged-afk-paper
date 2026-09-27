@@ -57,9 +57,9 @@ public final class BotFactory {
         scheduler.runAtFixedRate(plugin, deferred::tick, 1L, 1L);
     }
 
-    public static void spawnFake(ServerLevel level, Vec3 position, float yRot, float xRot, Session session) {
-        final var bot = spawn(
-                level, FakeIdentity.random().toProfile(), ClientInformation.createDefault(), Set.of(), session, null);
+    public static void spawnFake(
+            ServerLevel level, GameProfile profile, Vec3 position, float yRot, float xRot, Session session) {
+        final var bot = spawn(level, profile, ClientInformation.createDefault(), Set.of(), session, null);
 
         bot.gameMode.changeGameModeForPlayer(
                 GameType.DEFAULT_MODE, PlayerGameModeChangeEvent.Cause.DEFAULT_GAMEMODE, null);
