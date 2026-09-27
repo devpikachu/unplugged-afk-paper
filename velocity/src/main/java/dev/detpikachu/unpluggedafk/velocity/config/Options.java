@@ -2,6 +2,7 @@ package dev.detpikachu.unpluggedafk.velocity.config;
 
 import de.exlll.configlib.Comment;
 import de.exlll.configlib.Configuration;
+import dev.detpikachu.unpluggedafk.common.config.MessageOptions;
 import org.jetbrains.annotations.ApiStatus;
 
 @ApiStatus.Internal
@@ -19,6 +20,9 @@ public final class Options {
     @Comment("The link every backend dials to report its unplugged players.")
     private LinkOptions link = new LinkOptions();
 
+    @Comment("Text the plugin shows to players.")
+    private MessageOptions messages = new MessageOptions();
+
     public int getVersion() {
         return this.version;
     }
@@ -29,5 +33,9 @@ public final class Options {
 
     public LinkOptions getLink() {
         return this.link;
+    }
+
+    public MessageOptions getMessages() {
+        return this.messages;
     }
 }

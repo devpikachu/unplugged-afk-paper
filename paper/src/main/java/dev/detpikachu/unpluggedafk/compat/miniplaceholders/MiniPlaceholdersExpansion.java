@@ -2,6 +2,7 @@ package dev.detpikachu.unpluggedafk.compat.miniplaceholders;
 
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import dev.detpikachu.unpluggedafk.common.formatting.DurationFormatting;
+import dev.detpikachu.unpluggedafk.config.Config;
 import dev.detpikachu.unpluggedafk.session.Session;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.github.miniplaceholders.api.Expansion;
@@ -26,6 +27,7 @@ public final class MiniPlaceholdersExpansion {
     private static final String EXPIRES = "expires";
     private static final String REMAINING_MINS = "remaining_mins";
     private static final String IS_FAKE = "is_fake";
+    private static final String LABEL = "label";
     private static final String COUNT = "count";
 
     public static Expansion build(UnpluggedAfk plugin) {
@@ -66,6 +68,11 @@ public final class MiniPlaceholdersExpansion {
                         Player.class,
                         IS_FAKE,
                         (player, queue, context) -> sessionTag(player, session -> String.valueOf(session.isFake())))
+                .audiencePlaceholder(
+                        Player.class,
+                        LABEL,
+                        (player, queue, context) -> sessionTag(
+                                player, session -> Config.get().getMessages().getLabel()))
                 .globalPlaceholder(
                         COUNT,
                         (queue, context) ->

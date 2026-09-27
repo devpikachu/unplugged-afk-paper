@@ -2,6 +2,7 @@ package dev.detpikachu.unpluggedafk.compat.placeholderapi;
 
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import dev.detpikachu.unpluggedafk.common.formatting.DurationFormatting;
+import dev.detpikachu.unpluggedafk.config.Config;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
@@ -22,6 +23,7 @@ public final class PlaceholderApiExpansion extends PlaceholderExpansion {
     private static final String EXPIRES = "expires";
     private static final String REMAINING_MINS = "remaining_mins";
     private static final String IS_FAKE = "is_fake";
+    private static final String LABEL = "label";
     private static final String COUNT = "count";
 
     private final UnpluggedAfk plugin;
@@ -65,6 +67,7 @@ public final class PlaceholderApiExpansion extends PlaceholderExpansion {
             case REMAINING_MINS ->
                 session == null ? "" : String.valueOf(session.remaining().toMinutes());
             case IS_FAKE -> session == null ? "" : String.valueOf(session.isFake());
+            case LABEL -> session == null ? "" : Config.get().getMessages().getLabel();
             case COUNT -> String.valueOf(registry.count());
             default -> null;
         };

@@ -4,6 +4,7 @@ import de.exlll.configlib.Comment;
 import de.exlll.configlib.Configuration;
 import de.exlll.configlib.PostProcess;
 import dev.detpikachu.unpluggedafk.common.config.Clamps;
+import dev.detpikachu.unpluggedafk.common.config.MessageOptions;
 import org.jetbrains.annotations.ApiStatus;
 
 @ApiStatus.Internal
@@ -30,6 +31,9 @@ public final class Options {
     @Comment("The link to the Unplugged AFK companion on the proxy. Only used behind a Velocity proxy.")
     private LinkOptions link = new LinkOptions();
 
+    @Comment("Text the plugin shows to players.")
+    private MessageOptions messages = new MessageOptions();
+
     public int getVersion() {
         return this.version;
     }
@@ -48,6 +52,10 @@ public final class Options {
 
     public LinkOptions getLink() {
         return this.link;
+    }
+
+    public MessageOptions getMessages() {
+        return this.messages;
     }
 
     @PostProcess

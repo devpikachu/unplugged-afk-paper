@@ -4,6 +4,7 @@ import com.velocitypowered.api.proxy.Player;
 import dev.detpikachu.unpluggedafk.common.formatting.DurationFormatting;
 import dev.detpikachu.unpluggedafk.velocity.BuildConstants;
 import dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity;
+import dev.detpikachu.unpluggedafk.velocity.config.Config;
 import dev.detpikachu.unpluggedafk.velocity.session.Session;
 import dev.detpikachu.unpluggedafk.velocity.session.SessionStore;
 import io.github.miniplaceholders.api.Expansion;
@@ -26,6 +27,7 @@ public final class MiniPlaceholdersExpansion {
     private static final String EXPIRES = "expires";
     private static final String REMAINING_MINS = "remaining_mins";
     private static final String IS_FAKE = "is_fake";
+    private static final String LABEL = "label";
     private static final String SERVER = "server";
     private static final String COUNT = "count";
 
@@ -75,6 +77,12 @@ public final class MiniPlaceholdersExpansion {
                         Player.class,
                         SERVER,
                         (player, queue, context) -> sessionTag(sessionStore, player, Session::serverName))
+                .audiencePlaceholder(
+                        Player.class,
+                        LABEL,
+                        (player, queue, context) -> sessionTag(sessionStore, player, session -> Config.get()
+                                .getMessages()
+                                .getLabel()))
                 .globalPlaceholder(COUNT, (queue, context) -> tag(String.valueOf(sessionStore.count())))
                 .build();
     }

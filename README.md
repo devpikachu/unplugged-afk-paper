@@ -82,6 +82,7 @@ release; mixed versions are not supported. Restart each server.
 | `link.port`           | The port the proxy listens on                              | `25580`     | `1`     | `65535` |
 | `link.secret`         | Copied from the proxy's config                             |             |         |         |
 | `link.serverName`     | This backend's name, exactly as `velocity.toml` spells it  |             |         |         |
+| `messages.label`      | What `%unplugged-afk_label%` shows for an unplugged player | `🔌`        |         |         |
 
 Out-of-range values are clamped back to their default, with a warning in the console.
 
@@ -92,13 +93,14 @@ are set.
 
 `plugins/unplugged-afk/config.yml`, on the proxy.
 
-| Key           | Description                                                       | Default     | Minimum | Maximum |
-|---------------|-------------------------------------------------------------------|-------------|---------|---------|
-| `version`     | The file's shape. The plugin upgrades it, do not edit             | `1`         |         |         |
-| `debug`       | Logs link, presence and relay activity to the console             | `false`     |         |         |
-| `link.host`   | The address to listen on. Widen it for backends on other machines | `127.0.0.1` |         |         |
-| `link.port`   | The port to listen on                                             | `25580`     | `1`     | `65535` |
-| `link.secret` | Generated on first start. Copy it into every backend              |             |         |         |
+| Key              | Description                                                       | Default     | Minimum | Maximum |
+|------------------|-------------------------------------------------------------------|-------------|---------|---------|
+| `version`        | The file's shape. The plugin upgrades it, do not edit             | `1`         |         |         |
+| `debug`          | Logs link, presence and relay activity to the console             | `false`     |         |         |
+| `link.host`      | The address to listen on. Widen it for backends on other machines | `127.0.0.1` |         |         |
+| `link.port`      | The port to listen on                                             | `25580`     | `1`     | `65535` |
+| `link.secret`    | Generated on first start. Copy it into every backend              |             |         |         |
+| `messages.label` | What `<unplugged-afk_label>` shows for an unplugged player        | `🔌`        |         |         |
 
 Out-of-range values are clamped back to their default, with a warning in the console.
 
@@ -133,6 +135,7 @@ expansion under the identifier `unplugged-afk`.
 | `%unplugged-afk_expires%`        | How long is left, in the same form                                |
 | `%unplugged-afk_remaining_mins%` | How long is left, as a plain number of minutes                    |
 | `%unplugged-afk_is_fake%`        | `true` for an unplugged player from `/unplugged debug spawn-fake` |
+| `%unplugged-afk_label%`          | The configured `messages.label`, `🔌` by default                  |
 | `%unplugged-afk_count%`          | How many this server holds, matching the `/unplugged list` total  |
 
 Every placeholder except `%unplugged-afk_count%` describes one player and renders empty when that player is not

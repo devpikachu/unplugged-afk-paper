@@ -13,6 +13,8 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 ### Added
 
 - **26.1.2 and 26.2 support:** the plugin now supports Minecraft versions 26.1.2 and 26.2.
+- **Text placeholder:** a new placeholder `unplugged-afk_label` has been added, with a text value for use in, for
+  example, TAB lists. The default value is a plug emoji (🔌).
 - **Mutual authentication:** the plugin now requires both the proxy and the backend to authenticate when establishing
   the link.
 - **ConfigLib:** migrated to using ConfigLib
