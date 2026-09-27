@@ -98,7 +98,7 @@ public final class ProxyListener {
     private void chooseInitialServer(PlayerChooseInitialServerEvent event) {
         final var player = event.getPlayer();
         if (this.tabBridge != null) {
-            this.tabBridge.removeBot(player.getUniqueId());
+            this.tabBridge.forget(player.getUniqueId());
         }
 
         final var session = this.sessionStore.consume(player.getUniqueId());

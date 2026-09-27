@@ -25,6 +25,11 @@ import java.time.Duration;
  * someone on another proxy. Handing one to {@code GlobalPlayerList.onJoin} is the entire feature, and TAB then owns
  * which viewers see it along with vanish, spy servers and server groups. None of that is reimplemented here.
  *
+ * <p>A bare {@code ProxyPlayer} carries no tab format and no team, so it shows the Mojang name and sorts above every
+ * teamed player. {@link TabBridge} copies both from the real player while they are still a {@code TabPlayer}, the same
+ * way ProxySupport serialises a player for another proxy, and gives the bot a team name distinct from theirs, so their
+ * return is not refused as a duplicate team.
+ *
  * <p>{@code FeatureManager.getFeature("GlobalPlayerList")} returns null exactly when TAB is absent or its global player
  * list is off, since the feature is registered only when its configuration section is present. That single null check
  * is the whole presence gate, so on a network that does not already merge player lists across backends this does

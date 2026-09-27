@@ -25,6 +25,14 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 - **Plain-text reason:** the reason can no longer contain formatting characters, thus preventing a whole host of
   formatting issues related to placeholders.
 
+### Fixed
+
+- **TAB missing nicknames:** bots in TAB will now correctly display their nicknames instead of falling back to
+  showing the Mojang username.
+- **TAB missing ordering:** bots in TAB will now correctly order according to server setup instead of showing
+  bots at the top.
+
+
 ## [0.6.1] - 2026-08-26
 
 ### Fixed
