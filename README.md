@@ -38,21 +38,23 @@ until the time you declared runs out.
 
 ## Requirements
 
-Both JARs reach into their host's own internals, Minecraft's on the backend and Velocity's on the proxy, so neither is
-guaranteed to work on other releases. Anything outside this table is best-effort and logged on startup.
+Both halves reach into their host's own internals, Minecraft's on the backend and Velocity's on the proxy. Each JAR is
+built against one Minecraft version or one Velocity line and named for it, so give each host the JAR that matches.
+Anything outside this table is best-effort and logged on startup.
 
-| Unplugged AFK | Minecraft | Velocity |
-|---------------|-----------|----------|
-| 0.2.0+        | 1.21.11   | 3.5.0    |
+| JAR                                          | Runs on                  | Java        |
+|----------------------------------------------|--------------------------|-------------|
+| `unplugged-afk-1.21.11-<version>.jar`        | Paper 1.21.11, or a fork | 21 or newer |
+| `unplugged-afk-26.1.2-<version>.jar`         | Paper 26.1.2, or a fork  | 25 or newer |
+| `unplugged-afk-26.2-<version>.jar`           | Paper 26.2, or a fork    | 25 or newer |
+| `unplugged-afk-velocity-3.5.1-<version>.jar` | Velocity 3.5             | 21 or newer |
+| `unplugged-afk-velocity-4.0.0-<version>.jar` | Velocity 4               | 25 or newer |
 
 ## Installation
 
-Each release ships two JARs. Install both from the same release. Mixed versions are not supported.
-
-| JAR                                    | Goes in                         | Required            |
-|----------------------------------------|---------------------------------|---------------------|
-| `unplugged-afk-<version>.jar`          | every backend's `plugins/`      | Yes                 |
-| `unplugged-afk-velocity-<version>.jar` | the Velocity proxy's `plugins/` | Yes, behind a proxy |
+Drop the backend JAR for your server's Minecraft version into every backend's `plugins/` directory. Behind a Velocity
+proxy, also drop the proxy JAR for your Velocity line into the proxy's `plugins/` directory. Install both from the same
+release; mixed versions are not supported. Restart each server.
 
 ## Commands
 

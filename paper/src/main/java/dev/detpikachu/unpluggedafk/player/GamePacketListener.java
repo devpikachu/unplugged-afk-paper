@@ -17,6 +17,7 @@ public final class GamePacketListener extends ServerGamePacketListenerImpl {
 
     private final UnpluggedConnection unpluggedConnection;
     private final UnpluggedServerPlayer bot;
+    private boolean isDisconnectProcessed;
 
     public GamePacketListener(
             MinecraftServer server,
@@ -30,6 +31,10 @@ public final class GamePacketListener extends ServerGamePacketListenerImpl {
 
     @Override
     public void disconnect(DisconnectionDetails details) {
+        if (this.isDisconnectProcessed) {
+            return;
+        }
+
         final var isDuplicateLogin = details.disconnectionReason()
                 .flatMap(DisconnectionReason::game)
                 .filter(cause -> cause == PlayerKickEvent.Cause.DUPLICATE_LOGIN)
@@ -43,8 +48,17 @@ public final class GamePacketListener extends ServerGamePacketListenerImpl {
         this.bot.deferredDisconnect(text(KickReasons.RETURNED), Reason.PLAYER_RETURNED);
     }
 
+    public boolean isDisconnectProcessed() {
+        return this.isDisconnectProcessed;
+    }
+
     @Override
     public void onDisconnect(DisconnectionDetails details) {
+        if (this.isDisconnectProcessed) {
+            return;
+        }
+
+        this.isDisconnectProcessed = true;
         super.onDisconnect(details);
         this.unpluggedConnection.closeChannel();
     }

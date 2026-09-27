@@ -183,7 +183,8 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     }
 
     public void deferredDisconnect(Component message, @Nullable Reason reason) {
-        if (this.isDisconnectScheduled || this.connection.processedDisconnect) {
+        if (this.isDisconnectScheduled
+                || (this.connection instanceof GamePacketListener listener && listener.isDisconnectProcessed())) {
             return;
         }
 

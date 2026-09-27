@@ -8,7 +8,7 @@ plugins {
 
 spotless {
     kotlinGradle {
-        target("*.gradle.kts", "*/*.gradle.kts")
+        target("*.gradle.kts", "*/*.gradle.kts", "paper/versions/*/*.gradle.kts")
 
         trimTrailingWhitespace()
         endWithNewline()

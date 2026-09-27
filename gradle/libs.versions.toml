@@ -2,12 +2,18 @@
 java = "25"
 minecraft = "1.21.11"
 
+paper-v2612 = "26.1.2.build.74-stable"
+paper-v262 = "26.2.build.123-stable"
+
 configlib = "4.8.1"
 netty = "4.2.7.Final"
 slf4j = "2.0.16"
 snakeyaml-engine = "2.7"
 velocity = "3.5.1"
+velocity-v400 = "4.0.0"
 husksync = "4.0.0+1.21.11"
+husksync-v2612 = "4.0.0+26.1.2"
+husksync-v262 = "4.0.0+26.2"
 placeholderapi = "2.12.3"
 luckperms = "5.5"
 miniplaceholders = "3.1.0"
@@ -28,7 +34,10 @@ netty-transport = { module = "io.netty:netty-transport", version.ref = "netty" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 snakeyaml-engine = { module = "org.snakeyaml:snakeyaml-engine", version.ref = "snakeyaml-engine" }
 velocity-api = { module = "com.velocitypowered:velocity-api", version.ref = "velocity" }
+velocity-api-v400 = { module = "com.velocitypowered:velocity-api", version.ref = "velocity-v400" }
 husksync-bukkit = { module = "net.william278.husksync:husksync-bukkit", version.ref = "husksync" }
+husksync-bukkit-v2612 = { module = "net.william278.husksync:husksync-bukkit", version.ref = "husksync-v2612" }
+husksync-bukkit-v262 = { module = "net.william278.husksync:husksync-bukkit", version.ref = "husksync-v262" }
 placeholderapi = { module = "me.clip:placeholderapi", version.ref = "placeholderapi" }
 luckperms-api = { module = "net.luckperms:api", version.ref = "luckperms" }
 miniplaceholders-api = { module = "io.github.miniplaceholders:miniplaceholders-api", version.ref = "miniplaceholders" }

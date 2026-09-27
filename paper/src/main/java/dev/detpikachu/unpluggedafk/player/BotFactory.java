@@ -12,6 +12,7 @@ import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import dev.detpikachu.unpluggedafk.session.UnplugService;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import io.papermc.paper.util.KeepAlive;
+import net.minecraft.core.SectionPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketFlow;
@@ -104,7 +105,9 @@ public final class BotFactory {
             if (data != null) {
                 bot.load(data);
 
-                final var chunkPos = new ChunkPos(bot.blockPosition());
+                final var chunkPos = new ChunkPos(
+                        SectionPos.blockToSectionCoord(bot.getBlockX()),
+                        SectionPos.blockToSectionCoord(bot.getBlockZ()));
 
                 level.getChunkSource().addTicketWithRadius(TicketType.PLAYER_SPAWN, chunkPos, SPAWN_CHUNK_RADIUS);
                 level.waitForEntities(chunkPos, SPAWN_CHUNK_RADIUS);

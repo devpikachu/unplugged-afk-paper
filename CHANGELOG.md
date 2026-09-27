@@ -16,6 +16,7 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
   the link.
 - **ConfigLib:** migrated to using ConfigLib
 - **Fake bots proxy presence:** fake bots now get a proper presence on the proxy
+- **26.1.2 and 26.2 support:** the plugin now supports Minecraft versions 26.1.2 and 26.2.
 
 ### Changed
 
