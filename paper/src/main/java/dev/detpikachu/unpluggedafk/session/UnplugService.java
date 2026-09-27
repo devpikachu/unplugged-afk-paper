@@ -9,7 +9,6 @@ import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
 import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.common.network.messages.SessionAck;
 import dev.detpikachu.unpluggedafk.config.Config;
-import dev.detpikachu.unpluggedafk.exceptions.PlayerStillConnectedException;
 import dev.detpikachu.unpluggedafk.exceptions.ProxyUnavailableException;
 import dev.detpikachu.unpluggedafk.exceptions.UnplugCancelledException;
 import dev.detpikachu.unpluggedafk.exceptions.UnplugFailedException;
@@ -23,6 +22,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.ApiStatus;
 
 import static net.kyori.adventure.text.Component.text;
@@ -178,20 +178,14 @@ public final class UnplugService {
             return;
         }
 
-        try {
-            commit(player, session);
-        } catch (UnplugFailedException exception) {
-            Log.error("Failed to unplug {} ({}) after the proxy acknowledged the session.", name, uuid, exception);
-            client.endSession(uuid, END_ABORTED);
-        }
+        commit(player, session);
     }
 
-    private static void commit(ServerPlayer player, Session session) throws UnplugFailedException {
+    private static void commit(ServerPlayer player, Session session) {
         final var registry = SessionRegistry.getInstance();
         final var uuid = player.getUUID();
         final var name = player.getPlainTextName();
         final var level = player.level();
-        final var playerList = level.getServer().getPlayerList();
         final var message = ChatMessages.formatUnplugged(session.durationMins(), session.reason());
         final var oldConnection = player.connection.connection;
         final var clientInformation = player.clientInformation();
@@ -204,16 +198,12 @@ public final class UnplugService {
             registry.markCommitting(uuid);
             player.getBukkitEntity().kick(message, PlayerKickEvent.Cause.PLUGIN);
 
-            if (playerList.getPlayer(uuid) != null) {
+            if (player.quitReason != PlayerQuitEvent.QuitReason.KICKED) {
                 Log.warn(
                         "A plugin cancelled the kick of {} ({}), but the unplug is already committed. Forcing it.",
                         name,
                         uuid);
                 forceDisconnect(player, message);
-
-                if (playerList.getPlayer(uuid) != null) {
-                    throw new PlayerStillConnectedException(uuid, name);
-                }
             }
 
             BotFactory.spawnWhenSettled(level, gameProfile, clientInformation, channels, session, oldConnection);
@@ -226,10 +216,7 @@ public final class UnplugService {
     }
 
     private static void forceDisconnect(ServerPlayer player, Component message) {
-        final var details = new DisconnectionDetails(PaperAdventure.asVanilla(message));
-
-        player.connection.onDisconnect(details);
-        player.connection.connection.disconnect(details);
+        player.connection.connection.disconnect(new DisconnectionDetails(PaperAdventure.asVanilla(message)));
     }
 
     private record FakeSpawn(

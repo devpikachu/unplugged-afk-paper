@@ -122,6 +122,8 @@ public final class BotFactory {
                         "A plugin removed bot " + bot.describe() + " during its own PlayerJoinEvent.");
             }
 
+            bot.pinChunkLoadDistance();
+
             bot.connection = new GamePacketListener(server, connection, bot, cookie);
 
             if (data != null) {
@@ -209,7 +211,9 @@ public final class BotFactory {
         }
 
         private boolean hasReconnected() {
-            return this.level.getServer().getPlayerList().getPlayer(this.uuid) != null;
+            final var player = this.level.getServer().getPlayerList().getPlayer(this.uuid);
+
+            return player != null && !player.connection.connection.equals(this.oldConnection);
         }
 
         private boolean hasSettled() {
