@@ -28,19 +28,19 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
 import java.time.Duration;
+import java.time.Instant;
 
 import static net.kyori.adventure.text.Component.text;
 
 @ApiStatus.Internal
 public final class UnpluggedServerPlayer extends ServerPlayer {
 
-    // Copied verbatim from source mod:
-    // Delay sending the ADD_PLAYER packets... because Mojang.
     private static final Duration SPAWN_PACKET_DELAY = Duration.ofMillis(200);
     private static final int PERIODIC_TICK_INTERVAL = 10;
     private static final int DEATH_LINGER_TICKS = 20;
 
     private final Session session;
+    private final Instant spawnedAt = Instant.now();
 
     private boolean isSpawnStatePending = true;
     private boolean isDisconnectScheduled = false;
@@ -108,6 +108,9 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     @Override
     public void die(DamageSource damageSource) {
         this.dismount();
+
+        final var message = PaperAdventure.asAdventure(this.getCombatTracker().getDeathMessage());
+
         super.die(damageSource);
 
         if (!this.isDeadOrDying()) {
@@ -115,7 +118,7 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
             return;
         }
 
-        this.deathMessage = PaperAdventure.asAdventure(this.getCombatTracker().getDeathMessage());
+        this.deathMessage = message;
 
         Log.warn(
                 "Bot {} died. Their items dropped and their spot is held for another {} tick(s).",
@@ -158,11 +161,25 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
         super.onRemoval(reason);
 
         if (reason == RemovalReason.CHANGED_DIMENSION) {
+            this.scheduleReturnCheck();
             return;
         }
 
         Log.debug("Bot {} was removed from the world: {}.", this.describe(), reason);
         this.deferredDisconnect(text(KickReasons.REMOVED), Reason.ENTITY_REMOVED);
+    }
+
+    private void scheduleReturnCheck() {
+        final var server = this.level().getServer();
+
+        server.schedule(new TickTask(server.getTickCount() + 1, () -> {
+            if (!this.isRemoved()) {
+                return;
+            }
+
+            Log.debug("Bot {} never returned from a dimension change, so it is torn down.", this.describe());
+            this.deferredDisconnect(text(KickReasons.REMOVED), Reason.ENTITY_REMOVED);
+        }));
     }
 
     public void deferredDisconnect(Component message, @Nullable Reason reason) {
@@ -186,7 +203,8 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
     }
 
     private void tickPeriodic(MinecraftServer server) {
-        if (this.isSpawnStatePending && this.session.elapsed().compareTo(SPAWN_PACKET_DELAY) >= 0) {
+        if (this.isSpawnStatePending
+                && Duration.between(this.spawnedAt, Instant.now()).compareTo(SPAWN_PACKET_DELAY) >= 0) {
             this.applyDeferredSpawnState(server);
         }
 

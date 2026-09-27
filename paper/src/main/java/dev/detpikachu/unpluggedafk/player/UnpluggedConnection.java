@@ -54,7 +54,6 @@ public final class UnpluggedConnection extends Connection {
 
     @Override
     public void send(Packet<?> packet, @Nullable ChannelFutureListener futureListener, boolean flush) {
-        // Everything else stays dropped. A plugin message is the only packet with an identity to relay.
         if (packet instanceof ClientboundCustomPayloadPacket(DiscardedPayload(Identifier id, byte[] data))
                 && isRelayable(id, data)) {
             this.linkClient.relay(this.uuid, id.toString(), data);
@@ -62,9 +61,7 @@ public final class UnpluggedConnection extends Connection {
     }
 
     @Override
-    public void setReadOnly() {
-        // No-op
-    }
+    public void setReadOnly() {}
 
     @Override
     public void handleDisconnection() {
@@ -72,19 +69,13 @@ public final class UnpluggedConnection extends Connection {
     }
 
     @Override
-    public void setListenerForServerboundHandshake(PacketListener packetListener) {
-        // No-op
-    }
+    public void setListenerForServerboundHandshake(PacketListener packetListener) {}
 
     @Override
-    public <T extends PacketListener> void setupInboundProtocol(ProtocolInfo<T> protocolInfo, T packetListener) {
-        // No-op
-    }
+    public <T extends PacketListener> void setupInboundProtocol(ProtocolInfo<T> protocolInfo, T packetListener) {}
 
     @Override
-    public void tick() {
-        // No-op
-    }
+    public void tick() {}
 
     @Override
     public SocketAddress getRemoteAddress() {

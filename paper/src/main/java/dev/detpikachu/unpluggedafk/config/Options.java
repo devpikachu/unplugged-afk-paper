@@ -26,6 +26,13 @@ public final class Options extends OptionsBase {
         return INSTANCE;
     }
 
+    public static void deserialize(FileConfiguration config) {
+        INSTANCE.isDebug = config.getBoolean(KEY_DEBUG, DEFAULT_DEBUG);
+        INSTANCE.maxUnpluggedPlayers = atLeastOne(config, KEY_MAX_UNPLUGGED_PLAYERS, DEFAULT_MAX_UNPLUGGED_PLAYERS);
+        INSTANCE.maxDurationMins = atLeastOne(config, KEY_MAX_DURATION_MINS, DEFAULT_MAX_DURATION_MINS);
+        INSTANCE.link.deserialize(config);
+    }
+
     public boolean isDebug() {
         return this.isDebug;
     }
@@ -40,12 +47,5 @@ public final class Options extends OptionsBase {
 
     public LinkOptions getLink() {
         return this.link;
-    }
-
-    public static void deserialize(FileConfiguration config) {
-        INSTANCE.isDebug = config.getBoolean(KEY_DEBUG, DEFAULT_DEBUG);
-        INSTANCE.maxUnpluggedPlayers = atLeastOne(config, KEY_MAX_UNPLUGGED_PLAYERS, DEFAULT_MAX_UNPLUGGED_PLAYERS);
-        INSTANCE.maxDurationMins = atLeastOne(config, KEY_MAX_DURATION_MINS, DEFAULT_MAX_DURATION_MINS);
-        INSTANCE.link.deserialize(config);
     }
 }

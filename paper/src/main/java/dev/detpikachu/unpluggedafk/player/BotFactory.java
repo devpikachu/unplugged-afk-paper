@@ -41,6 +41,7 @@ public final class BotFactory {
     private static final int SPAWN_SETTLE_TICKS = 1;
     private static final int SPAWN_TIMEOUT_TICKS = 100;
     private static final int SPAWN_CHUNK_RADIUS = 3;
+    private static final int BOT_VIEW_DISTANCE = 2;
 
     public static void spawnWhenSettled(
             ServerLevel level,
@@ -85,22 +86,20 @@ public final class BotFactory {
             Session session,
             @Nullable CompoundTag persistedData) {
         final var server = level.getServer();
+        final var botInformation = withBotViewDistance(clientInformation);
         final var cookie = new CommonListenerCookie(
-                profile, 0, clientInformation, true, null, new HashSet<>(channels), new KeepAlive());
+                profile, 0, botInformation, true, null, new HashSet<>(channels), new KeepAlive());
         final var connection = new UnpluggedConnection(server, PacketFlow.SERVERBOUND, profile.id());
 
-        final var bot = new UnpluggedServerPlayer(server, level, profile, clientInformation, session);
+        final var bot = new UnpluggedServerPlayer(server, level, profile, botInformation, session);
         final var registry = SessionRegistry.getInstance();
 
-        registry.add(bot);
+        registry.add(bot); // placeNewPlayer fires PlayerJoinEvent, where a late registration reads isUnplugged false.
         var placed = false;
 
         try (final var reporter = new ProblemReporter.ScopedCollector(bot.problemPath(), Log.logger())) {
             final var data = toValueInput(bot, reporter, persistedData);
 
-            // Vanilla loads persisted state before placing the player (PrepareSpawnTask$Ready.spawn). Placing first
-            // fires the bot's PlayerJoinEvent with an empty inventory at the world spawn, and the chunk ticket is what
-            // stops the pearls and vehicle below from being added to a chunk that is not loaded yet.
             if (data != null) {
                 bot.load(data);
 
@@ -112,6 +111,12 @@ public final class BotFactory {
 
             server.getPlayerList().placeNewPlayer(connection, bot, cookie);
             placed = true;
+
+            if (bot.isRemoved()) {
+                throw new IllegalStateException(
+                        "A plugin removed bot " + bot.describe() + " during its own PlayerJoinEvent.");
+            }
+
             bot.connection = new GamePacketListener(server, connection, bot, cookie);
 
             if (data != null) {
@@ -129,6 +134,19 @@ public final class BotFactory {
         }
 
         return bot;
+    }
+
+    private static ClientInformation withBotViewDistance(ClientInformation clientInformation) {
+        return new ClientInformation(
+                clientInformation.language(),
+                BOT_VIEW_DISTANCE,
+                clientInformation.chatVisibility(),
+                clientInformation.chatColors(),
+                clientInformation.modelCustomisation(),
+                clientInformation.mainHand(),
+                clientInformation.textFilteringEnabled(),
+                clientInformation.allowsListing(),
+                clientInformation.particleStatus());
     }
 
     private static @Nullable ValueInput toValueInput(
@@ -222,9 +240,8 @@ public final class BotFactory {
             }
 
             Log.info(
-                    "{} ({}) is unplugged at {}, {}, {} in {}. {} of {} slot(s) in use.",
-                    this.name,
-                    this.uuid,
+                    "{} is unplugged at {}, {}, {} in {}. {} of {} slot(s) in use.",
+                    bot.describe(),
                     (int) bot.getX(),
                     (int) bot.getY(),
                     (int) bot.getZ(),

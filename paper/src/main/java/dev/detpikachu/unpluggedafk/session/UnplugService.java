@@ -62,11 +62,28 @@ public final class UnplugService {
         final var plugin = UnpluggedAfk.getInstance();
 
         if (!plugin.isEnabled()) {
-            resume(player, session, ack);
+            abandon(player, ack);
             return;
         }
 
         plugin.getServer().getGlobalRegionScheduler().run(plugin, task -> resume(player, session, ack));
+    }
+
+    private static void abandon(ServerPlayer player, SessionAck ack) {
+        final var registry = SessionRegistry.getInstance();
+        final var uuid = player.getUUID();
+
+        registry.clearUnplugging(uuid);
+
+        if (!ack.accepted()) {
+            return;
+        }
+
+        Log.warn(
+                "The proxy acknowledged the unplug of {} ({}) while the plugin was disabling, so it is undone.",
+                player.getPlainTextName(),
+                uuid);
+        UnpluggedAfk.getInstance().getLinkClient().endSession(uuid, END_ABORTED);
     }
 
     private static void resume(ServerPlayer player, Session session, SessionAck ack) {

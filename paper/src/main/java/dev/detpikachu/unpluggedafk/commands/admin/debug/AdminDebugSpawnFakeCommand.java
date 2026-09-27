@@ -16,6 +16,7 @@ import static dev.detpikachu.unpluggedafk.commands.CommandGuards.ARG_DURATION_MI
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireCapacity;
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireDuration;
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireExecutor;
+import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requirePlainText;
 
 @ApiStatus.Internal
 public final class AdminDebugSpawnFakeCommand {
@@ -41,7 +42,8 @@ public final class AdminDebugSpawnFakeCommand {
 
         requireCapacity();
 
-        final var effectiveReason = (reason == null || reason.isBlank()) ? executor.getPlainTextName() : reason;
+        final var effectiveReason =
+                (reason == null || reason.isBlank()) ? executor.getPlainTextName() : requirePlainText(reason);
 
         BotFactory.spawnFake(
                 executor.level(),

@@ -55,9 +55,19 @@ public final class HuskSyncListener implements Listener {
 
         if (bot != null) {
             final var repaired = snapshotOf(user);
+            final var dying = repaired.getHealth()
+                    .filter(health -> health.getHealth() <= 0.0)
+                    .isPresent();
 
-            event.editData(stale -> overwrite(stale, repaired));
-            Log.debug("Repaired HuskSync's snapshot for bot {}.", bot.describe());
+            event.editData(stale -> {
+                overwrite(stale, repaired);
+
+                if (dying) {
+                    stale.getHealth().ifPresent(health -> health.setHealth(WITHHELD_HEALTH));
+                }
+            });
+
+            Log.debug("Repaired HuskSync's snapshot for bot {}. Withheld a zero health: {}.", bot.describe(), dying);
 
             return;
         }
@@ -102,6 +112,11 @@ public final class HuskSyncListener implements Listener {
         final var withheldAt = this.withheldDeaths.remove(user.getUuid());
 
         if (withheldAt == null || isExpired(withheldAt) || user.hasDisconnected()) {
+            return;
+        }
+
+        if (SessionRegistry.getInstance().find(user.getUuid()) != null) {
+            Log.debug("Dropped a withheld death for {} ({}): a bot holds that uuid.", user.getName(), user.getUuid());
             return;
         }
 

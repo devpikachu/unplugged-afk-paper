@@ -10,6 +10,18 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ## [Unreleased]
 
+### Added
+
+- **Mutual authentication:** the plugin now requires both the proxy and the backend to authenticate when establishing
+  the link.
+
+### Changed
+
+- **No view distance:** bots no longer inherit the player's view distance, thus improving performance and reducing
+  server load; simulation distance is unaffected.
+- **Plain-text reason:** the reason can no longer contain formatting characters, thus preventing a whole host of
+  formatting issues related to placeholders.
+
 ## [0.6.1] - 2026-08-26
 
 ### Fixed
@@ -25,15 +37,18 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ### Changed
 
-- **Silently drop unknown packets:** instead of logging a warning, the plugin now silently drops unknown packets so that port scanners don't create log spam
+- **Silently drop unknown packets:** instead of logging a warning, the plugin now silently drops unknown packets so that
+  port scanners don't create log spam
 
 ## [0.5.0] - 2026-08-24
 
 ### Added
 
-- **Backend-Proxy transport:** a plugin-owned TCP socket transport for communication between the server and the proxy, bypassing the need for real players' connections
+- **Backend-Proxy transport:** a plugin-owned TCP socket transport for communication between the server and the proxy,
+  bypassing the need for real players' connections
 - **PlaceholderAPI support:** the plugin now provides placeholders for unplugged player state
-- **TAB compatibility:** When using TAB to synchronize player lists behind a proxy, unplugged players now also synchronize
+- **TAB compatibility:** When using TAB to synchronize player lists behind a proxy, unplugged players now also
+  synchronize
 
 ### Changed
 
@@ -41,11 +56,13 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ### Removed
 
-- **Hard Minecraft version requirement:** the plugin no longer refuses to load on servers running unsupported versions of Minecraft, instead being best-effort and logging a warning
+- **Hard Minecraft version requirement:** the plugin no longer refuses to load on servers running unsupported versions
+  of Minecraft, instead being best-effort and logging a warning
 
 ### Fixed
 
-- **Proxy player count:** when behind a proxy, the server list now correctly includes unplugged players in the player count
+- **Proxy player count:** when behind a proxy, the server list now correctly includes unplugged players in the player
+  count
 - **Unnecessary kick message:** the server no longer sends a kick message for a bot replaced by a returning player
 - **Doubled death message:** when using HuskSync, the death message is no longer broadcast twice
 
@@ -58,7 +75,8 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ### Fixed
 
-- **Inventory handoff:** the unplugged player now receives your inventory directly, before it joins. It no longer starts empty in front of plugins that read inventory on join, and no longer relies on a save file the server may never write
+- **Inventory handoff:** the unplugged player now receives your inventory directly, before it joins. It no longer starts
+  empty in front of plugins that read inventory on join, and no longer relies on a save file the server may never write
 - **Failed spawns:** a spawn that fails no longer leaves a phantom unplugged player holding a slot
 - **Proxy sessions:** simultaneous unplugs can no longer corrupt the proxy's routing records
 
@@ -66,7 +84,10 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ### Fixed
 
-- Unplugged bots no longer die a tick after spawning on servers running ProtocolLib alongside PacketEvents. The bot's fake connection now carries a vanilla-shaped Netty pipeline, so ProtocolLib injects into it instead of throwing `NoSuchElementException: encoder` on every unplug, and PacketEvents' injection kick is refused for unplugged bots only.
+- Unplugged bots no longer die a tick after spawning on servers running ProtocolLib alongside PacketEvents. The bot's
+  fake connection now carries a vanilla-shaped Netty pipeline, so ProtocolLib injects into it instead of throwing
+  `NoSuchElementException: encoder` on every unplug, and PacketEvents' injection kick is refused for unplugged bots
+  only.
 
 ## [0.2.0] - 2026-08-20
 

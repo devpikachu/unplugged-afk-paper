@@ -23,6 +23,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -37,6 +38,7 @@ public final class LinkServer {
     private static final long BOOT_POLL_MILLIS = 50;
 
     private final ConcurrentHashMap<String, Channel> links = new ConcurrentHashMap<>();
+    private final Set<String> synced = ConcurrentHashMap.newKeySet();
 
     private volatile long startedAt;
     private volatile long lastLinkAt;
@@ -100,6 +102,7 @@ public final class LinkServer {
     @SuppressWarnings("FutureReturnValueIgnored")
     public void stop() {
         this.links.clear();
+        this.synced.clear();
 
         final var channel = this.channel;
         if (channel != null) {
@@ -124,7 +127,7 @@ public final class LinkServer {
         final var deadline = this.startedAt + BOOT_CAP_MILLIS;
 
         while (System.currentTimeMillis() < deadline
-                && this.links.size() < this.expectedBackends
+                && this.synced.size() < this.expectedBackends
                 && System.currentTimeMillis() - this.lastLinkAt < BOOT_QUIET_MILLIS) {
             try {
                 Thread.sleep(BOOT_POLL_MILLIS);
@@ -140,13 +143,30 @@ public final class LinkServer {
         return link != null && link.isActive();
     }
 
-    void linked(String serverName, Channel link) {
+    boolean linked(String serverName, Channel link) {
+        final var holder = this.links.compute(
+                serverName, (key, existing) -> existing != null && existing.isActive() ? existing : link);
+
+        if (!link.equals(holder)) {
+            return false;
+        }
+
         this.lastLinkAt = System.currentTimeMillis();
-        this.links.put(serverName, link);
+        return true;
+    }
+
+    void synced(String serverName) {
+        this.lastLinkAt = System.currentTimeMillis();
+        this.synced.add(serverName);
     }
 
     boolean unlinked(String serverName, Channel link) {
-        return this.links.remove(serverName, link);
+        if (!this.links.remove(serverName, link)) {
+            return false;
+        }
+
+        this.synced.remove(serverName);
+        return true;
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")

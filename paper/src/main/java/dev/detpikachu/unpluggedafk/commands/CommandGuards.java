@@ -14,6 +14,7 @@ import org.jetbrains.annotations.ApiStatus;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_ALREADY_UNPLUGGING;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_EXECUTOR_NOT_ALLOWED;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_NOT_A_PLAYER;
+import static dev.detpikachu.unpluggedafk.commands.CommandErrors.ERR_REASON_NOT_PLAIN_TEXT;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.errCapReached;
 import static dev.detpikachu.unpluggedafk.commands.CommandErrors.errDurationTooLarge;
 
@@ -21,6 +22,8 @@ import static dev.detpikachu.unpluggedafk.commands.CommandErrors.errDurationTooL
 public final class CommandGuards {
 
     public static final String ARG_DURATION_MINS = "durationMins";
+
+    private static final String FORMATTING_CHARACTERS = "&<>\\§";
 
     public static ServerPlayer requireExecutor(CommandContext<CommandSourceStack> context)
             throws CommandSyntaxException {
@@ -45,6 +48,19 @@ public final class CommandGuards {
         }
 
         return durationMins;
+    }
+
+    public static String requirePlainText(String reason) throws CommandSyntaxException {
+        for (var index = 0; index < reason.length(); index++) {
+            if (isPlainText(reason.charAt(index))) {
+                continue;
+            }
+
+            Log.debug("Refused a reason carrying something other than plain text at index {}.", index);
+            throw ERR_REASON_NOT_PLAIN_TEXT.create();
+        }
+
+        return reason;
     }
 
     public static void requireAllowedExecutor(ServerPlayer player) throws CommandSyntaxException {
@@ -77,5 +93,11 @@ public final class CommandGuards {
                     maxUnpluggedPlayers);
             throw errCapReached().create();
         }
+    }
+
+    private static boolean isPlainText(char character) {
+        return FORMATTING_CHARACTERS.indexOf(character) < 0
+                && !Character.isISOControl(character)
+                && Character.getType(character) != Character.FORMAT;
     }
 }

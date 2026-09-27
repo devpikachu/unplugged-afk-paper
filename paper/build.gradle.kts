@@ -13,8 +13,12 @@ val minecraftVersion = libs.versions.minecraft.get()
 val apiVersion = minecraftVersion.split('.').take(2).joinToString(".")
 
 repositories {
-    maven("https://repo.william278.net/releases")
-    maven("https://repo.extendedclip.com/releases")
+    maven("https://repo.william278.net/releases") {
+        content { includeGroupByRegex("net\\.william278.*") }
+    }
+    maven("https://repo.extendedclip.com/releases") {
+        content { includeGroup("me.clip") }
+    }
 }
 
 base {

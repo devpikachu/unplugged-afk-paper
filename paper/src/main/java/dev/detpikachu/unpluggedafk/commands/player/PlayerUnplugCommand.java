@@ -26,6 +26,7 @@ import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireCapacity
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireDuration;
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireExecutor;
 import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requireNotAlreadyUnplugging;
+import static dev.detpikachu.unpluggedafk.commands.CommandGuards.requirePlainText;
 
 @ApiStatus.Internal
 public final class PlayerUnplugCommand {
@@ -51,7 +52,7 @@ public final class PlayerUnplugCommand {
     private static int execute(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         final var player = requireExecutor(context);
         final var durationMins = requireDuration(context);
-        final var reason = context.getArgument(ARG_REASON, String.class);
+        final var reason = requirePlainText(context.getArgument(ARG_REASON, String.class));
 
         if (reason.isBlank()) {
             throw ERR_REASON_REQUIRED.create();

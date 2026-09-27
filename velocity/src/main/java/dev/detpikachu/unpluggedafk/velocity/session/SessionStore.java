@@ -4,8 +4,10 @@ import dev.detpikachu.unpluggedafk.common.logging.Log;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -77,8 +79,10 @@ public final class SessionStore {
         this.pruneExpired();
     }
 
-    public void replace(String serverName, Map<UUID, Session> incoming) {
+    public Set<UUID> replace(String serverName, Map<UUID, Session> incoming) {
         this.dropServer(serverName);
+
+        final var accepted = new HashSet<UUID>();
 
         incoming.forEach((uuid, session) -> {
             final var previous = this.sessions.get(uuid);
@@ -93,9 +97,12 @@ public final class SessionStore {
             }
 
             this.sessions.put(uuid, session);
+            accepted.add(uuid);
         });
 
         this.pruneExpired();
+
+        return accepted;
     }
 
     public void dropServer(String serverName) {

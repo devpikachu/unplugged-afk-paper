@@ -82,8 +82,6 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
             return;
         }
 
-        this.challenged = true;
-
         if (challenge.protocolVersion() != Protocol.VERSION) {
             this.client.errorOnce(
                     "Link protocol mismatch. This backend uses {}, the proxy uses {}. Use the same version of both plugins.",
@@ -94,6 +92,8 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
         }
 
         final var signature = Handshake.sign(this.options.getSecret(), challenge.nonce());
+
+        this.challenged = true;
         send(context, new Auth(Protocol.VERSION, this.options.getServerName(), signature));
     }
 

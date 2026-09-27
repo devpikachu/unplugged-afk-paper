@@ -17,7 +17,7 @@ import java.util.function.Function;
 @ApiStatus.Internal
 public final class MiniPlaceholdersExpansion {
 
-    static final String IDENTIFIER = "unplugged-afk";
+    private static final String IDENTIFIER = "unplugged-afk";
 
     private static final String IS_UNPLUGGED = "is_unplugged";
     private static final String DURATION_MINS = "duration_mins";

@@ -37,6 +37,7 @@ import org.jspecify.annotations.Nullable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -56,6 +57,7 @@ public final class LinkClient {
     private static final String END_TIMED_OUT = "ACK_TIMEOUT";
 
     private final ConcurrentHashMap<UUID, PendingSession> pendingSessions = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<UUID, CommittedSession> committedSessions = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, EndedSession> endedSessions = new ConcurrentHashMap<>();
 
     private volatile boolean running;
@@ -176,10 +178,14 @@ public final class LinkClient {
                 uuid,
                 secondsRemaining);
 
+        final var start = describe(player, session, secondsRemaining);
         final var timeout = channel.eventLoop().schedule(() -> timedOut(uuid), ACK_TIMEOUT_SECS, TimeUnit.SECONDS);
-        this.pendingSessions.put(uuid, new PendingSession(onAck, timeout));
 
-        channel.writeAndFlush(describe(player, session, secondsRemaining));
+        this.pendingSessions.put(uuid, new PendingSession(onAck, timeout));
+        pruneCommittedSessions();
+        this.committedSessions.put(uuid, new CommittedSession(start, session));
+
+        channel.writeAndFlush(start);
     }
 
     public void endSession(UnpluggedServerPlayer bot, String reason) {
@@ -200,6 +206,7 @@ public final class LinkClient {
             pending.timeout().cancel(false);
         }
 
+        this.committedSessions.remove(uuid);
         sendEnd(uuid, reason);
     }
 
@@ -249,6 +256,11 @@ public final class LinkClient {
 
         Log.debug("SESSION_ACK for {}: accepted={} reason={}", ack.uuid(), ack.accepted(), ack.reason());
         pending.timeout().cancel(false);
+
+        if (!ack.accepted()) {
+            this.committedSessions.remove(ack.uuid());
+        }
+
         pending.callback().accept(ack);
     }
 
@@ -270,7 +282,7 @@ public final class LinkClient {
         Log.debug("Link closed. Ready before the close: {}.", wasReady);
         failPending(ChatMessages.REFUSED_UNREACHABLE);
 
-        if (wasReady) {
+        if (wasReady && this.running) {
             warnOnce("Link to the proxy lost. Reconnecting in the background.");
         }
 
@@ -298,6 +310,7 @@ public final class LinkClient {
     @SuppressWarnings("FutureReturnValueIgnored")
     private void sync(Channel channel) {
         final var sessions = new ArrayList<SessionStart>();
+        final var seen = new HashSet<UUID>();
 
         for (final var bot : SessionRegistry.getInstance().all()) {
             final var session = bot.getSession();
@@ -306,11 +319,23 @@ public final class LinkClient {
                 continue;
             }
 
+            seen.add(bot.getUUID());
             sessions.add(describe(bot, session, session.remaining().toSeconds()));
         }
 
+        pruneCommittedSessions();
+        this.committedSessions.forEach((uuid, committed) -> {
+            if (seen.add(uuid)) {
+                sessions.add(committed.current());
+            }
+        });
+
         pruneEndedSessions();
-        this.endedSessions.values().forEach(ended -> sessions.add(ended.hint()));
+        this.endedSessions.forEach((uuid, ended) -> {
+            if (seen.add(uuid)) {
+                sessions.add(ended.hint());
+            }
+        });
 
         Log.debug("Sending SYNC with {} session(s).", sessions.size());
         channel.writeAndFlush(new Sync(sessions));
@@ -324,6 +349,7 @@ public final class LinkClient {
         }
 
         Log.warn("The proxy did not acknowledge the unplug of {} in time. Undoing the session.", uuid);
+        this.committedSessions.remove(uuid);
         sendEnd(uuid, END_TIMED_OUT);
         answer(pending, uuid, ChatMessages.REFUSED_TIMED_OUT);
     }
@@ -334,6 +360,7 @@ public final class LinkClient {
 
             if (pending != null) {
                 pending.timeout().cancel(false);
+                this.committedSessions.remove(uuid);
                 answer(pending, uuid, reason);
             }
         });
@@ -345,6 +372,12 @@ public final class LinkClient {
         } catch (RuntimeException exception) {
             Log.error("Failed to answer the pending unplug of {}.", uuid, exception);
         }
+    }
+
+    private void pruneCommittedSessions() {
+        final var registry = SessionRegistry.getInstance();
+
+        this.committedSessions.keySet().removeIf(uuid -> !registry.isUnplugging(uuid) && registry.find(uuid) == null);
     }
 
     private void pruneEndedSessions() {
@@ -422,6 +455,19 @@ public final class LinkClient {
     }
 
     private record PendingSession(Consumer<SessionAck> callback, ScheduledFuture<?> timeout) {}
+
+    private record CommittedSession(SessionStart start, Session session) {
+
+        SessionStart current() {
+            return new SessionStart(
+                    this.start.uuid(),
+                    this.start.username(),
+                    this.start.skin(),
+                    this.start.durationMins(),
+                    this.start.reason(),
+                    this.session.remaining().toSeconds());
+        }
+    }
 
     private record EndedSession(SessionStart start, Instant endedAt) {
 

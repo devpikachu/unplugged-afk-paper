@@ -53,7 +53,11 @@ public final class PlayerUnplugEvent extends PlayerEvent implements Cancellable 
     /**
      * Returns the reason the player gave for unplugging.
      *
-     * @return the reason the player gave, never blank
+     * <p>It is plain text: the command refuses a reason carrying a legacy colour code, a MiniMessage tag, or any
+     * control or Unicode formatting character, so a consumer may insert it into a message without escaping it. Insert
+     * it literally all the same, since nothing re-checks it downstream.
+     *
+     * @return the reason the player gave, never blank and always plain text
      */
     public String getReason() {
         return this.reason;

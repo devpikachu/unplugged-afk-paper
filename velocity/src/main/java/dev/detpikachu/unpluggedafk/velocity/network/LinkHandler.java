@@ -49,6 +49,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
 
     private @Nullable String nonce;
     private @Nullable String serverName;
+    private boolean refused;
 
     public LinkHandler(
             LinkServer linkServer,
@@ -101,6 +102,10 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext context, Message message) {
+        if (this.refused) {
+            return;
+        }
+
         if (message instanceof Auth auth) {
             onAuth(context, auth);
             return;
@@ -109,7 +114,8 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
         final var serverName = this.serverName;
 
         if (serverName == null) {
-            refuse(context, "Expected AUTH first but got " + message.getType() + ".");
+            this.refused = true;
+            close(context);
             return;
         }
 
@@ -157,10 +163,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
         }
 
         if (this.linkServer.isLinked(auth.serverName())) {
-            refuse(
-                    context,
-                    "Backend " + auth.serverName()
-                            + " is already linked from another connection. Two servers must not share a link.serverName.");
+            refuse(context, alreadyLinked(auth.serverName()));
             return;
         }
 
@@ -175,11 +178,15 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
             return;
         }
 
+        if (!this.linkServer.linked(auth.serverName(), context.channel())) {
+            refuse(context, alreadyLinked(auth.serverName()));
+            return;
+        }
+
         this.nonce = null;
         this.serverName = auth.serverName();
         context.pipeline()
                 .replace(ReadTimeoutHandler.class, "timeout", new ReadTimeoutHandler(Protocol.IDLE_TIMEOUT_SECS));
-        this.linkServer.linked(auth.serverName(), context.channel());
         send(context, new Ready(true, ""));
         Log.info(
                 "Backend {} linked from {}.",
@@ -210,7 +217,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
                 relay.getChannel());
         this.proxyServer
                 .getEventManager()
-                .fireAndForget(new PluginMessageEvent(source, source, identifier, relay.getPayload()));
+                .fireAndForget(new PluginMessageEvent(source, source.getPlayer(), identifier, relay.getPayload()));
     }
 
     private void onSessionStart(ChannelHandlerContext context, SessionStart start, String serverName) {
@@ -255,17 +262,19 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
             sessions.put(start.uuid(), toSession(serverName, start));
         }
 
-        this.sessionStore.replace(serverName, sessions);
+        final var accepted = this.sessionStore.replace(serverName, sessions);
+
         this.clearPresence(serverName);
 
         for (final var start : sync.sessions()) {
-            if (start.secondsRemaining() <= 0) {
+            if (start.secondsRemaining() <= 0 || !accepted.contains(start.uuid())) {
                 continue;
             }
 
             this.addPresence(serverName, start.uuid(), start.username(), skinOf(start.skin()));
         }
 
+        this.linkServer.synced(serverName);
         Log.info("SYNC from {}: {} session(s).", serverName, sessions.size());
     }
 
@@ -297,8 +306,14 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     }
 
     private void refuse(ChannelHandlerContext context, String reason) {
+        this.refused = true;
         Log.warn("Refusing a link from {}. {}", context.channel().remoteAddress(), reason);
         sendAndClose(context, new Ready(false, reason));
+    }
+
+    private static String alreadyLinked(String serverName) {
+        return "Backend " + serverName
+                + " is already linked from another connection. Two servers must not share a link.serverName.";
     }
 
     private String registeredNames() {

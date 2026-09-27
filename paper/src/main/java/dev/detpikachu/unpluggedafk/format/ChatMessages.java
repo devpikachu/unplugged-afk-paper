@@ -58,7 +58,7 @@ public final class ChatMessages {
     }
 
     public static Component formatUnpluggedBroadcast(Player player) {
-        final var playerName = text(player.getName(), YELLOW);
+        final var playerName = text(player.getName());
         final var unplugged = text(" has unplugged, leaving their character behind");
 
         return playerName.append(unplugged).color(YELLOW);

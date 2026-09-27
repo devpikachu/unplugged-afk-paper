@@ -15,7 +15,7 @@ import java.util.UUID;
  * @param uuid the UUID of the player who unplugged, which their bot shares with them
  * @param name the player's name
  * @param durationMins the window the player asked for, in minutes
- * @param reason the reason the player gave to {@code /unplug}
+ * @param reason the reason the player gave to {@code /unplug}, always plain text and safe to insert literally
  * @param startedAt when the bot was created
  * @param expiresAt when the bot is due to be reaped, being {@code startedAt} plus {@code durationMins}
  * @param isFake whether this is a throwaway bot from {@code /unplugged debug spawn-fake} rather than a real player's

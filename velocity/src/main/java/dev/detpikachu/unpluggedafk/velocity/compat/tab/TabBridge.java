@@ -88,7 +88,7 @@ public final class TabBridge {
 
     public void addBot(String serverName, UUID uuid, String username, Session.@Nullable Skin skin) {
         Log.debug("Building a TAB entry for bot {} ({}) on {}.", username, uuid, serverName);
-        this.dispatch(feature -> this.bots.put(uuid, this.newProxyPlayer(uuid, username, serverName, skin)));
+        this.dispatch(feature -> this.bots.put(uuid, this.newProxyPlayer(serverName, uuid, username, skin)));
         this.refreshLater();
     }
 
@@ -168,7 +168,7 @@ public final class TabBridge {
         }
     }
 
-    private Object newProxyPlayer(UUID uuid, String username, String serverName, Session.@Nullable Skin skin)
+    private Object newProxyPlayer(String serverName, UUID uuid, String username, Session.@Nullable Skin skin)
             throws ReflectiveOperationException {
         final var server = this.serverByName.invoke(null, serverName);
         final var texture = skin == null ? null : this.skin.newInstance(skin.value(), skin.signature());

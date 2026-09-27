@@ -6,6 +6,7 @@ import dev.detpikachu.unpluggedafk.common.network.Protocol;
 import dev.detpikachu.unpluggedafk.common.network.codec.MessageCodec;
 import org.jetbrains.annotations.ApiStatus;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -13,6 +14,8 @@ import java.util.UUID;
 
 @ApiStatus.Internal
 public final class Relay implements Message {
+
+    private static final int PAYLOAD_CHUNK_BYTES = 8192;
 
     private final UUID uuid;
     private final String channel;
@@ -50,10 +53,24 @@ public final class Relay implements Message {
             throw new IOException("Relay payload of " + length + " byte(s) is out of range.");
         }
 
-        final var payload = new byte[length];
-        in.readFully(payload);
+        return new Relay(uuid, channel, readPayload(in, length));
+    }
 
-        return new Relay(uuid, channel, payload);
+    private static byte[] readPayload(DataInput in, int length) throws IOException {
+        final var chunk = new byte[Math.min(length, PAYLOAD_CHUNK_BYTES)];
+        final var payload = new ByteArrayOutputStream(chunk.length);
+
+        var remaining = length;
+
+        while (remaining > 0) {
+            final var taken = Math.min(remaining, chunk.length);
+
+            in.readFully(chunk, 0, taken);
+            payload.write(chunk, 0, taken);
+            remaining -= taken;
+        }
+
+        return payload.toByteArray();
     }
 
     @Override

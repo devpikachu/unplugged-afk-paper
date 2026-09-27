@@ -62,7 +62,7 @@ public final class LuckPermsBridge {
     static @Nullable LuckPermsBridge resolve() {
         try {
             return new LuckPermsBridge(LuckPermsProvider.get());
-        } catch (ReflectiveOperationException | RuntimeException exception) {
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError exception) {
             Log.warn("Could not resolve LuckPerms' internals. Bots will resolve permissions without it.", exception);
             return null;
         }
