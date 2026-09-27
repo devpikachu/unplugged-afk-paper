@@ -10,6 +10,8 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-27
+
 ### Added
 
 - **26.1.2 and 26.2 support:** the plugin now supports Minecraft versions 26.1.2 and 26.2.
@@ -133,7 +135,8 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 - **Capped:** Configurable limit to how many unplugged players can exist at the same time, to prevent resource
   exhaustion on AFK players
 
-[unreleased]: https://github.com/devpikachu/unplugged-afk-paper/compare/v0.6.1...HEAD
+[unreleased]: https://github.com/devpikachu/unplugged-afk-paper/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/devpikachu/unplugged-afk-paper/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/devpikachu/unplugged-afk-paper/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/devpikachu/unplugged-afk-paper/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/devpikachu/unplugged-afk-paper/compare/v0.4.0...v0.5.0
