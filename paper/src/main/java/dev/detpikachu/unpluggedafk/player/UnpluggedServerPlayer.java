@@ -153,7 +153,12 @@ public final class UnpluggedServerPlayer extends ServerPlayer {
             this.connection.player.hasChangedDimension();
         }
 
+        this.pinChunkLoadDistance();
         return this.connection.player;
+    }
+
+    void pinChunkLoadDistance() {
+        this.getBukkitEntity().setViewDistance(this.level().getWorld().getSimulationDistance());
     }
 
     @Override

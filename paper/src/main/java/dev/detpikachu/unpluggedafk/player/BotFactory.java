@@ -94,6 +94,7 @@ public final class BotFactory {
         final var connection = new UnpluggedConnection(server, PacketFlow.SERVERBOUND, profile.id());
 
         final var bot = new UnpluggedServerPlayer(server, level, profile, botInformation, session);
+        bot.pinChunkLoadDistance();
         final var registry = SessionRegistry.getInstance();
 
         registry.add(bot); // placeNewPlayer fires PlayerJoinEvent, where a late registration reads isUnplugged false.
