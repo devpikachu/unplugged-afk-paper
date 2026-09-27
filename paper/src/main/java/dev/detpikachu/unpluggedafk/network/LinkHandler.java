@@ -3,6 +3,7 @@ package dev.detpikachu.unpluggedafk.network;
 import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.common.network.Handshake;
+import dev.detpikachu.unpluggedafk.common.network.Handshake.Role;
 import dev.detpikachu.unpluggedafk.common.network.Message;
 import dev.detpikachu.unpluggedafk.common.network.Protocol;
 import dev.detpikachu.unpluggedafk.common.network.messages.Auth;
@@ -16,6 +17,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.jetbrains.annotations.ApiStatus;
+import org.jspecify.annotations.Nullable;
 
 @ApiStatus.Internal
 public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
@@ -23,7 +25,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     private final LinkClient client;
     private final LinkOptions options;
 
-    private boolean challenged;
+    private @Nullable String nonce;
     private boolean ready;
 
     public LinkHandler(LinkClient client, LinkOptions options) {
@@ -76,7 +78,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     }
 
     private void onChallenge(ChannelHandlerContext context, Challenge challenge) {
-        if (this.challenged) {
+        if (this.nonce != null) {
             this.client.warnOnce("The proxy sent a second CHALLENGE on an open link. Closing.");
             close(context);
             return;
@@ -91,14 +93,17 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
             return;
         }
 
-        final var signature = Handshake.sign(this.options.getSecret(), challenge.nonce());
+        final var signature = Handshake.sign(this.options.getSecret(), Role.BACKEND, challenge.nonce());
+        final var nonce = Handshake.newNonce();
 
-        this.challenged = true;
-        send(context, new Auth(Protocol.VERSION, this.options.getServerName(), signature));
+        this.nonce = nonce;
+        send(context, new Auth(Protocol.VERSION, this.options.getServerName(), signature, nonce));
     }
 
     private void onReady(ChannelHandlerContext context, Ready message) {
-        if (!this.challenged || this.ready) {
+        final var nonce = this.nonce;
+
+        if (nonce == null || this.ready) {
             this.client.warnOnce("The proxy sent an unexpected READY. Closing.");
             close(context);
             return;
@@ -106,6 +111,12 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
 
         if (!message.accepted()) {
             this.client.errorOnce("The proxy refused the link. {}", message.reason());
+            close(context);
+            return;
+        }
+
+        if (!Handshake.verify(this.options.getSecret(), Role.PROXY, nonce, message.signature())) {
+            this.client.errorOnce("The proxy could not prove it holds this backend's link.secret. Closing.");
             close(context);
             return;
         }

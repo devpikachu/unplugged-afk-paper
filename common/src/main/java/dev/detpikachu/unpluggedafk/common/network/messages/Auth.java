@@ -9,7 +9,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 @ApiStatus.Internal
-public record Auth(int protocolVersion, String serverName, String signature) implements Message {
+public record Auth(int protocolVersion, String serverName, String signature, String nonce) implements Message {
 
     @Override
     public MessageType getType() {
@@ -17,7 +17,7 @@ public record Auth(int protocolVersion, String serverName, String signature) imp
     }
 
     public static Auth read(DataInput in) throws IOException {
-        return new Auth(in.readInt(), in.readUTF(), in.readUTF());
+        return new Auth(in.readInt(), in.readUTF(), in.readUTF(), in.readUTF());
     }
 
     @Override
@@ -25,5 +25,6 @@ public record Auth(int protocolVersion, String serverName, String signature) imp
         out.writeInt(this.protocolVersion);
         out.writeUTF(this.serverName);
         out.writeUTF(this.signature);
+        out.writeUTF(this.nonce);
     }
 }

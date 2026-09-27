@@ -6,6 +6,7 @@ import com.velocitypowered.api.proxy.messages.ChannelIdentifier;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.common.network.Handshake;
+import dev.detpikachu.unpluggedafk.common.network.Handshake.Role;
 import dev.detpikachu.unpluggedafk.common.network.Message;
 import dev.detpikachu.unpluggedafk.common.network.Protocol;
 import dev.detpikachu.unpluggedafk.common.network.messages.Auth;
@@ -157,7 +158,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
             return;
         }
 
-        if (this.nonce == null || !Handshake.verify(this.secret, this.nonce, auth.signature())) {
+        if (this.nonce == null || !Handshake.verify(this.secret, Role.BACKEND, this.nonce, auth.signature())) {
             refuse(context, "The backend's link.secret does not match this proxy's.");
             return;
         }
@@ -187,7 +188,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
         this.serverName = auth.serverName();
         context.pipeline()
                 .replace(ReadTimeoutHandler.class, "timeout", new ReadTimeoutHandler(Protocol.IDLE_TIMEOUT_SECS));
-        send(context, new Ready(true, ""));
+        send(context, new Ready(true, "", Handshake.sign(this.secret, Role.PROXY, auth.nonce())));
         Log.info(
                 "Backend {} linked from {}.",
                 auth.serverName(),
@@ -308,7 +309,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     private void refuse(ChannelHandlerContext context, String reason) {
         this.refused = true;
         Log.warn("Refusing a link from {}. {}", context.channel().remoteAddress(), reason);
-        sendAndClose(context, new Ready(false, reason));
+        sendAndClose(context, new Ready(false, reason, ""));
     }
 
     private static String alreadyLinked(String serverName) {

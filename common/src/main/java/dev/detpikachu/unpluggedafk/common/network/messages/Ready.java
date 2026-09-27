@@ -9,7 +9,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 @ApiStatus.Internal
-public record Ready(boolean accepted, String reason) implements Message {
+public record Ready(boolean accepted, String reason, String signature) implements Message {
 
     @Override
     public MessageType getType() {
@@ -17,12 +17,13 @@ public record Ready(boolean accepted, String reason) implements Message {
     }
 
     public static Ready read(DataInput in) throws IOException {
-        return new Ready(in.readBoolean(), in.readUTF());
+        return new Ready(in.readBoolean(), in.readUTF(), in.readUTF());
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeBoolean(this.accepted);
         out.writeUTF(this.reason);
+        out.writeUTF(this.signature);
     }
 }

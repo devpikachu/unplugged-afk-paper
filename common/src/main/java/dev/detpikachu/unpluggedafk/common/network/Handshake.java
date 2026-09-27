@@ -27,11 +27,13 @@ public final class Handshake {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(token);
     }
 
-    public static String sign(String secret, String nonce) {
+    public static String sign(String secret, Role signer, String nonce) {
+        final var message = signer.name() + ':' + nonce;
+
         try {
             final var mac = Mac.getInstance(ALGORITHM);
             mac.init(new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), ALGORITHM));
-            final var signed = mac.doFinal(nonce.getBytes(StandardCharsets.UTF_8));
+            final var signed = mac.doFinal(message.getBytes(StandardCharsets.UTF_8));
 
             return Base64.getUrlEncoder().withoutPadding().encodeToString(signed);
         } catch (GeneralSecurityException exception) {
@@ -39,9 +41,14 @@ public final class Handshake {
         }
     }
 
-    public static boolean verify(String secret, String nonce, String signature) {
-        final var expected = sign(secret, nonce).getBytes(StandardCharsets.UTF_8);
+    public static boolean verify(String secret, Role signer, String nonce, String signature) {
+        final var expected = sign(secret, signer, nonce).getBytes(StandardCharsets.UTF_8);
 
         return MessageDigest.isEqual(expected, signature.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public enum Role {
+        BACKEND,
+        PROXY
     }
 }
