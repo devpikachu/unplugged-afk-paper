@@ -12,11 +12,11 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ### Added
 
+- **26.1.2 and 26.2 support:** the plugin now supports Minecraft versions 26.1.2 and 26.2.
 - **Mutual authentication:** the plugin now requires both the proxy and the backend to authenticate when establishing
   the link.
 - **ConfigLib:** migrated to using ConfigLib
 - **Fake bots proxy presence:** fake bots now get a proper presence on the proxy
-- **26.1.2 and 26.2 support:** the plugin now supports Minecraft versions 26.1.2 and 26.2.
 
 ### Changed
 
@@ -24,6 +24,7 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
   server load; simulation distance is unaffected.
 - **Plain-text reason:** the reason can no longer contain formatting characters, thus preventing a whole host of
   formatting issues related to placeholders.
+- **Bots are immediately AFK:** bots are marked as AFK immediately on unplug in supported plugins.
 
 ### Fixed
 
@@ -31,6 +32,8 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
   showing the Mojang username.
 - **TAB missing ordering:** bots in TAB will now correctly order according to server setup instead of showing
   bots at the top.
+- **Bots not AFKing in CMI:** bots will now correctly be marked as AFK by CMI.
+- **Prevent AFK kick in CMI:** bots will now ignore CMI AFK kicks.
 
 
 ## [0.6.1] - 2026-08-26

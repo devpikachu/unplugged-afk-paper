@@ -152,6 +152,9 @@ repositories {
     maven("https://repo.extendedclip.com/releases") {
         content { includeGroup("me.clip") }
     }
+    maven("https://jitpack.io") {
+        content { includeGroup("com.github.Zrips") }
+    }
 }
 
 base {
@@ -190,6 +193,9 @@ dependencies {
     backendShared(libs.placeholderapi)
     backendShared(libs.luckperms.api)
     backendShared(libs.miniplaceholders.api)
+    backendShared(libs.cmi.api) {
+        isTransitive = false
+    }
 
     // Annotations
     backendShared(libs.errorprone.annotations)

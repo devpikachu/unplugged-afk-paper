@@ -24,6 +24,7 @@ until the time you declared runs out.
 - **Admin control:** commands to inspect who is unplugged, and to debug the plugin's behaviour
 - **Placeholder aware:** with PlaceholderAPI or MiniPlaceholders installed, scoreboards, tab lists and chat plugins can
   show who is unplugged and for how long
+- **CMI aware:** with CMI installed, the unplugged player is marked AFK as soon as it appears and is never AFK-kicked
 - **Proxy aware:** behind Velocity, unplugging disconnects you from the whole network, returning puts you back on the
   server your unplugged player is on, and the server list still counts it
 
