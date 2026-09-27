@@ -14,6 +14,7 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 - **Mutual authentication:** the plugin now requires both the proxy and the backend to authenticate when establishing
   the link.
+- **ConfigLib**: migrated to using ConfigLib
 
 ### Changed
 

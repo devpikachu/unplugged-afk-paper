@@ -1,7 +1,7 @@
 package dev.detpikachu.unpluggedafk.format;
 
 import dev.detpikachu.unpluggedafk.common.formatting.DurationFormatting;
-import dev.detpikachu.unpluggedafk.config.Options;
+import dev.detpikachu.unpluggedafk.config.Config;
 import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import net.kyori.adventure.text.Component;
@@ -103,7 +103,7 @@ public final class ChatMessages {
         final var unpluggedValue = text(unplugged, GOLD);
         final var pendingMarker = formatPendingMarker(unplugging);
         final var separator = text("/");
-        final var capValue = text(Options.getInstance().getMaxUnpluggedPlayers(), GOLD);
+        final var capValue = text(Config.get().getMaxUnpluggedPlayers(), GOLD);
 
         return label.append(unpluggedValue)
                 .append(pendingMarker)

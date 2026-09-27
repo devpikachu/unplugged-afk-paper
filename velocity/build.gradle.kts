@@ -35,7 +35,6 @@ dependencies {
     compileOnly(libs.netty.codec.base)
     compileOnly(libs.netty.handler)
     compileOnly(libs.netty.transport)
-    implementation(libs.snakeyaml)
 
     // Annotations
     compileOnly(libs.jspecify)
@@ -56,7 +55,6 @@ tasks {
 
         relocate("de.exlll.configlib", "dev.detpikachu.unpluggedafk.libs.configlib")
         relocate("org.snakeyaml.engine", "dev.detpikachu.unpluggedafk.libs.snakeyaml.engine")
-        relocate("org.yaml.snakeyaml", "dev.detpikachu.unpluggedafk.velocity.libs.snakeyaml")
     }
 }
 

@@ -1,40 +1,41 @@
 package dev.detpikachu.unpluggedafk.config;
 
-import org.bukkit.configuration.file.FileConfiguration;
+import de.exlll.configlib.Comment;
+import de.exlll.configlib.Configuration;
+import de.exlll.configlib.PostProcess;
+import dev.detpikachu.unpluggedafk.common.config.Clamps;
 import org.jetbrains.annotations.ApiStatus;
 
 @ApiStatus.Internal
-public final class Options extends OptionsBase {
+@Configuration
+public final class Options {
 
-    private static final Options INSTANCE = new Options();
+    static final int CURRENT_VERSION = 1;
 
-    private static final boolean DEFAULT_DEBUG = false;
     private static final int DEFAULT_MAX_UNPLUGGED_PLAYERS = 16;
     private static final int DEFAULT_MAX_DURATION_MINS = 480;
 
-    private static final String KEY_DEBUG = "debug";
-    private static final String KEY_MAX_UNPLUGGED_PLAYERS = "maxUnpluggedPlayers";
-    private static final String KEY_MAX_DURATION_MINS = "maxDurationMins";
+    @Comment("The shape of this file, which the plugin upgrades on its own. Do not edit it.")
+    private int version = CURRENT_VERSION;
 
-    private boolean isDebug = DEFAULT_DEBUG;
+    @Comment("Enables the /unplugged debug commands and a dump file for every unplug.")
+    private boolean debug = false;
+
+    @Comment("How many unplugged players may exist at the same time, at least 1.")
     private int maxUnpluggedPlayers = DEFAULT_MAX_UNPLUGGED_PLAYERS;
+
+    @Comment("The longest a player may unplug for, in minutes, at least 1.")
     private int maxDurationMins = DEFAULT_MAX_DURATION_MINS;
 
+    @Comment("The link to the Unplugged AFK companion on the proxy. Only used behind a Velocity proxy.")
     private LinkOptions link = new LinkOptions();
 
-    public static Options getInstance() {
-        return INSTANCE;
-    }
-
-    public static void deserialize(FileConfiguration config) {
-        INSTANCE.isDebug = config.getBoolean(KEY_DEBUG, DEFAULT_DEBUG);
-        INSTANCE.maxUnpluggedPlayers = atLeastOne(config, KEY_MAX_UNPLUGGED_PLAYERS, DEFAULT_MAX_UNPLUGGED_PLAYERS);
-        INSTANCE.maxDurationMins = atLeastOne(config, KEY_MAX_DURATION_MINS, DEFAULT_MAX_DURATION_MINS);
-        INSTANCE.link.deserialize(config);
+    public int getVersion() {
+        return this.version;
     }
 
     public boolean isDebug() {
-        return this.isDebug;
+        return this.debug;
     }
 
     public int getMaxUnpluggedPlayers() {
@@ -47,5 +48,12 @@ public final class Options extends OptionsBase {
 
     public LinkOptions getLink() {
         return this.link;
+    }
+
+    @PostProcess
+    void clamp() {
+        this.maxUnpluggedPlayers =
+                Clamps.atLeastOne("maxUnpluggedPlayers", this.maxUnpluggedPlayers, DEFAULT_MAX_UNPLUGGED_PLAYERS);
+        this.maxDurationMins = Clamps.atLeastOne("maxDurationMins", this.maxDurationMins, DEFAULT_MAX_DURATION_MINS);
     }
 }

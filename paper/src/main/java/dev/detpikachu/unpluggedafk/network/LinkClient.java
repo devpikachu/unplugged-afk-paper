@@ -12,7 +12,7 @@ import dev.detpikachu.unpluggedafk.common.network.messages.SessionAck;
 import dev.detpikachu.unpluggedafk.common.network.messages.SessionEnd;
 import dev.detpikachu.unpluggedafk.common.network.messages.SessionStart;
 import dev.detpikachu.unpluggedafk.common.network.messages.Sync;
-import dev.detpikachu.unpluggedafk.config.Options;
+import dev.detpikachu.unpluggedafk.config.Config;
 import dev.detpikachu.unpluggedafk.format.ChatMessages;
 import dev.detpikachu.unpluggedafk.player.UnpluggedServerPlayer;
 import dev.detpikachu.unpluggedafk.session.Session;
@@ -74,7 +74,7 @@ public final class LinkClient {
             return;
         }
 
-        final var options = Options.getInstance().getLink();
+        final var options = Config.get().getLink();
         final var group = new MultiThreadIoEventLoopGroup(WORKER_THREADS, NioIoHandler.newFactory());
 
         this.quiet = false;

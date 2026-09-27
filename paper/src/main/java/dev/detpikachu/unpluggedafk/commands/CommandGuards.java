@@ -4,7 +4,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import dev.detpikachu.unpluggedafk.Permissions;
 import dev.detpikachu.unpluggedafk.common.logging.Log;
-import dev.detpikachu.unpluggedafk.config.Options;
+import dev.detpikachu.unpluggedafk.config.Config;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.minecraft.server.level.ServerPlayer;
@@ -36,7 +36,7 @@ public final class CommandGuards {
 
     public static int requireDuration(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         final var durationMins = context.getArgument(ARG_DURATION_MINS, int.class);
-        final var maxDurationMins = Options.getInstance().getMaxDurationMins();
+        final var maxDurationMins = Config.get().getMaxDurationMins();
 
         if (durationMins > maxDurationMins) {
             Log.debug(
@@ -85,7 +85,7 @@ public final class CommandGuards {
     }
 
     public static void requireCapacity() throws CommandSyntaxException {
-        final var maxUnpluggedPlayers = Options.getInstance().getMaxUnpluggedPlayers();
+        final var maxUnpluggedPlayers = Config.get().getMaxUnpluggedPlayers();
 
         if (SessionRegistry.getInstance().count() >= maxUnpluggedPlayers) {
             Log.warn(

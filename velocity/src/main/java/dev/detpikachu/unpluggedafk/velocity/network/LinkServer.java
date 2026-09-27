@@ -7,7 +7,7 @@ import dev.detpikachu.unpluggedafk.common.network.codec.MessageEncoder;
 import dev.detpikachu.unpluggedafk.common.network.messages.Relay;
 import dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity;
 import dev.detpikachu.unpluggedafk.velocity.compat.tab.TabBridge;
-import dev.detpikachu.unpluggedafk.velocity.config.Options;
+import dev.detpikachu.unpluggedafk.velocity.config.Config;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -50,7 +50,7 @@ public final class LinkServer {
 
     @SuppressWarnings("FutureReturnValueIgnored")
     public void start(UnpluggedAfkVelocity plugin, BotPlayerBridge botPlayerBridge, @Nullable TabBridge tabBridge) {
-        final var options = Options.getInstance().getLink();
+        final var options = Config.get().getLink();
         final var acceptorGroup = new MultiThreadIoEventLoopGroup(ACCEPTOR_THREADS, NioIoHandler.newFactory());
         final var workerGroup = new MultiThreadIoEventLoopGroup(WORKER_THREADS, NioIoHandler.newFactory());
 

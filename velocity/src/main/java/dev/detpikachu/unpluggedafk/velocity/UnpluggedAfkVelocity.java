@@ -11,7 +11,7 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.velocity.compat.miniplaceholders.MiniPlaceholdersCompat;
 import dev.detpikachu.unpluggedafk.velocity.compat.tab.TabCompat;
-import dev.detpikachu.unpluggedafk.velocity.config.Options;
+import dev.detpikachu.unpluggedafk.velocity.config.Config;
 import dev.detpikachu.unpluggedafk.velocity.listeners.ProxyListener;
 import dev.detpikachu.unpluggedafk.velocity.network.BotPlayerBridge;
 import dev.detpikachu.unpluggedafk.velocity.network.LinkServer;
@@ -44,7 +44,7 @@ public final class UnpluggedAfkVelocity {
 
     @Inject
     public UnpluggedAfkVelocity(Logger logger, ProxyServer proxyServer, @DataDirectory Path dataDirectory) {
-        Log.configure(logger, () -> Options.getInstance().isDebug());
+        Log.configure(logger, () -> Config.get().isDebug());
 
         this.proxyServer = proxyServer;
         this.sessionStore = new SessionStore();
@@ -78,7 +78,10 @@ public final class UnpluggedAfkVelocity {
         }
 
         this.botPlayerBridge = botPlayerBridge;
-        Options.deserialize(this.dataDirectory);
+
+        if (!Config.load(this.dataDirectory)) {
+            return;
+        }
 
         final var tabBridge = TabCompat.register(this);
         MiniPlaceholdersCompat.register(this);
@@ -88,7 +91,7 @@ public final class UnpluggedAfkVelocity {
         final var listener = new ProxyListener(this, botPlayerBridge, tabBridge);
         this.proxyServer.getEventManager().register(this, listener);
 
-        final var linkOptions = Options.getInstance().getLink();
+        final var linkOptions = Config.get().getLink();
         Log.info(
                 "Unplugged AFK has been enabled. Link listening on {}:{}.",
                 linkOptions.getHost(),

@@ -2,7 +2,7 @@ package dev.detpikachu.unpluggedafk.commands.admin.debug;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import dev.detpikachu.unpluggedafk.Permissions;
-import dev.detpikachu.unpluggedafk.config.Options;
+import dev.detpikachu.unpluggedafk.config.Config;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import org.jetbrains.annotations.ApiStatus;
@@ -19,6 +19,6 @@ public final class AdminDebugCommands {
     }
 
     private static boolean isDebug(CommandSourceStack stack) {
-        return Options.getInstance().isDebug() && stack.getSender().hasPermission(Permissions.ADMIN_DEBUG);
+        return Config.get().isDebug() && stack.getSender().hasPermission(Permissions.ADMIN_DEBUG);
     }
 }

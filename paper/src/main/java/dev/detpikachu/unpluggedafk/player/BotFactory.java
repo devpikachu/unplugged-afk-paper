@@ -6,7 +6,7 @@ import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerSpawnEvent;
 import dev.detpikachu.unpluggedafk.common.logging.Log;
-import dev.detpikachu.unpluggedafk.config.Options;
+import dev.detpikachu.unpluggedafk.config.Config;
 import dev.detpikachu.unpluggedafk.session.Session;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
@@ -247,7 +247,7 @@ public final class BotFactory {
                     (int) bot.getZ(),
                     bot.level().dimension().identifier(),
                     SessionRegistry.getInstance().count(),
-                    Options.getInstance().getMaxUnpluggedPlayers());
+                    Config.get().getMaxUnpluggedPlayers());
 
             new UnpluggedPlayerSpawnEvent(bot.getBukkitEntity(), bot.toInfo()).callEvent();
         }

@@ -1,15 +1,12 @@
-package dev.detpikachu.unpluggedafk.config;
+package dev.detpikachu.unpluggedafk.common.config;
 
 import dev.detpikachu.unpluggedafk.common.logging.Log;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.ApiStatus;
 
 @ApiStatus.Internal
-public abstract class OptionsBase {
+public final class Clamps {
 
-    protected static int atLeastOne(FileConfiguration config, String key, int defaultValue) {
-        final var value = config.getInt(key, defaultValue);
-
+    public static int atLeastOne(String key, int value, int fallback) {
         if (value >= 1) {
             return value;
         }
@@ -18,13 +15,11 @@ public abstract class OptionsBase {
                 "{} of {} is invalid. The value must be greater than or equal to 1. Resetting to {}.",
                 key,
                 value,
-                defaultValue);
-        return defaultValue;
+                fallback);
+        return fallback;
     }
 
-    protected static int inRange(FileConfiguration config, String key, int defaultValue, int min, int max) {
-        final var value = config.getInt(key, defaultValue);
-
+    public static int inRange(String key, int value, int fallback, int min, int max) {
         if (value >= min && value <= max) {
             return value;
         }
@@ -35,7 +30,7 @@ public abstract class OptionsBase {
                 value,
                 min,
                 max,
-                defaultValue);
-        return defaultValue;
+                fallback);
+        return fallback;
     }
 }

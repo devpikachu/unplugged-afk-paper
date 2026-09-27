@@ -16,7 +16,7 @@ java {
 
 dependencies {
     // Dependencies
-    implementation(libs.configlib.core)
+    api(libs.configlib.core)
     implementation(libs.configlib.yaml)
     implementation(libs.snakeyaml.engine)
     compileOnly(libs.netty.buffer)

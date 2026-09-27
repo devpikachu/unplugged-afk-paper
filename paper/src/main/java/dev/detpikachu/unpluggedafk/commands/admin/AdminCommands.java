@@ -3,7 +3,7 @@ package dev.detpikachu.unpluggedafk.commands.admin;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import dev.detpikachu.unpluggedafk.Permissions;
 import dev.detpikachu.unpluggedafk.commands.admin.debug.AdminDebugCommands;
-import dev.detpikachu.unpluggedafk.config.Options;
+import dev.detpikachu.unpluggedafk.config.Config;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import org.jetbrains.annotations.ApiStatus;
@@ -28,6 +28,6 @@ public final class AdminCommands {
         return sender.hasPermission(Permissions.ADMIN)
                 || sender.hasPermission(Permissions.ADMIN_INFO)
                 || sender.hasPermission(Permissions.ADMIN_LIST)
-                || (Options.getInstance().isDebug() && sender.hasPermission(Permissions.ADMIN_DEBUG));
+                || (Config.get().isDebug() && sender.hasPermission(Permissions.ADMIN_DEBUG));
     }
 }

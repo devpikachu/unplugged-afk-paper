@@ -5,7 +5,7 @@ import dev.detpikachu.unpluggedafk.UnpluggedAfk;
 import dev.detpikachu.unpluggedafk.api.events.PlayerUnplugEvent;
 import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.common.network.messages.SessionAck;
-import dev.detpikachu.unpluggedafk.config.Options;
+import dev.detpikachu.unpluggedafk.config.Config;
 import dev.detpikachu.unpluggedafk.exceptions.PlayerStillConnectedException;
 import dev.detpikachu.unpluggedafk.exceptions.ProxyUnavailableException;
 import dev.detpikachu.unpluggedafk.exceptions.UnplugCancelledException;
@@ -44,7 +44,7 @@ public final class UnplugService {
 
         Log.info("Unplugging {} ({}) for {} minute(s): {}", name, uuid, session.durationMins(), session.reason());
 
-        if (Options.getInstance().isDebug()) {
+        if (Config.get().isDebug()) {
             DumpWriter.write(player.getBukkitEntity(), session);
         }
 

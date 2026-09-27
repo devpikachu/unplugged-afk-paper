@@ -1,82 +1,24 @@
 package dev.detpikachu.unpluggedafk.velocity.config;
 
-import dev.detpikachu.unpluggedafk.common.logging.Log;
+import de.exlll.configlib.Configuration;
+import de.exlll.configlib.PostProcess;
+import dev.detpikachu.unpluggedafk.common.config.LinkOptionsBase;
 import dev.detpikachu.unpluggedafk.common.network.Handshake;
 import org.jetbrains.annotations.ApiStatus;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 @ApiStatus.Internal
-public final class LinkOptions extends OptionsBase {
+@Configuration
+public final class LinkOptions extends LinkOptionsBase {
 
-    private static final String DEFAULT_HOST = "127.0.0.1";
-    private static final int DEFAULT_PORT = 25580;
-    private static final String DEFAULT_SECRET = "";
-
-    private static final String KEY_SECTION = "link";
-    private static final String KEY_HOST = "host";
-    private static final String KEY_PORT = "port";
-    private static final String KEY_SECRET = "secret";
-
-    private static final int MIN_PORT = 1;
-    private static final int MAX_PORT = 65535;
     private static final int SECRET_BYTES = 32;
 
-    private final String host;
-    private final int port;
-    private final String secret;
-
-    public LinkOptions() {
-        this(DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SECRET);
+    void mintSecret() {
+        this.setSecret(Handshake.newToken(SECRET_BYTES));
     }
 
-    private LinkOptions(String host, int port, String secret) {
-        this.host = host;
-        this.port = port;
-        this.secret = secret;
-    }
-
-    public static LinkOptions deserialize(Map<?, ?> values) {
-        final var section = values.get(KEY_SECTION) instanceof Map<?, ?> nested ? nested : Map.of();
-
-        return new LinkOptions(
-                string(section, KEY_HOST, DEFAULT_HOST), port(section), string(section, KEY_SECRET, DEFAULT_SECRET));
-    }
-
-    public String getHost() {
-        return this.host;
-    }
-
-    public int getPort() {
-        return this.port;
-    }
-
-    public String getSecret() {
-        return this.secret;
-    }
-
-    public LinkOptions withGeneratedSecret() {
-        return new LinkOptions(this.host, this.port, Handshake.newToken(SECRET_BYTES));
-    }
-
-    public Map<String, Object> serialize() {
-        final var section = new LinkedHashMap<String, Object>();
-        section.put(KEY_HOST, this.host);
-        section.put(KEY_PORT, this.port);
-        section.put(KEY_SECRET, this.secret);
-
-        return Map.of(KEY_SECTION, section);
-    }
-
-    private static int port(Map<?, ?> section) {
-        final var port = integer(section, KEY_PORT, DEFAULT_PORT);
-
-        if (port >= MIN_PORT && port <= MAX_PORT) {
-            return port;
-        }
-
-        Log.warn("link.port of {} is outside {}-{}. Resetting to {}.", port, MIN_PORT, MAX_PORT, DEFAULT_PORT);
-        return DEFAULT_PORT;
+    @PostProcess
+    void normalize() {
+        this.resetBlankHost();
+        this.clampPort();
     }
 }

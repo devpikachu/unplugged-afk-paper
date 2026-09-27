@@ -9,7 +9,7 @@ import dev.detpikachu.unpluggedafk.compat.luckperms.LuckPermsCompat;
 import dev.detpikachu.unpluggedafk.compat.miniplaceholders.MiniPlaceholdersCompat;
 import dev.detpikachu.unpluggedafk.compat.packetevents.PacketEventsCompat;
 import dev.detpikachu.unpluggedafk.compat.placeholderapi.PlaceholderApiCompat;
-import dev.detpikachu.unpluggedafk.config.Options;
+import dev.detpikachu.unpluggedafk.config.Config;
 import dev.detpikachu.unpluggedafk.listeners.PaperListener;
 import dev.detpikachu.unpluggedafk.network.LinkClient;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
@@ -47,13 +47,10 @@ public final class UnpluggedAfk extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        Log.configure(this.getComponentLogger(), () -> Options.getInstance().isDebug());
+        Log.configure(this.getComponentLogger(), () -> Config.get().isDebug());
         this.warnOnVersionMismatch();
 
-        this.saveDefaultConfig();
-        Options.deserialize(this.getConfig());
-
-        if (!this.hasRequiredLink()) {
+        if (!Config.load(this.getDataPath()) || !this.hasRequiredLink()) {
             this.getServer().getPluginManager().disablePlugin(this);
             return;
         }
@@ -110,7 +107,7 @@ public final class UnpluggedAfk extends JavaPlugin {
     }
 
     private void logStartupSummary() {
-        final var options = Options.getInstance();
+        final var options = Config.get();
 
         Log.info(
                 "Enabled for Minecraft {}. maxUnpluggedPlayers={}, maxDurationMins={}",
@@ -146,7 +143,7 @@ public final class UnpluggedAfk extends JavaPlugin {
             return true;
         }
 
-        if (Options.getInstance().getLink().isValid()) {
+        if (Config.get().getLink().isValid()) {
             return true;
         }
 

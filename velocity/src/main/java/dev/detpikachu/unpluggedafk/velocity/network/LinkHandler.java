@@ -21,7 +21,7 @@ import dev.detpikachu.unpluggedafk.common.network.messages.SessionStart;
 import dev.detpikachu.unpluggedafk.common.network.messages.Sync;
 import dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity;
 import dev.detpikachu.unpluggedafk.velocity.compat.tab.TabBridge;
-import dev.detpikachu.unpluggedafk.velocity.config.Options;
+import dev.detpikachu.unpluggedafk.velocity.config.Config;
 import dev.detpikachu.unpluggedafk.velocity.session.Session;
 import dev.detpikachu.unpluggedafk.velocity.session.SessionStore;
 import io.netty.channel.ChannelFutureListener;
@@ -62,7 +62,7 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
         this.tabBridge = tabBridge;
         this.proxyServer = plugin.getProxyServer();
         this.sessionStore = plugin.getSessionStore();
-        this.secret = Options.getInstance().getLink().getSecret();
+        this.secret = Config.get().getLink().getSecret();
     }
 
     @Override

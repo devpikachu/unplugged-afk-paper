@@ -71,6 +71,7 @@ Each release ships two JARs. Install both from the same release. Mixed versions 
 
 | Key                   | Description                                                | Default     | Minimum | Maximum |
 |-----------------------|------------------------------------------------------------|-------------|---------|---------|
+| `version`             | The file's shape. The plugin upgrades it, do not edit      | `1`         |         |         |
 | `debug`               | Enables debug functionality. See [Debug Mode](#debug-mode) | `false`     |         |         |
 | `maxUnpluggedPlayers` | How many unplugged players may exist at the same time      | `16`        | `1`     |         |
 | `maxDurationMins`     | The longest a player may unplug for, in minutes            | `480`       | `1`     |         |
@@ -90,6 +91,7 @@ are set.
 
 | Key           | Description                                                       | Default     | Minimum | Maximum |
 |---------------|-------------------------------------------------------------------|-------------|---------|---------|
+| `version`     | The file's shape. The plugin upgrades it, do not edit             | `1`         |         |         |
 | `debug`       | Logs link, presence and relay activity to the console             | `false`     |         |         |
 | `link.host`   | The address to listen on. Widen it for backends on other machines | `127.0.0.1` |         |         |
 | `link.port`   | The port to listen on                                             | `25580`     | `1`     | `65535` |

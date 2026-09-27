@@ -1,7 +1,7 @@
 package dev.detpikachu.unpluggedafk.commands;
 
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
-import dev.detpikachu.unpluggedafk.config.Options;
+import dev.detpikachu.unpluggedafk.config.Config;
 import io.papermc.paper.command.brigadier.MessageComponentSerializer;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.ApiStatus;
@@ -52,7 +52,7 @@ public final class CommandErrors {
                 .serialize(text("The duration of ")
                         .append(text(durationMins))
                         .append(text(" minute(s) is larger than the allowed maximum of "))
-                        .append(text(Options.getInstance().getMaxDurationMins()))
+                        .append(text(Config.get().getMaxDurationMins()))
                         .append(text(" minute(s)."))
                         .color(RED)));
     }
@@ -60,7 +60,7 @@ public final class CommandErrors {
     public static SimpleCommandExceptionType errCapReached() {
         return new SimpleCommandExceptionType(MessageComponentSerializer.message()
                 .serialize(text("The server already has ")
-                        .append(text(Options.getInstance().getMaxUnpluggedPlayers()))
+                        .append(text(Config.get().getMaxUnpluggedPlayers()))
                         .append(text(" unplugged player(s). Please try again later."))
                         .color(RED)));
     }
