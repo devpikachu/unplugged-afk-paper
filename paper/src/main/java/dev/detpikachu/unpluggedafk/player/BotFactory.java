@@ -9,6 +9,7 @@ import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.config.Config;
 import dev.detpikachu.unpluggedafk.session.Session;
 import dev.detpikachu.unpluggedafk.session.SessionRegistry;
+import dev.detpikachu.unpluggedafk.session.UnplugService;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import io.papermc.paper.util.KeepAlive;
 import net.minecraft.nbt.CompoundTag;
@@ -236,6 +237,11 @@ public final class BotFactory {
                         this.name,
                         this.uuid,
                         exception);
+
+                if (SessionRegistry.getInstance().find(this.uuid) == null) {
+                    UnpluggedAfk.getInstance().getLinkClient().endSession(this.uuid, UnplugService.END_ABORTED);
+                }
+
                 return;
             }
 

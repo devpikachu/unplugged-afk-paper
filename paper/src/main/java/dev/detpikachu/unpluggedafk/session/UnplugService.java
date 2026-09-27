@@ -30,7 +30,7 @@ import static net.kyori.adventure.text.Component.text;
 @ApiStatus.Internal
 public final class UnplugService {
 
-    private static final String END_ABORTED = "ABORTED";
+    public static final String END_ABORTED = "ABORTED";
 
     public static void unplug(ServerPlayer player, Session session) throws UnplugFailedException {
         final var registry = SessionRegistry.getInstance();
