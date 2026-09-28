@@ -10,13 +10,11 @@ import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
 import com.velocitypowered.api.proxy.ProxyServer;
 import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity;
-import dev.detpikachu.unpluggedafk.velocity.compat.tab.TabBridge;
 import dev.detpikachu.unpluggedafk.velocity.network.BotPlayerBridge;
 import dev.detpikachu.unpluggedafk.velocity.network.LinkServer;
 import dev.detpikachu.unpluggedafk.velocity.session.SessionStore;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.ApiStatus;
-import org.jspecify.annotations.Nullable;
 
 import static net.kyori.adventure.text.Component.text;
 
@@ -29,14 +27,12 @@ public final class ProxyListener {
     private final SessionStore sessionStore;
     private final LinkServer linkServer;
     private final BotPlayerBridge botPlayerBridge;
-    private final @Nullable TabBridge tabBridge;
 
-    public ProxyListener(UnpluggedAfkVelocity plugin, BotPlayerBridge botPlayerBridge, @Nullable TabBridge tabBridge) {
+    public ProxyListener(UnpluggedAfkVelocity plugin, BotPlayerBridge botPlayerBridge) {
         this.proxyServer = plugin.getProxyServer();
         this.sessionStore = plugin.getSessionStore();
         this.linkServer = plugin.getLinkServer();
         this.botPlayerBridge = botPlayerBridge;
-        this.tabBridge = tabBridge;
     }
 
     @Subscribe
@@ -54,7 +50,7 @@ public final class ProxyListener {
         this.botPlayerBridge.remove(event.getGameProfile().getId());
     }
 
-    @Subscribe
+    @Subscribe(priority = Short.MIN_VALUE)
     public void onDisconnect(DisconnectEvent event) {
         final var player = event.getPlayer();
         Log.debug(
@@ -97,10 +93,6 @@ public final class ProxyListener {
 
     private void chooseInitialServer(PlayerChooseInitialServerEvent event) {
         final var player = event.getPlayer();
-        if (this.tabBridge != null) {
-            this.tabBridge.forget(player.getUniqueId());
-        }
-
         final var session = this.sessionStore.consume(player.getUniqueId());
         if (session.isEmpty()) {
             return;

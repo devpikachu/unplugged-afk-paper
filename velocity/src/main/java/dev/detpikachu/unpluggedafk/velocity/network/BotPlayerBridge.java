@@ -10,6 +10,7 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 import com.velocitypowered.api.util.GameProfile;
 import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity;
+import dev.detpikachu.unpluggedafk.velocity.compat.tab.TabBridge;
 import dev.detpikachu.unpluggedafk.velocity.session.Session;
 import io.netty.buffer.ByteBufHolder;
 import io.netty.buffer.ByteBufUtil;
@@ -54,6 +55,7 @@ public final class BotPlayerBridge {
 
     private final ProxyServer proxyServer;
     private final LinkServer linkServer;
+    private final @Nullable TabBridge tabBridge;
 
     private final Constructor<?> minecraftConnection;
     private final Field protocolVersion;
@@ -71,7 +73,8 @@ public final class BotPlayerBridge {
     private final ConcurrentHashMap<UUID, Pending> pending = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, Bot> bots = new ConcurrentHashMap<>();
 
-    public BotPlayerBridge(UnpluggedAfkVelocity plugin) throws ReflectiveOperationException {
+    public BotPlayerBridge(UnpluggedAfkVelocity plugin, @Nullable TabBridge tabBridge)
+            throws ReflectiveOperationException {
         final var velocityServerClass = Class.forName(LOCATOR_VELOCITY_SERVER);
         final var minecraftConnectionClass = Class.forName(LOCATOR_MINECRAFT_CONNECTION);
         final var connectedPlayerClass = Class.forName(LOCATOR_CONNECTED_PLAYER);
@@ -81,6 +84,7 @@ public final class BotPlayerBridge {
 
         this.proxyServer = plugin.getProxyServer();
         this.linkServer = plugin.getLinkServer();
+        this.tabBridge = tabBridge;
 
         this.minecraftConnection = minecraftConnectionClass.getConstructor(Channel.class, velocityServerClass);
         this.protocolVersion = minecraftConnectionClass.getDeclaredField("protocolVersion");
@@ -176,6 +180,10 @@ public final class BotPlayerBridge {
             this.bots.put(uuid, new Bot(bot, (ServerConnection) connection, server.get()));
             this.addPlayer.invoke(server.get(), bot);
             Log.debug("Gave bot {} ({}) a proxy connection on {}.", username, uuid, serverName);
+
+            if (this.tabBridge != null) {
+                this.tabBridge.addBot(bot);
+            }
         } catch (ReflectiveOperationException | RuntimeException exception) {
             Log.warn(
                     "Could not register bot {} ({}) with the proxy. Some functionality will be disabled.",
@@ -242,6 +250,10 @@ public final class BotPlayerBridge {
     private void drop(@Nullable Bot bot) {
         if (bot == null) {
             return;
+        }
+
+        if (this.tabBridge != null) {
+            this.tabBridge.removeBot(bot.player());
         }
 
         try {

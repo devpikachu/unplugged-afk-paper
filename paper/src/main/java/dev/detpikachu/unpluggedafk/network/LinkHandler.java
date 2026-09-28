@@ -133,7 +133,14 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     }
 
     private static void deliver(Relay relay) {
-        final var bot = SessionRegistry.getInstance().find(relay.getUuid());
+        final var registry = SessionRegistry.getInstance();
+        final var bot = registry.find(relay.getUuid());
+
+        if (bot == null && registry.isUnplugging(relay.getUuid())) {
+            final var plugin = UnpluggedAfk.getInstance();
+            plugin.getServer().getGlobalRegionScheduler().runDelayed(plugin, task -> deliver(relay), 1L);
+            return;
+        }
 
         if (bot == null) {
             Log.debug("Dropped a relayed message on {}. Bot {} is gone.", relay.getChannel(), relay.getUuid());

@@ -20,7 +20,6 @@ import dev.detpikachu.unpluggedafk.common.network.messages.SessionEnd;
 import dev.detpikachu.unpluggedafk.common.network.messages.SessionStart;
 import dev.detpikachu.unpluggedafk.common.network.messages.Sync;
 import dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity;
-import dev.detpikachu.unpluggedafk.velocity.compat.tab.TabBridge;
 import dev.detpikachu.unpluggedafk.velocity.config.Config;
 import dev.detpikachu.unpluggedafk.velocity.session.Session;
 import dev.detpikachu.unpluggedafk.velocity.session.SessionStore;
@@ -43,7 +42,6 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
 
     private final LinkServer linkServer;
     private final BotPlayerBridge botPlayerBridge;
-    private final @Nullable TabBridge tabBridge;
     private final ProxyServer proxyServer;
     private final SessionStore sessionStore;
     private final String secret;
@@ -52,14 +50,9 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     private @Nullable String serverName;
     private boolean refused;
 
-    public LinkHandler(
-            LinkServer linkServer,
-            UnpluggedAfkVelocity plugin,
-            BotPlayerBridge botPlayerBridge,
-            @Nullable TabBridge tabBridge) {
+    public LinkHandler(LinkServer linkServer, UnpluggedAfkVelocity plugin, BotPlayerBridge botPlayerBridge) {
         this.linkServer = linkServer;
         this.botPlayerBridge = botPlayerBridge;
-        this.tabBridge = tabBridge;
         this.proxyServer = plugin.getProxyServer();
         this.sessionStore = plugin.getSessionStore();
         this.secret = Config.get().getLink().getSecret();
@@ -282,19 +275,11 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
     private void addPresence(String serverName, UUID uuid, String username, Session.@Nullable Skin skin) {
         Log.debug("Adding presence for {} ({}) on {}. Skin: {}.", username, uuid, serverName, skin != null);
         this.botPlayerBridge.addWhenDisconnected(serverName, uuid, username, skin);
-
-        if (this.tabBridge != null) {
-            this.tabBridge.addBot(serverName, uuid, username, skin);
-        }
     }
 
     private void dropPresence(UUID uuid) {
         Log.debug("Dropping presence for {}.", uuid);
         this.botPlayerBridge.remove(uuid);
-
-        if (this.tabBridge != null) {
-            this.tabBridge.removeBot(uuid);
-        }
     }
 
     private void clearPresence(String serverName) {

@@ -66,10 +66,11 @@ public final class UnpluggedAfkVelocity {
 
     @Subscribe
     public void onProxyInitialize(ProxyInitializeEvent event) {
+        final var tabBridge = TabCompat.register(this);
         final BotPlayerBridge botPlayerBridge;
 
         try {
-            botPlayerBridge = new BotPlayerBridge(this);
+            botPlayerBridge = new BotPlayerBridge(this, tabBridge);
         } catch (ReflectiveOperationException | RuntimeException exception) {
             Log.error(
                     "Unplugged AFK could not resolve Velocity's internals, which it needs to give a bot a proxy connection. Ensure you are using a version of Velocity that is supported by this version of the plugin.",
@@ -83,12 +84,11 @@ public final class UnpluggedAfkVelocity {
             return;
         }
 
-        final var tabBridge = TabCompat.register(this);
         MiniPlaceholdersCompat.register(this);
 
-        this.linkServer.start(this, botPlayerBridge, tabBridge);
+        this.linkServer.start(this, botPlayerBridge);
 
-        final var listener = new ProxyListener(this, botPlayerBridge, tabBridge);
+        final var listener = new ProxyListener(this, botPlayerBridge);
         this.proxyServer.getEventManager().register(this, listener);
 
         final var linkOptions = Config.get().getLink();

@@ -17,6 +17,8 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
   stopped AuraSkills from drawing health and mana for every player after one.
 - **Kicking bots on 26.x:** kicking a bot, with `/kick`, `/cmi kick` or from another plugin, now removes it on 26.1.2
   and 26.2 instead of doing nothing.
+- **TAB placeholders on bots:** a bot's TAB entry now updates live instead of freezing at `/unplug`, so AFK markers and
+  `unplugged-afk_label` show.
 
 ## [0.7.0] - 2026-09-27
 
