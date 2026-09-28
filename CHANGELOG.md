@@ -10,6 +10,10 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ## [Unreleased]
 
+### Fixed
+
+- **CMI kick bypass:** admins can now `/cmi kick` any bot, including one standing in for an op or staff member.
+
 ## [0.7.0] - 2026-09-27
 
 ### Added
