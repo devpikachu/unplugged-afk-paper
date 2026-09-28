@@ -2,12 +2,14 @@ package dev.detpikachu.unpluggedafk.player;
 
 import dev.detpikachu.unpluggedafk.KickReasons;
 import dev.detpikachu.unpluggedafk.api.events.UnpluggedPlayerRemoveEvent.Reason;
+import io.papermc.paper.adventure.PaperAdventure;
 import io.papermc.paper.connection.DisconnectionReason;
 import net.minecraft.network.DisconnectionDetails;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.ApiStatus;
 
 import static net.kyori.adventure.text.Component.text;
@@ -42,6 +44,10 @@ public final class GamePacketListener extends ServerGamePacketListenerImpl {
 
         if (!isDuplicateLogin) {
             super.disconnect(details);
+
+            if (this.bot.quitReason == PlayerQuitEvent.QuitReason.KICKED) {
+                this.bot.deferredDisconnect(PaperAdventure.asAdventure(details.reason()), null);
+            }
             return;
         }
 

@@ -28,6 +28,7 @@ import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.phys.Vec3;
 import org.bukkit.event.player.PlayerGameModeChangeEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.jetbrains.annotations.ApiStatus;
 import org.jspecify.annotations.Nullable;
 
@@ -117,9 +118,9 @@ public final class BotFactory {
             server.getPlayerList().placeNewPlayer(connection, bot, cookie);
             placed = true;
 
-            if (bot.isRemoved()) {
+            if (bot.isRemoved() || bot.quitReason == PlayerQuitEvent.QuitReason.KICKED) {
                 throw new IllegalStateException(
-                        "A plugin removed bot " + bot.describe() + " during its own PlayerJoinEvent.");
+                        "A plugin kicked or removed bot " + bot.describe() + " during its own PlayerJoinEvent.");
             }
 
             bot.pinChunkLoadDistance();
