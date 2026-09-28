@@ -43,7 +43,7 @@ public final class UnpluggedConnection extends Connection {
         this.uuid = uuid;
         this.linkClient = UnpluggedAfk.getInstance().getLinkClient();
 
-        final var channel = new EmbeddedChannel();
+        final var channel = new EmbeddedChannel(new OutboundSink());
         Connection.configureSerialization(channel.pipeline(), receiving, false, null);
         this.channel = channel;
         this.configurePacketHandler(channel.pipeline());

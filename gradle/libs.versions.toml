@@ -18,6 +18,7 @@ placeholderapi = "2.12.3"
 luckperms = "5.5"
 miniplaceholders = "3.1.0"
 cmi-api = "9.8.6.4"
+packetevents = "2.13.0"
 
 errorprone = "2.50.0"
 nullaway = "0.14.0"
@@ -43,6 +44,7 @@ placeholderapi = { module = "me.clip:placeholderapi", version.ref = "placeholder
 luckperms-api = { module = "net.luckperms:api", version.ref = "luckperms" }
 miniplaceholders-api = { module = "io.github.miniplaceholders:miniplaceholders-api", version.ref = "miniplaceholders" }
 cmi-api = { module = "com.github.Zrips:CMI-API", version.ref = "cmi-api" }
+packetevents-api = { module = "com.github.retrooper:packetevents-api", version.ref = "packetevents" }
 
 errorprone-annotations = { module = "com.google.errorprone:error_prone_annotations", version.ref = "errorprone" }
 errorprone-core = { module = "com.google.errorprone:error_prone_core", version.ref = "errorprone" }

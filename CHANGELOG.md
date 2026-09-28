@@ -13,6 +13,8 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 ### Fixed
 
 - **CMI kick bypass:** admins can now `/cmi kick` any bot, including one standing in for an op or staff member.
+- **PacketEvents sends:** plugins sending packets through PacketEvents no longer fail on unplugged players, which
+  stopped AuraSkills from drawing health and mana for every player after one.
 
 ## [0.7.0] - 2026-09-27
 

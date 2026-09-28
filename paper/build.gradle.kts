@@ -155,6 +155,9 @@ repositories {
     maven("https://jitpack.io") {
         content { includeGroup("com.github.Zrips") }
     }
+    maven("https://repo.codemc.io/repository/maven-releases") {
+        content { includeGroup("com.github.retrooper") }
+    }
 }
 
 base {
@@ -194,6 +197,9 @@ dependencies {
     backendShared(libs.luckperms.api)
     backendShared(libs.miniplaceholders.api)
     backendShared(libs.cmi.api) {
+        isTransitive = false
+    }
+    backendShared(libs.packetevents.api) {
         isTransitive = false
     }
 
