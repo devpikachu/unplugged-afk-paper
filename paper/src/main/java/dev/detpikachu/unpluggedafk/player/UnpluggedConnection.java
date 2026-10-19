@@ -32,7 +32,19 @@ public final class UnpluggedConnection extends Connection {
 
     private static final SocketAddress ADDRESS = new InetSocketAddress(InetAddress.getLoopbackAddress(), 65535);
     private static final String BUNGEE_NAMESPACE = "bungeecord";
-    private static final Set<String> BUNGEE_SUBCHANNELS = Set.of("GetServers", "PlayerCount");
+    private static final Set<String> BUNGEE_SUBCHANNELS = Set.of(
+            "Forward",
+            "ForwardToPlayer",
+            "GetPlayerServer",
+            "GetServer",
+            "GetServers",
+            "IPOther",
+            "Message",
+            "MessageRaw",
+            "PlayerCount",
+            "PlayerList",
+            "ServerIP",
+            "UUIDOther");
 
     private final UUID uuid;
     private final LinkClient linkClient;

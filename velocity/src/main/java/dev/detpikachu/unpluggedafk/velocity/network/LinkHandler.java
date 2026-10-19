@@ -203,6 +203,15 @@ public final class LinkHandler extends SimpleChannelInboundHandler<Message> {
             return;
         }
 
+        if (this.botPlayerBridge.answerBungeeCord(relay.getUuid(), identifier.getId(), relay.getPayload())) {
+            Log.debug(
+                    "Velocity answered a BungeeCord request from bot {} on {} on channel {}.",
+                    relay.getUuid(),
+                    serverName,
+                    relay.getChannel());
+            return;
+        }
+
         Log.debug(
                 "Relaying {} byte(s) from bot {} on {} to the proxy on channel {}.",
                 relay.getPayload().length,

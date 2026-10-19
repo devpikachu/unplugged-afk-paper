@@ -12,8 +12,10 @@ import dev.detpikachu.unpluggedafk.common.logging.Log;
 import dev.detpikachu.unpluggedafk.velocity.UnpluggedAfkVelocity;
 import dev.detpikachu.unpluggedafk.velocity.compat.tab.TabBridge;
 import dev.detpikachu.unpluggedafk.velocity.session.Session;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufHolder;
 import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOutboundHandlerAdapter;
@@ -52,6 +54,8 @@ public final class BotPlayerBridge {
             "com.velocitypowered.proxy.server.VelocityRegisteredServer";
     private static final String LOCATOR_PLUGIN_MESSAGE_PACKET =
             "com.velocitypowered.proxy.protocol.packet.PluginMessagePacket";
+    private static final String LOCATOR_BUNGEECORD_RESPONDER =
+            "com.velocitypowered.proxy.connection.backend.BungeeCordMessageResponder";
 
     private final ProxyServer proxyServer;
     private final LinkServer linkServer;
@@ -69,6 +73,9 @@ public final class BotPlayerBridge {
     private final Method removePlayer;
     private final Class<?> pluginMessagePacket;
     private final Method packetChannel;
+    private final @Nullable Constructor<?> pluginMessage;
+    private final @Nullable Constructor<?> bungeeCordResponder;
+    private final @Nullable Method bungeeCordProcess;
 
     private final ConcurrentHashMap<UUID, Pending> pending = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<UUID, Bot> bots = new ConcurrentHashMap<>();
@@ -110,6 +117,32 @@ public final class BotPlayerBridge {
         this.removePlayer = registeredServerClass.getMethod("removePlayer", connectedPlayerClass);
         this.pluginMessagePacket = pluginMessagePacketClass;
         this.packetChannel = pluginMessagePacketClass.getMethod("getChannel");
+
+        Constructor<?> pluginMessage = null;
+        Constructor<?> bungeeCordResponder = null;
+        Method bungeeCordProcess = null;
+
+        try {
+            final var bungeeCordResponderClass = Class.forName(LOCATOR_BUNGEECORD_RESPONDER);
+
+            pluginMessage = pluginMessagePacketClass.getConstructor(String.class, ByteBuf.class);
+            bungeeCordResponder =
+                    bungeeCordResponderClass.getDeclaredConstructor(velocityServerClass, connectedPlayerClass);
+            bungeeCordResponder.setAccessible(true);
+            bungeeCordProcess = bungeeCordResponderClass.getDeclaredMethod("process", pluginMessagePacketClass);
+            bungeeCordProcess.setAccessible(true);
+        } catch (ReflectiveOperationException | RuntimeException exception) {
+            Log.warn(
+                    "Could not resolve Velocity's BungeeCord responder. BungeeCord requests sent through bots will go unanswered.",
+                    exception);
+            pluginMessage = null;
+            bungeeCordResponder = null;
+            bungeeCordProcess = null;
+        }
+
+        this.pluginMessage = pluginMessage;
+        this.bungeeCordResponder = bungeeCordResponder;
+        this.bungeeCordProcess = bungeeCordProcess;
     }
 
     public void addWhenDisconnected(String serverName, UUID uuid, String username, Session.@Nullable Skin skin) {
@@ -238,6 +271,35 @@ public final class BotPlayerBridge {
     public @Nullable ServerConnection connectionOf(UUID uuid) {
         final var bot = this.bots.get(uuid);
         return bot == null ? null : bot.connection();
+    }
+
+    public boolean answerBungeeCord(UUID uuid, String channel, byte[] payload) {
+        final var bot = this.bots.get(uuid);
+
+        if (bot == null
+                || this.pluginMessage == null
+                || this.bungeeCordResponder == null
+                || this.bungeeCordProcess == null) {
+            return false;
+        }
+
+        Object packet = null;
+
+        try {
+            packet = this.pluginMessage.newInstance(channel, Unpooled.wrappedBuffer(payload));
+            final var responder = this.bungeeCordResponder.newInstance(this.proxyServer, bot.player());
+
+            return Boolean.TRUE.equals(this.bungeeCordProcess.invoke(responder, packet));
+        } catch (ReflectiveOperationException | RuntimeException exception) {
+            Log.warn(
+                    "Velocity could not answer a BungeeCord request from bot {} ({}).",
+                    bot.player().getUsername(),
+                    uuid,
+                    exception);
+            return false;
+        } finally {
+            ReferenceCountUtil.release(packet);
+        }
     }
 
     private Object newConnection(ChannelOutboundHandlerAdapter drain) throws ReflectiveOperationException {
