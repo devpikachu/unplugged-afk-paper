@@ -283,8 +283,6 @@ public final class BotPlayerBridge {
             return false;
         }
 
-        // Velocity only answers BungeeCord requests read from a real backend connection, so a bot's requests are
-        // handed to its responder here. Replies go out on the bot's backend connection and back via RelayHandler.
         Object packet = null;
 
         try {
