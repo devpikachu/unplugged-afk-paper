@@ -10,6 +10,13 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ## [Unreleased]
 
+### Fixed
+
+- **BungeeCord requests from bots:** BungeeCord requests that a plugin sends through a bot, such as `PlayerCount`,
+  `PlayerList` and `Forward`, are now handled by the proxy as they would be for a real player. Before, most were
+  dropped and the rest went unanswered, so values such as PlaceholderAPI's `%bungee_<server>%` counts froze while a bot
+  was a backend's first online player.
+
 ## [0.7.1] - 2026-09-28
 
 ### Fixed

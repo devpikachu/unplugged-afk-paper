@@ -32,7 +32,21 @@ public final class UnpluggedConnection extends Connection {
 
     private static final SocketAddress ADDRESS = new InetSocketAddress(InetAddress.getLoopbackAddress(), 65535);
     private static final String BUNGEE_NAMESPACE = "bungeecord";
-    private static final Set<String> BUNGEE_SUBCHANNELS = Set.of("GetServers", "PlayerCount");
+    // Connect, ConnectOther, KickPlayer and KickPlayerRaw move or kick players, and IP and UUID describe the bot's own
+    // fake connection, so a bot never relays them.
+    private static final Set<String> BUNGEE_SUBCHANNELS = Set.of(
+            "Forward",
+            "ForwardToPlayer",
+            "GetPlayerServer",
+            "GetServer",
+            "GetServers",
+            "IPOther",
+            "Message",
+            "MessageRaw",
+            "PlayerCount",
+            "PlayerList",
+            "ServerIP",
+            "UUIDOther");
 
     private final UUID uuid;
     private final LinkClient linkClient;
