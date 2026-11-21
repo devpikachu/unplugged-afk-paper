@@ -10,6 +10,14 @@ tags the release; pushing that tag makes CI publish the section as the GitHub re
 
 ## [Unreleased]
 
+### Fixed
+
+- **Bots dropped by failed logins:** a login attempt under a bot's name no longer removes the bot from the proxy before
+  the player has authenticated. Before, a client that never finished logging in, such as a cracked client or a server
+  scanner using a name from the server list, left the bot on its backend but gone from the proxy's player list, and
+  the proxy logged `Dropped a relayed message ... has no proxy connection` for every message the bot sent until its
+  session ended.
+
 ## [0.7.2] - 2026-10-19
 
 ### Fixed

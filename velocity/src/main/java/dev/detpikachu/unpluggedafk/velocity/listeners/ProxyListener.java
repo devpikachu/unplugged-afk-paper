@@ -3,7 +3,6 @@ package dev.detpikachu.unpluggedafk.velocity.listeners;
 import com.velocitypowered.api.event.EventTask;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.DisconnectEvent;
-import com.velocitypowered.api.event.connection.PreLoginEvent;
 import com.velocitypowered.api.event.player.GameProfileRequestEvent;
 import com.velocitypowered.api.event.player.KickedFromServerEvent;
 import com.velocitypowered.api.event.player.PlayerChooseInitialServerEvent;
@@ -36,18 +35,13 @@ public final class ProxyListener {
     }
 
     @Subscribe
-    public void onPreLogin(PreLoginEvent event) {
-        Log.debug("PreLogin for {}, clearing any presence under that name.", event.getUsername());
-        this.botPlayerBridge.remove(event.getUsername());
-    }
-
-    @Subscribe
     public void onGameProfileRequest(GameProfileRequestEvent event) {
         Log.debug(
-                "GameProfileRequest for {} ({}), clearing any presence under that uuid.",
+                "GameProfileRequest for {} ({}), clearing any presence under that uuid or name.",
                 event.getUsername(),
                 event.getGameProfile().getId());
         this.botPlayerBridge.remove(event.getGameProfile().getId());
+        this.botPlayerBridge.remove(event.getGameProfile().getName());
     }
 
     @Subscribe(priority = Short.MIN_VALUE)
